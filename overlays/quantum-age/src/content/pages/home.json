@@ -1,0 +1,17 @@
+{
+  "tagline": "Elevate strategy. Accelerate growth.",
+  "positioning": "The only marketing firm in senior care steeped in both consumer and business-to-business.",
+  "primaryButton": {
+    "label": "Start a conversation",
+    "href": "/contact"
+  },
+  "heroImage": {
+    "src": "",
+    "alt": "",
+    "placement": "with-copy",
+    "align": "start",
+    "width": "medium",
+    "aspect": "auto",
+    "focal": "center"
+  }
+}

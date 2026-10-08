@@ -1,0 +1,39 @@
+{
+  "websiteId": "web_quantum_age",
+  "name": "Quantum Age",
+  "productionUrl": "https://testsite.4eos.com",
+  "github": { "owner": "4EOSWeb", "repository": "quantum-age" },
+  "azureDeploymentIdentifier": null,
+  "packageManager": "npm",
+  "installCommand": "npm ci",
+  "devCommand": "npm run dev",
+  "buildCommand": "npm run build",
+  "defaultBranch": "main",
+  "routes": [
+    { "path": "/", "title": "Home", "editable": true },
+    { "path": "/solutions", "title": "Solutions", "editable": false },
+    { "path": "/approach", "title": "Approach", "editable": false },
+    { "path": "/about", "title": "About", "editable": false },
+    { "path": "/team", "title": "Team", "editable": false },
+    { "path": "/references", "title": "References", "editable": false },
+    { "path": "/insights", "title": "Insights", "editable": false },
+    { "path": "/contact", "title": "Contact", "editable": false },
+    { "path": "/privacy", "title": "Privacy", "editable": false },
+    { "path": "/terms", "title": "Terms", "editable": false }
+  ],
+  "lockedComponents": [
+    "Rings",
+    "FormulaStory",
+    "globals.css",
+    "next.config.ts",
+    "start-site.ps1"
+  ],
+  "freeformComponents": [],
+  "blog": { "collection": "insights", "format": "structured-json" },
+  "media": "git",
+  "viewports": [
+    { "id": "mobile", "width": 390 },
+    { "id": "tablet", "width": 768 },
+    { "id": "desktop", "width": 1280 }
+  ]
+}

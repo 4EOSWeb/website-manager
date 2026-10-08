@@ -1,0 +1,240 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum PlatformRole {
+  SUPER_ADMIN
+  DESIGNER
+}
+
+enum MembershipRole {
+  CLIENT_ADMIN
+  CLIENT_EDITOR
+  VIEWER
+  DESIGNER
+}
+
+enum EditorStatus {
+  PENDING_APPROVAL
+  APPROVED
+  DISABLED
+}
+
+enum PageStatus {
+  ACTIVE
+}
+
+enum BlogStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+}
+
+enum PublishStatus {
+  SAVED
+  AWAITING_REVIEW
+  BUILD_IN_PROGRESS
+  DEPLOYMENT_IN_PROGRESS
+  LIVE
+  BUILD_FAILED
+  MERGE_CONFLICT
+  PUBLICATION_FAILED
+  SAVED_LOCALLY
+}
+
+model Client {
+  id        String    @id
+  name      String
+  createdAt DateTime  @default(now()) @map("created_at")
+  websites  Website[]
+
+  @@map("clients")
+}
+
+model User {
+  id                   String          @id
+  identityProviderId   String?         @unique @map("identity_provider_id")
+  displayName          String          @map("display_name")
+  email                String          @unique
+  status               UserStatus      @default(ACTIVE)
+  platformRole         PlatformRole?   @map("platform_role")
+  createdAt            DateTime        @default(now()) @map("created_at")
+  memberships          WebsiteMembership[]
+  drafts               WorkspaceDraft[]
+  blogPosts            BlogPost[]      @relation("BlogAuthor")
+  media                MediaAsset[]
+  auditEvents          AuditEvent[]
+  sessions             EditorSession[]
+  publishRequests      PublishingRequest[] @relation("PublishRequester")
+  reviewedRequests     PublishingRequest[] @relation("PublishReviewer")
+
+  @@map("users")
+}
+
+model Website {
+  id                         String       @id
+  clientId                   String       @map("client_id")
+  client                     Client       @relation(fields: [clientId], references: [id])
+  name                       String
+  productionUrl              String       @map("production_url")
+  githubOwner                String       @map("github_owner")
+  githubRepository           String       @map("github_repository")
+  githubInstallationId       Int?         @map("github_installation_id")
+  defaultBranch              String       @default("main") @map("default_branch")
+  azureDeploymentIdentifier  String?      @map("azure_deployment_identifier")
+  editorStatus               EditorStatus @default(PENDING_APPROVAL) @map("editor_status")
+  manifest                   Json
+  createdAt                  DateTime     @default(now()) @map("created_at")
+  memberships                WebsiteMembership[]
+  pages                      Page[]
+  drafts                     WorkspaceDraft[]
+  blogPosts                  BlogPost[]
+  media                      MediaAsset[]
+  auditEvents                AuditEvent[]
+  publishRequests            PublishingRequest[]
+
+  @@unique([githubOwner, githubRepository])
+  @@map("websites")
+}
+
+model WebsiteMembership {
+  id        String         @id
+  userId    String         @map("user_id")
+  user      User           @relation(fields: [userId], references: [id])
+  websiteId String         @map("website_id")
+  website   Website        @relation(fields: [websiteId], references: [id])
+  role      MembershipRole
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  @@unique([userId, websiteId])
+  @@map("website_memberships")
+}
+
+model Page {
+  id               String     @id
+  websiteId        String     @map("website_id")
+  website          Website    @relation(fields: [websiteId], references: [id])
+  route            String
+  title            String
+  status           PageStatus @default(ACTIVE)
+  editableManifest Json       @map("editable_manifest")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+  drafts           WorkspaceDraft[]
+
+  @@unique([websiteId, route])
+  @@map("pages")
+}
+
+model WorkspaceDraft {
+  id            String   @id
+  websiteId     String   @map("website_id")
+  website       Website  @relation(fields: [websiteId], references: [id])
+  userId        String   @map("user_id")
+  user          User     @relation(fields: [userId], references: [id])
+  pageId        String?  @map("page_id")
+  page          Page?    @relation(fields: [pageId], references: [id])
+  draftData     Json     @map("draft_data")
+  baseCommitSha String?  @map("base_commit_sha")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@unique([websiteId, userId, pageId])
+  @@map("workspace_drafts")
+}
+
+model BlogPost {
+  id                String     @id
+  websiteId         String     @map("website_id")
+  website           Website    @relation(fields: [websiteId], references: [id])
+  title             String
+  slug              String
+  excerpt           String     @default("")
+  content           Json
+  featuredImage     String?    @map("featured_image")
+  authorDisplayName String     @map("author_display_name")
+  authorUserId      String?    @map("author_user_id")
+  author            User?      @relation("BlogAuthor", fields: [authorUserId], references: [id])
+  status            BlogStatus @default(DRAFT)
+  publishDate       DateTime?  @map("publish_date")
+  seoTitle          String     @default("") @map("seo_title")
+  metaDescription   String     @default("") @map("meta_description")
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
+
+  @@unique([websiteId, slug])
+  @@map("blog_posts")
+}
+
+model MediaAsset {
+  id              String   @id
+  websiteId       String   @map("website_id")
+  website         Website  @relation(fields: [websiteId], references: [id])
+  filename        String
+  storageLocation String   @map("storage_location")
+  altText         String   @default("") @map("alt_text")
+  checksum        String
+  uploadedById    String   @map("uploaded_by")
+  uploadedBy      User     @relation(fields: [uploadedById], references: [id])
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@unique([websiteId, checksum])
+  @@map("media_assets")
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  websiteId String?  @map("website_id")
+  website   Website? @relation(fields: [websiteId], references: [id])
+  userId    String?  @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  target    String
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([websiteId, createdAt])
+  @@map("audit_events")
+}
+
+model PublishingRequest {
+  id             String        @id
+  websiteId      String        @map("website_id")
+  website        Website       @relation(fields: [websiteId], references: [id])
+  requestedById  String        @map("requested_by")
+  requestedBy    User          @relation("PublishRequester", fields: [requestedById], references: [id])
+  reviewedById   String?       @map("reviewed_by")
+  reviewedBy     User?         @relation("PublishReviewer", fields: [reviewedById], references: [id])
+  branchName     String        @map("branch_name")
+  commitSha      String?       @map("commit_sha")
+  pullRequestUrl String?       @map("pull_request_url")
+  status         PublishStatus
+  summary        String
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  @@map("publishing_requests")
+}
+
+model EditorSession {
+  id             String    @id
+  userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id])
+  userAgent      String    @default("") @map("user_agent")
+  lastActivityAt DateTime  @default(now()) @map("last_activity_at")
+  stepUpAt       DateTime? @map("step_up_at")
+  revokedAt      DateTime? @map("revoked_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("editor_sessions")
+}
