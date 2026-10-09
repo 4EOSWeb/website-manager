@@ -480,3 +480,29 @@ Reusable pieces that stay: link picker, alt text, fit and focal point, and text 
 - Destination adapter file: none.
 - Migration risk: Unit tests import this overlay file. They must import the platform copies after the move.
 - Test required: `tests/unit/canvas.test.ts` still passes until the import path changes, then the same assertions run against the platform module.
+
+## Articles
+
+Page capabilities replace a permanent managed state. Existing HTML bodies stay intact unless an administrator converts them. Ordinary users do not get raw HTML editing.
+
+### Hub article path
+
+- Current file: `src/components/editor-shell.tsx` line 113 and `src/components/editor/panels.tsx` lines 75–80
+- Current behavior: Any path `/insights/:slug` is treated as an Insights post. The panel groups them as Insights drafts.
+- Why it is site-specific: The prefix and the name are one site’s blog.
+- Generic replacement: Page capabilities: editable metadata, header, body, sidebar, CTA, locked layout, locked content, provider-managed.
+- Destination adapter file: `adapters/quantum-age/articles.ts` and `adapters/quantum-age/page-capabilities.ts`
+- Migration risk: Structured blog drafts and published HTML articles are different. Mixing them would expose HTML or hide editable drafts.
+- Test required: Open one Insights article and compare it with this description.
+
+### Overlay article renderer
+
+- Current files: `overlays/quantum-age/src/components/site/structured-article.tsx`, `overlays/quantum-age/src/lib/structured-posts.ts`, `overlays/quantum-age/src/app/insights/[slug]/page.tsx`
+- Current behavior: Structured drafts render as text, never as HTML. The article page shows “This article is kept as it was published. New Insights posts are edited as structured drafts. This one stays as it is.” HTML articles stay as published.
+- Why it is site-specific: The copy and the route are Quantum Age’s. The safety rule, no raw HTML for ordinary users, is generic and must remain.
+- Generic replacement: `body: "html-preserved"` on the adapter. Surrounding regions edit when flags allow. Conversion is administrator-only and backed up.
+- Destination adapter file: `adapters/quantum-age/articles.ts`
+- Migration risk: Converting HTML without a backup can lose markup. Do not convert during this audit.
+- Test required: An article route still renders. A missing slug still 404s under `ensureStatic = "navigation"`. No HTML textarea is shown.
+
+Blog drafts in `src/lib/content-schema.ts` (`blogDraftSchema`) are a separate JSON shape from the visual document. They stay until the article template and the migrator cover them.
