@@ -11,5 +11,14 @@ export function fakeContext(websiteId: string): SiteContext {
 }
 
 export function fakeAdapter(id: string) {
-  return { version: 1 as const, site: { id, name: id } };
+  return {
+    version: 1 as const,
+    site: {
+      id,
+      name: id,
+      productionUrl: "https://example.com",
+      repository: { owner: "example", name: id },
+      defaultBranch: "dev",
+    },
+  };
 }
