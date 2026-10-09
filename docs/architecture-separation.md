@@ -94,3 +94,69 @@ Two hub sets match each other. A third copy lives in the overlay.
 - Test required: Preview still opens `/about` and `/insights`.
 
 Content links to `/contact` and `/about` in `src/lib/flow-seed.ts`, `src/lib/page-documents.ts`, `src/lib/library.ts`, and the overlay components are page content, not the reserved set. They move with the seed and the site components. `overlays/quantum-age/4eos.editor.config.json` lines 14–22 list the same routes except `/` and `/prototype-notes`.
+
+## Insights
+
+The generic replacement is adapter article capabilities. The hub must not branch on the string `/insights`.
+
+### src/components/editor-shell.tsx
+
+- Current file: `src/components/editor-shell.tsx`, lines 113 and 539
+- Current behavior: `activePost` matches `path === `/insights/${item.slug}``, and opening a post navigates to `/insights/${post.slug}`.
+- Why it is site-specific: The article collection is hardcoded to one route prefix.
+- Generic replacement: `adapter.articles.routePattern`.
+- Destination adapter file: `adapters/quantum-age/articles.ts`
+- Migration risk: Existing article URLs must keep working on the public site.
+- Test required: Open one Insights article in the editor after the shell stops using the literal.
+
+### src/components/editor/panels.tsx
+
+- Current file: `src/components/editor/panels.tsx`, lines 75–80
+- Current behavior: A group titled “Insights drafts” opens `/insights/${post.slug}`.
+- Why it is site-specific: The panel names one collection.
+- Generic replacement: A page or article list from the adapter.
+- Destination adapter file: `adapters/quantum-age/articles.ts`
+- Migration risk: Draft posts must still be listed for Quantum Age.
+- Test required: The Pages panel still lists “A note from the team” until the generic list replaces it, then the adapter pattern still finds that slug.
+
+### src/lib/manifest.ts
+
+- Current file: `src/lib/manifest.ts`, line 27
+- Current behavior: `blog.collection` must be the literal `"insights"`.
+- Why it is site-specific: Another site cannot name its collection.
+- Generic replacement: Article behavior on the adapter, with no required collection name in the platform.
+- Destination adapter file: `adapters/quantum-age/articles.ts`
+- Migration risk: Stored `Website.manifest` JSON uses this literal.
+- Test required: `tests/unit/qa-adapter-articles.test.ts`
+
+### src/lib/library.ts
+
+- Current file: `src/lib/library.ts`, lines 45 and 47
+- Current behavior: Search copy says “Search pages and Insights”. The catalog has `section:insights-summary`.
+- Why it is site-specific: The Add catalog names one site’s writing section.
+- Generic replacement: Registered components. The platform catalog has no Insights entry.
+- Destination adapter file: `adapters/quantum-age/components/insights.ts`
+- Migration risk: Existing pages that contain an insights-summary section must still render.
+- Test required: Quantum Age still shows the summary. A second site’s catalog does not.
+
+### src/lib/content-schema.ts
+
+- Current file: `src/lib/content-schema.ts`
+- Current behavior: Blog defaults mention Insights. Flow kind `insights`, layout `insights`, preset `insights`, section type `insights-summary`, route `/insights`, and template `insights-landing` are schema literals.
+- Why it is site-specific: The document schema knows one site’s section types.
+- Generic replacement: A `custom` node whose component id is registered by the adapter. Templates live on the adapter.
+- Destination adapter file: `adapters/quantum-age/components/insights.ts` and `adapters/quantum-age/templates.ts`
+- Migration risk: Version 3 drafts contain these types. The migrator must map them, not drop them.
+- Test required: `tests/unit/convert-section.test.ts`
+
+### Overlay article routes
+
+- Current files: `overlays/quantum-age/src/app/insights/page.tsx`, `overlays/quantum-age/src/app/insights/[slug]/page.tsx`, `overlays/quantum-age/src/components/site/structured-article.tsx`, `overlays/quantum-age/src/components/site/flow-section.tsx`, `overlays/quantum-age/src/components/site/home-canvas.tsx`
+- Current behavior: The public site renders the Insights index, HTML articles, structured drafts, and the home Insights preset. The article page tells the editor that a published article stays as it was published.
+- Why it is site-specific: These are Quantum Age pages. The hub must not import them.
+- Generic replacement: The site keeps its routes. The adapter describes article capabilities. The hub does not import these files.
+- Destination adapter file: `adapters/quantum-age/articles.ts`
+- Migration risk: Public article HTML must not be rewritten by the audit or by a later editor change that lacks a backup.
+- Test required: `/insights` and one article slug still return 200 on the public build.
+
+Also named in the hub, and covered again by later audit sections: `src/lib/publish.ts` and `src/lib/publish-git.ts` allow `src/app/insights/page.tsx` and `src/app/insights/[slug]/page.tsx`. `src/components/editor/dialogs.tsx` offers template `insights-landing`. `src/components/editor/inspector/index.tsx` labels a mode “Insights list”. `src/lib/page-documents.ts` builds an insights-summary section and an insights-landing template. `src/app/api/sites/[websiteId]/blog/route.ts` returns “Insights draft saved.”
