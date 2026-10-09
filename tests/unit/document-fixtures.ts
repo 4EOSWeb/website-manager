@@ -6,7 +6,7 @@ export const minimalNode = {
   styles: {},
   responsive: {},
   children: [],
-  visibility: {},
+  visibility: { hidden: false, hideOn: [] },
   locked: false,
   metadata: {},
 };
