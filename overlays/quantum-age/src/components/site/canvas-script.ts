@@ -1087,7 +1087,7 @@ export function canvasScript(origin: string) {
       placeUi(fmt, editing);
       input.focus();
       input.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") { event.preventDefault(); submitLink(input, note); }
+        if (event.key === "Enter") { event.preventDefault(); event.stopPropagation(); submitLink(input, note); }
         if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); cancelLink(); }
       });
     }
@@ -1344,6 +1344,7 @@ export function canvasScript(origin: string) {
         return;
       }
       if (fmt && fmt.contains(event.target) && key === "Escape") { event.preventDefault(); cancelLink(); return; }
+      if (event.target && event.target.closest && event.target.closest(".eos-fmt")) return;
       if (editing) {
         if (key === "Escape") { event.preventDefault(); finishEdit(); return; }
         if (mod && (key === "z" || key === "Z")) { event.preventDefault(); editUndo(event.shiftKey); return; }

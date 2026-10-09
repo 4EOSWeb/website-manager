@@ -1,6 +1,8 @@
 import zlib from "node:zlib";
 import { expect, type Frame, type FrameLocator, type Locator, type Page } from "@playwright/test";
 
+export { restoreSnapshot } from "./global-teardown";
+
 export const SITE = "web_quantum_age";
 
 /** Next.js dev tooling reads document.cookie, which a sandboxed preview frame cannot do. Production builds do not log this. */
