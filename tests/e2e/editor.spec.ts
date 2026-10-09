@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { afterReload, clearMessages, hubRedo, hubUndo, inspector, messages, openEditor, previewFrame, realErrors, sectionIds, startEditing } from "./helpers";
+import { afterReload, clearMessages, hubRedo, hubUndo, inspector, messages, openEditor, previewFrame, realErrors, sectionIds, startEditing, restoreSnapshot } from "./helpers";
 
 const moves = (list: { type?: string }[]) => list.filter((item) => item.type === "4eos-move" || item.type === "4eos-reorder-block" || item.type === "4eos-place");
 
 test.describe("selecting and dragging", () => {
+  test.beforeEach(restoreSnapshot);
+
   test("the editor opens without console errors and shows the page settings", async ({ page }) => {
     const errors: string[] = [];
     await openEditor(page, errors);
