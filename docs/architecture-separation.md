@@ -272,3 +272,49 @@ Platform theme tokens are an open list of `{ id, value }`. The names `ink`, `plu
 - Destination adapter file: `adapters/quantum-age/theme.ts`. The layout file stays in the overlay.
 - Migration risk: Editing the layout would change the public site. Do not edit it in the token move except to read values.
 - Test required: Public home colors match the baseline screenshot. `git diff` on this layout stays empty during the token move.
+
+## Reserved routes
+
+Generic page rules read `adapter.pages.reservedRoutes`. The platform ships no default list.
+
+The two constants were listed under Routes. This section records the user-facing enforcement.
+
+### src/lib/editor-ops.ts
+
+- Current file: `src/lib/editor-ops.ts`, line 429, and `RESERVED` at line 361
+- Current behavior: Changing a reserved or locked page returns “This page keeps its address.”
+- Why it is site-specific: The reserved set is Quantum Age’s pages. The sentence can stay generic.
+- Generic replacement: The same sentence, driven by the adapter list.
+- Destination adapter file: `adapters/quantum-age/page-rules.ts`
+- Migration risk: Quantum Age built-in pages must still refuse address changes. A second site that does not reserve `/insights` must accept that slug.
+- Test required: `tests/unit/page-reserved.test.ts`
+
+### src/lib/content-schema.ts
+
+- Current file: `src/lib/content-schema.ts`, `BUILT_IN_ROUTES` at lines 464–476
+- Current behavior: The schema set matches `RESERVED`. Both contain `/`, `/about`, `/approach`, `/solutions`, `/team`, `/references`, `/insights`, `/contact`, `/privacy`, `/terms`, `/prototype-notes`.
+- Why it is site-specific: Same list as above.
+- Generic replacement: One adapter list. Delete both constants in step 14.10, not in this audit.
+- Destination adapter file: `adapters/quantum-age/page-rules.ts`
+- Migration risk: Deleting a constant before the editor reads the adapter would unlock built-in addresses.
+- Test required: Compare the two sets. They are equal today.
+
+### src/components/editor/inspector/page.tsx
+
+- Current file: `src/components/editor/inspector/page.tsx`, line 22
+- Current behavior: The address field hint is “Built-in pages keep their address.” The field is disabled for those pages.
+- Why it is site-specific: “Built-in” is implemented with the Quantum Age route set.
+- Generic replacement: Disable the field when the route is in the adapter reserved list. Keep a plain hint.
+- Destination adapter file: `adapters/quantum-age/page-rules.ts`
+- Migration risk: Custom pages must still edit their addresses.
+- Test required: Playwright: Home’s address stays disabled. A custom page can change its address.
+
+### src/components/editor-shell.tsx
+
+- Current file: `src/components/editor-shell.tsx`, line 559
+- Current behavior: A failed route change surfaces “This page keeps its address.”
+- Why it is site-specific: The error is generic, but it is raised by the site-specific `RESERVED` check.
+- Generic replacement: The platform returns that error when the adapter list contains the route.
+- Destination adapter file: `adapters/quantum-age/page-rules.ts`
+- Migration risk: Low if the sentence stays.
+- Test required: The pages Playwright spec for a built-in address.
