@@ -1,6 +1,6 @@
 "use client";
 
-import { Heading, ImageIcon, List, MousePointerClick, Pilcrow } from "lucide-react";
+import { BookmarkPlus, Clipboard, CopyPlus, Heading, ImageIcon, List, MousePointerClick, Pilcrow, Trash2 } from "lucide-react";
 import type { FlowBlock, Section } from "@/lib/content-schema";
 import { addFlowBlock, applyText, setEditorName, setHideOn, setSectionHidden, setSectionLayout, setSectionStyle } from "@/lib/editor-ops";
 import type { EditorApi } from "@/components/editor/types";
@@ -33,29 +33,20 @@ export function sectionName(section: Section) {
   return section.type.charAt(0).toUpperCase() + section.type.slice(1).replace(/-/g, " ");
 }
 
+function hrefFieldOf(section: Section) {
+  return section.type === "button" || section.type === "cta" ? "href" : section.type === "preset" && section.buttonHref !== undefined ? "buttonHref" : "";
+}
+
+export function sectionHasContent(section: Section) {
+  return Boolean(hrefFieldOf(section)) || section.type === "video" || section.type === "image" || section.type === "map";
+}
+
 export function SectionContent({ api, section }: { api: EditorApi; section: Section }) {
   const disabled = !api.canEdit;
-  const hrefField = section.type === "button" || section.type === "cta" ? "href" : section.type === "preset" && section.buttonHref !== undefined ? "buttonHref" : "";
+  const hrefField = hrefFieldOf(section);
   const href = section.type === "button" || section.type === "cta" ? section.href : section.type === "preset" ? section.buttonHref ?? "" : "";
   return (
     <>
-      <Group title="Name">
-        <Field label="Name in the layers list" hint="Only you see this name.">
-          <TextInput value={section.editorName ?? ""} placeholder={sectionName(section)} disabled={disabled} maxLength={80} onChange={(value) => api.commitText(setEditorName(api.site, api.path, section.id, value), `${section.id}:name`)} />
-        </Field>
-      </Group>
-      {section.type === "flow" ? (
-        <Group title="Add to this section">
-          <div className="ed-tiles">
-            {ADDABLE.map((item) => (
-              <button key={item.kind} type="button" className="ed-tile" disabled={disabled} onClick={() => api.commit(addFlowBlock(api.site, api.path, section.id, item.kind, api.selection.itemId || undefined), true)}>
-                {item.icon}
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </Group>
-      ) : null}
       {hrefField ? (
         <Group title="Button link">
           <LinkPicker key={section.id} site={api.site} value={href} disabled={disabled} onChange={(value) => api.commit(applyText(api.site, api.path, section.id, hrefField, value), true)} />
@@ -81,7 +72,44 @@ export function SectionContent({ api, section }: { api: EditorApi; section: Sect
           <TextInput value={section.address} disabled={disabled} onChange={(value) => api.commitText(applyText(api.site, api.path, section.id, "address", value), `${section.id}:address`, true)} />
         </Group>
       ) : null}
-      {section.type !== "flow" && section.type !== "freeform" ? <p className="ed-hint ed-pad">Double-click any text in this section on the page to change it.</p> : null}
+      <p className="ed-hint ed-pad">Double-click any text in this section on the page to change it.</p>
+    </>
+  );
+}
+
+export function SectionAdvanced({ api, section }: { api: EditorApi; section: Section }) {
+  const disabled = !api.canEdit;
+  const reusable = section.type !== "designed" && section.type !== "embed" && !(section.type === "preset" && section.providerLocked);
+  return (
+    <>
+      <Group title="Name">
+        <Field label="Name in the layers list" hint="Only you see this name.">
+          <TextInput value={section.editorName ?? ""} placeholder={sectionName(section)} disabled={disabled} maxLength={80} onChange={(value) => api.commitText(setEditorName(api.site, api.path, section.id, value), `${section.id}:name`)} />
+        </Field>
+      </Group>
+      <Group title="Reuse">
+        <div className="ed-row">
+          <button type="button" className="ed-button" disabled={disabled} onClick={() => api.run("duplicate")}>
+            <CopyPlus size={14} aria-hidden="true" /> Duplicate
+          </button>
+          {reusable ? (
+            <>
+              <button type="button" className="ed-button" disabled={disabled} onClick={() => api.run("copy")}>
+                <Clipboard size={14} aria-hidden="true" /> Copy
+              </button>
+              <button type="button" className="ed-button" disabled={disabled} onClick={() => api.run("template")}>
+                <BookmarkPlus size={14} aria-hidden="true" /> Save as template
+              </button>
+            </>
+          ) : null}
+        </div>
+      </Group>
+      <Group title="Remove">
+        <button type="button" className="ed-button is-danger-outline" disabled={disabled} onClick={() => api.run("delete")}>
+          <Trash2 size={14} aria-hidden="true" /> Delete section
+        </button>
+        <p className="ed-hint">You can undo this.</p>
+      </Group>
     </>
   );
 }
@@ -132,6 +160,18 @@ export function SectionLayoutTab({ api, section }: { api: EditorApi; section: Se
         <Group title="Arrangement">
           <Select label="Arrangement" value={section.layout ?? "stack"} disabled={disabled} options={LAYOUTS} onChange={(value) => api.commit(setSectionLayout(api.site, api.path, section.id, value), true)} />
           {section.layout === "fluid" ? <p className="ed-hint">Drag items anywhere in this section. They snap to edges and to each other.</p> : null}
+        </Group>
+      ) : null}
+      {section.type === "flow" ? (
+        <Group title="Add to this section">
+          <div className="ed-tiles">
+            {ADDABLE.map((item) => (
+              <button key={item.kind} type="button" className="ed-tile" disabled={disabled} onClick={() => api.commit(addFlowBlock(api.site, api.path, section.id, item.kind, api.selection.itemId || undefined), true)}>
+                {item.icon}
+                {item.label}
+              </button>
+            ))}
+          </div>
         </Group>
       ) : null}
       <Group title="Visibility">

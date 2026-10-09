@@ -53,4 +53,6 @@ export type EditorApi = {
   selectNode: (sectionId: string, itemId?: string) => void;
   openPicker: () => void;
   openCrop: () => void;
+  run: (action: "duplicate" | "delete" | "copy" | "template") => void;
+  media: MediaItem[];
 };

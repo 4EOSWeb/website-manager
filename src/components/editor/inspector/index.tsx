@@ -6,7 +6,7 @@ import { PROVIDER_LOCK_MESSAGE, type BlogDraft, type FreeformItem } from "@/lib/
 import type { EditorApi } from "@/components/editor/types";
 import { Empty } from "@/components/editor/ui";
 import { BlockVisibility, ButtonContent, ButtonStyle, ImageContent, ImageStyle, TEXT_KINDS, TextContent, TextStyleTab } from "@/components/editor/inspector/blocks";
-import { SectionContent, SectionLayoutTab, SectionStyleTab, sectionName } from "@/components/editor/inspector/section";
+import { SectionAdvanced, SectionContent, SectionLayoutTab, SectionStyleTab, sectionHasContent, sectionName } from "@/components/editor/inspector/section";
 import { PageTab, PostTab, SeoTab } from "@/components/editor/inspector/page";
 import { FooterInspector, FreeformInspector, HeaderInspector, NavInspector } from "@/components/editor/inspector/chrome";
 
@@ -37,11 +37,11 @@ type Mode =
   | { kind: "post" };
 
 const TABS: Record<string, { id: string; label: string }[]> = {
-  text: [{ id: "content", label: "Content" }, { id: "style", label: "Style" }, { id: "visibility", label: "Visibility" }],
-  button: [{ id: "content", label: "Content" }, { id: "style", label: "Style" }, { id: "visibility", label: "Visibility" }],
-  image: [{ id: "content", label: "Content" }, { id: "style", label: "Style" }, { id: "visibility", label: "Visibility" }],
-  "block-other": [{ id: "visibility", label: "Visibility" }],
-  section: [{ id: "content", label: "Content" }, { id: "style", label: "Style" }, { id: "layout", label: "Layout" }],
+  text: [{ id: "content", label: "Content" }, { id: "design", label: "Design" }, { id: "layout", label: "Layout" }],
+  button: [{ id: "content", label: "Content" }, { id: "design", label: "Design" }, { id: "layout", label: "Layout" }],
+  image: [{ id: "content", label: "Content" }, { id: "layout", label: "Layout" }],
+  "block-other": [{ id: "layout", label: "Layout" }],
+  section: [{ id: "content", label: "Content" }, { id: "layout", label: "Layout" }, { id: "design", label: "Design" }, { id: "advanced", label: "Advanced" }],
   freeform: [{ id: "content", label: "Content" }, { id: "arrange", label: "Arrange" }],
   page: [{ id: "page", label: "Page" }, { id: "seo", label: "Search" }],
   post: [{ id: "post", label: "Post" }],
@@ -76,7 +76,12 @@ export function Inspector(props: {
   else if (props.post) mode = { kind: "post" };
   else if (page) mode = { kind: "page" };
 
-  const tabs = (TABS[mode.kind] ?? []).filter((item) => !(mode.kind === "section" && item.id === "style" && (section?.type === "preset" || section?.type === "designed")));
+  const tabs = (TABS[mode.kind] ?? []).filter((item) => {
+    if (mode.kind !== "section" || !section) return true;
+    if (item.id === "design") return section.type !== "preset" && section.type !== "designed";
+    if (item.id === "content") return sectionHasContent(section);
+    return true;
+  });
   const [tab, setTab] = useState(tabs[0]?.id ?? "");
   const tabKey = `${mode.kind}:${selection.sectionId}:${selection.itemId}`;
   const [lastKey, setLastKey] = useState(tabKey);
@@ -154,19 +159,20 @@ export function Inspector(props: {
         {block && section?.type === "flow" ? (
           <>
             {mode.kind === "text" && active === "content" ? <TextContent api={api} section={section} block={block} /> : null}
-            {mode.kind === "text" && active === "style" ? <TextStyleTab api={api} section={section} block={block} /> : null}
+            {mode.kind === "text" && active === "design" ? <TextStyleTab api={api} section={section} block={block} /> : null}
             {mode.kind === "button" && active === "content" ? <ButtonContent api={api} section={section} block={block} /> : null}
-            {mode.kind === "button" && active === "style" ? <ButtonStyle api={api} section={section} block={block} /> : null}
+            {mode.kind === "button" && active === "design" ? <ButtonStyle api={api} section={section} block={block} /> : null}
             {mode.kind === "image" && active === "content" ? <ImageContent api={api} section={section} block={block} /> : null}
-            {mode.kind === "image" && active === "style" ? <ImageStyle api={api} section={section} block={block} /> : null}
-            {active === "visibility" && mode.kind !== "locked" ? <BlockVisibility api={api} section={section} block={block} /> : null}
+            {mode.kind === "image" && active === "layout" ? <ImageStyle api={api} section={section} block={block} /> : null}
+            {active === "layout" && mode.kind !== "locked" ? <BlockVisibility api={api} section={section} block={block} /> : null}
           </>
         ) : null}
         {mode.kind === "section" && section ? (
           <>
             {active === "content" ? <SectionContent api={api} section={section} /> : null}
-            {active === "style" ? <SectionStyleTab api={api} section={section} /> : null}
             {active === "layout" ? <SectionLayoutTab api={api} section={section} /> : null}
+            {active === "design" ? <SectionStyleTab api={api} section={section} /> : null}
+            {active === "advanced" ? <SectionAdvanced api={api} section={section} /> : null}
           </>
         ) : null}
         {mode.kind === "freeform" && section ? <FreeformInspector api={api} section={section} item={mode.item} tab={active} /> : null}

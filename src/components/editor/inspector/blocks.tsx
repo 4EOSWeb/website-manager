@@ -32,9 +32,11 @@ function style(api: EditorApi, section: Flow, block: FlowBlock, change: TextStyl
 export function TextContent({ api, section, block }: { api: EditorApi; section: Flow; block: FlowBlock }) {
   const disabled = !api.canEdit;
   const text = words(block.text);
-  const isTitle = block.kind === "eyebrow" || block.kind === "heading" || block.kind === "paragraph";
+  const heroTitle = section.layout === "hero" && block.kind === "heading";
+  const isTitle = !heroTitle && (block.kind === "eyebrow" || block.kind === "heading" || block.kind === "paragraph");
   return (
     <>
+      {heroTitle ? <p className="ed-note">This is the main title of the page, so it is always an H1.</p> : null}
       {isTitle ? (
         <Group title="Text type">
           <Segmented
@@ -206,19 +208,56 @@ export function ImageContent({ api, section, block }: { api: EditorApi; section:
           <TextArea rows={3} value={block.alt ?? ""} disabled={disabled} maxLength={200} onChange={(value) => api.commitText(applyText(api.site, api.path, section.id, "alt", value, block.id), `${block.id}:alt`, true)} />
         </Field>
       </Group>
+      {block.src ? <FileDetails api={api} filename={filename} /> : null}
     </>
   );
 }
 
+function FileDetails({ api, filename }: { api: EditorApi; filename: string }) {
+  const item = api.media.find((entry) => entry.filename === filename);
+  return (
+    <Group title="File" defaultOpen={false}>
+      <dl className="ed-facts">
+        <dt>Name</dt>
+        <dd className="truncate">{filename}</dd>
+        {item?.width && item.height ? (
+          <>
+            <dt>Size</dt>
+            <dd>
+              {item.width}×{item.height}
+              {item.bytes ? ` · ${Math.ceil(item.bytes / 1024)} KB` : ""}
+            </dd>
+          </>
+        ) : null}
+        <dt>Used on</dt>
+        <dd>{item?.usedBy?.length ? item.usedBy.join(", ") : "This page only"}</dd>
+      </dl>
+    </Group>
+  );
+}
+
+const FOCAL: (NonNullable<FlowBlock["focal"]> | null)[] = [null, "top", null, "left", "center", "right", null, "bottom", null];
+
 export function ImageStyle({ api, section, block }: { api: EditorApi; section: Flow; block: FlowBlock }) {
   const disabled = !api.canEdit;
+  const focal = block.focal ?? "center";
   return (
     <>
       <Group title="Fit">
         <Segmented label="Image fit" value={block.fit ?? "fit"} disabled={disabled} options={[{ value: "fit", label: "Show all" }, { value: "fill", label: "Fill the space" }]} onChange={(value) => patch(api, section, block, { fit: value })} />
-        <Field label="Keep in view when cropped">
-          <Select label="Keep in view" value={block.focal ?? "center"} disabled={disabled} options={[{ value: "center", label: "Center" }, { value: "top", label: "Top" }, { value: "bottom", label: "Bottom" }, { value: "left", label: "Left" }, { value: "right", label: "Right" }]} onChange={(value) => patch(api, section, block, { focal: value })} />
-        </Field>
+        <div className="ed-field">
+          <span className="ed-field-label">Keep in view when the image is cut off</span>
+          <div className="ed-focal" role="radiogroup" aria-label="Part of the image to keep in view">
+            {FOCAL.map((spot, index) =>
+              spot ? (
+                <button key={spot} type="button" role="radio" aria-checked={focal === spot} aria-label={spot.charAt(0).toUpperCase() + spot.slice(1)} data-tip={spot.charAt(0).toUpperCase() + spot.slice(1)} disabled={disabled} onClick={() => patch(api, section, block, { focal: spot })} />
+              ) : (
+                <span key={`gap-${index}`} aria-hidden="true" />
+              ),
+            )}
+          </div>
+          {block.fit !== "fill" ? <span className="ed-hint">Only matters when the image fills the space.</span> : null}
+        </div>
       </Group>
       <Group title="Size and alignment">
         <Segmented label="Image width" value={block.width ?? "full"} disabled={disabled} options={[{ value: "s", label: "S" }, { value: "m", label: "M" }, { value: "l", label: "L" }, { value: "full", label: "Full" }]} onChange={(value) => patch(api, section, block, { width: value })} />

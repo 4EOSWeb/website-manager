@@ -156,7 +156,7 @@ export function EditorShell(props: {
   }
 
   function commitText(next: SiteDraft, key: string, reload = false) {
-    if (!props.canEdit) return;
+    if (!props.canEdit || JSON.stringify(next) === JSON.stringify(site)) return;
     if (textKey.current !== key) {
       textKey.current = key;
       rememberHistory();
@@ -867,6 +867,7 @@ export function EditorShell(props: {
     return () => window.removeEventListener("keydown", onKey);
   });
 
+  const mediaWithUse = media.map((item) => ({ ...item, usedBy: imageUsage(site, posts, item.filename) }));
   const api: EditorApi = {
     websiteId: props.websiteId,
     site,
@@ -881,10 +882,11 @@ export function EditorShell(props: {
     selectNode,
     openPicker: () => setPicker(true),
     openCrop: () => openCrop(),
+    run: (action) => runAction(action, selection.sectionId, selection.itemId, selection.overlay, selection.itemIds),
+    media: mediaWithUse,
   };
 
   const width = VIEWPORTS.find((item) => item.id === viewport)?.width ?? 1280;
-  const mediaWithUse = media.map((item) => ({ ...item, usedBy: imageUsage(site, posts, item.filename) }));
   const recommended = recommendedFor(page?.sections ?? []);
   const templates = site.sectionTemplates.map((item) => ({ id: item.id, name: item.name }));
   const canPlaceImage = Boolean(selection.sectionId && (selection.kind === "image" || imageSrc(selection.sectionId, selection.itemId)));
@@ -943,6 +945,7 @@ export function EditorShell(props: {
         websiteName={props.websiteName}
         pageTitle={pageTitle}
         onPages={() => setRail("pages")}
+        onNewPage={() => setAddingPage(true)}
         viewport={viewport}
         onViewport={setViewport}
         zoom={zoom}

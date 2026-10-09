@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlertCircle, Check, ChevronDown, CloudUpload, Eye, Files, ImageIcon, Keyboard, Layers, LoaderCircle, LogOut, Monitor, Palette, Plus, Redo2, ShieldCheck, Smartphone, Tablet, Undo2 } from "lucide-react";
+import { AlertCircle, Check, ChevronDown, CloudUpload, Eye, FilePlus2, Files, ImageIcon, Keyboard, Layers, LoaderCircle, LogOut, Monitor, Palette, Plus, Redo2, ShieldCheck, Smartphone, Tablet, Undo2 } from "lucide-react";
 import { signOutUser } from "@/app/signin/actions";
 import type { RailPanel, SaveState, Viewport } from "@/components/editor/types";
 import { IconButton } from "@/components/editor/ui";
@@ -76,6 +76,7 @@ export function TopBar(props: {
   websiteName: string;
   pageTitle: string;
   onPages: () => void;
+  onNewPage: () => void;
   viewport: Viewport;
   onViewport: (viewport: Viewport) => void;
   zoom: Zoom;
@@ -107,6 +108,11 @@ export function TopBar(props: {
           <span className="truncate">{props.pageTitle}</span>
           <ChevronDown size={14} aria-hidden="true" />
         </button>
+        {props.canEdit ? (
+          <IconButton label="New page" onClick={props.onNewPage}>
+            <FilePlus2 size={16} aria-hidden="true" />
+          </IconButton>
+        ) : null}
       </div>
       <div className="ed-topbar-center">
         <div className="ed-segmented is-toolbar" role="radiogroup" aria-label="Preview size">
@@ -135,7 +141,7 @@ export function TopBar(props: {
         </a>
         {props.canPublish ? (
           <button type="button" className="ed-button is-primary" onClick={props.onPublish}>
-            <CloudUpload size={14} aria-hidden="true" /> Publish
+            <CloudUpload size={14} aria-hidden="true" /> Submit for review
           </button>
         ) : (
           <span className="ed-tag">{props.canEdit ? "Drafts only" : "View only"}</span>
