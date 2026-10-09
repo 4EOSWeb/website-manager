@@ -15,6 +15,7 @@ export type PlatformErrorCode = (typeof platformErrorCodes)[number];
 export type PlatformError = {
   code: PlatformErrorCode;
   message: string;
+  path?: string;
 };
 
 const defaultMessages: Record<PlatformErrorCode, string> = {
@@ -37,8 +38,9 @@ export function adapterNotFound(message?: string): PlatformError {
   return platformError("adapter_not_found", message);
 }
 
-export function adapterInvalid(message?: string): PlatformError {
-  return platformError("adapter_invalid", message);
+export function adapterInvalid(message?: string, path?: string): PlatformError {
+  const error = platformError("adapter_invalid", message);
+  return path ? { ...error, path } : error;
 }
 
 export function capabilityMissing(message?: string): PlatformError {
