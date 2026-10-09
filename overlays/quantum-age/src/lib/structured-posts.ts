@@ -5,7 +5,10 @@ export type StructuredBlock =
   | { type: "paragraph"; text: string }
   | { type: "heading"; level: 2 | 3; text: string }
   | { type: "quote"; text: string }
-  | { type: "list"; ordered: boolean; items: string[] };
+  | { type: "list"; ordered: boolean; items: string[] }
+  | { type: "table"; headers: string[]; rows: string[][] }
+  | { type: "image"; src: string; alt: string }
+  | { type: "link"; href: string; label: string };
 
 export type StructuredPost = {
   title: string;
@@ -16,6 +19,7 @@ export type StructuredPost = {
   metaDescription: string;
   blocks: StructuredBlock[];
   featuredImage: { src: string; alt: string } | null;
+  publishAt?: string;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -37,6 +41,19 @@ function parsePost(value: unknown, slugFromFile: string): StructuredPost | null 
     if (block.type === "list" && typeof block.ordered === "boolean" && Array.isArray(block.items)) {
       blocks.push({ type: "list", ordered: block.ordered, items: block.items.filter((item) => typeof item === "string") });
     }
+    if (block.type === "table" && Array.isArray(block.headers) && Array.isArray(block.rows)) {
+      blocks.push({
+        type: "table",
+        headers: block.headers.filter((item) => typeof item === "string"),
+        rows: block.rows.filter(Array.isArray).map((row) => row.filter((cell) => typeof cell === "string")),
+      });
+    }
+    if (block.type === "image" && typeof block.src === "string") {
+      blocks.push({ type: "image", src: block.src, alt: typeof block.alt === "string" ? block.alt : "" });
+    }
+    if (block.type === "link" && typeof block.href === "string" && typeof block.label === "string") {
+      blocks.push({ type: "link", href: block.href, label: block.label });
+    }
   }
   if (blocks.length === 0) return null;
   const featured = isRecord(value.featuredImage) && typeof value.featuredImage.src === "string"
@@ -51,6 +68,7 @@ function parsePost(value: unknown, slugFromFile: string): StructuredPost | null 
     metaDescription: typeof value.metaDescription === "string" ? value.metaDescription : "",
     blocks,
     featuredImage: featured,
+    publishAt: typeof value.publishAt === "string" ? value.publishAt : "",
   };
 }
 

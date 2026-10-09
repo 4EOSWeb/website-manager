@@ -1,7 +1,8 @@
 import { randomBytes } from "node:crypto";
 import { authorize, authzResponse } from "@/lib/authorize";
 import { recordAudit } from "@/lib/audit";
-import { blogDraftSchema, homeDraftSchema, zodFieldErrors, defaultHomeDraft } from "@/lib/content-schema";
+import { blogDraftSchema, zodFieldErrors } from "@/lib/content-schema";
+import { normalizeSiteDraft } from "@/lib/page-documents";
 import { prisma } from "@/lib/prisma";
 import { syncDraftToWorkspace } from "@/lib/publish";
 
@@ -48,18 +49,20 @@ export async function PUT(request: Request, { params }: Params) {
             status: "DRAFT",
           },
         });
-    const page = await prisma.page.findUnique({ where: { websiteId_route: { websiteId, route: "/" } } });
-    const draft = page
+    const home = await prisma.page.findUnique({ where: { websiteId_route: { websiteId, route: "/" } } });
+    const draft = home
       ? await prisma.workspaceDraft.findUnique({
-          where: { websiteId_userId_pageId: { websiteId, userId: actor.user.id, pageId: page.id } },
+          where: { websiteId_userId_pageId: { websiteId, userId: actor.user.id, pageId: home.id } },
         })
       : null;
-    const home = homeDraftSchema.safeParse(draft?.draftData);
-    const posts = await prisma.blogPost.findMany({ where: { websiteId, status: "DRAFT" } });
+    const posts = await prisma.blogPost.findMany({ where: { websiteId, status: { in: ["DRAFT", "SCHEDULED"] } } });
     await syncDraftToWorkspace(
       websiteId,
-      home.success ? home.data : defaultHomeDraft,
-      posts.map((post) => post.content as never),
+      normalizeSiteDraft(draft?.draftData),
+      posts.flatMap((post) => {
+        const content = blogDraftSchema.safeParse(post.content);
+        return content.success ? [content.data] : [];
+      }),
     );
     await recordAudit({
       websiteId,

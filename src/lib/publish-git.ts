@@ -12,10 +12,20 @@ const ADAPTER_FILES = new Set([
   "src/app/insights/page.tsx",
   "src/app/insights/[slug]/page.tsx",
   "src/components/site/hero-content-image.tsx",
-  "src/components/site/editor-preview-script.tsx",
+  "src/components/site/canvas-script.ts",
   "src/components/site/structured-article.tsx",
+  "src/components/site/editor-regions.tsx",
+  "src/components/site/home-canvas.tsx",
+  "src/components/site/section-view.tsx",
+  "src/components/site/blocks.tsx",
+  "src/components/site/nav-links.tsx",
+  "src/components/site/mobile-nav.tsx",
   "src/lib/structured-posts.ts",
+  "src/lib/editor-site.ts",
+  "src/lib/editor-nav.ts",
+  "src/app/[slug]/page.tsx",
   "src/content/pages/home.json",
+  "src/content/editor/site.json",
 ]);
 
 export function assertAllowedPath(filePath: string) {
@@ -24,7 +34,7 @@ export function assertAllowedPath(filePath: string) {
   }
   const content =
     filePath.startsWith("src/content/blog/") && filePath.endsWith(".json") ||
-    filePath.startsWith("public/media/") && /\.(png|jpe?g|webp)$/i.test(filePath);
+    filePath.startsWith("public/media/") && /\.(png|jpe?g|webp|svg)$/i.test(filePath);
   if (!ADAPTER_FILES.has(filePath) && !content) throw new Error("That file cannot be saved.");
 }
 

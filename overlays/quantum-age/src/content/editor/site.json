@@ -1,0 +1,270 @@
+{
+  "version": 2,
+  "sectionTemplates": [],
+  "pages": [
+    {
+      "seoTitle": "Home",
+      "metaDescription": "",
+      "archived": false,
+      "locked": false,
+      "id": "page_home",
+      "route": "/",
+      "title": "Home",
+      "template": "home",
+      "navVisible": true,
+      "sections": [
+        {
+          "id": "hero",
+          "type": "preset",
+          "hidden": false,
+          "preset": "hero",
+          "providerLocked": false,
+          "tagline": "Elevate strategy. Accelerate growth.",
+          "positioning": "The only marketing firm in senior care steeped in both consumer and business-to-business.",
+          "buttonLabel": "Start a conversation",
+          "buttonHref": "/contact",
+          "heroImage": {
+            "src": "",
+            "alt": "",
+            "placement": "with-copy",
+            "align": "start",
+            "width": "medium",
+            "aspect": "auto",
+            "focal": "center"
+          },
+          "overlayName": "Hero callouts",
+          "overlay": []
+        },
+        {
+          "id": "audience",
+          "type": "preset",
+          "hidden": false,
+          "preset": "audience",
+          "providerLocked": false,
+          "heading": "Who we work with"
+        },
+        {
+          "id": "who",
+          "type": "preset",
+          "hidden": false,
+          "preset": "who",
+          "providerLocked": false,
+          "heading": "An agile, responsive ally — an extension of your team"
+        },
+        {
+          "id": "solutions",
+          "type": "preset",
+          "hidden": false,
+          "preset": "solutions",
+          "providerLocked": false,
+          "heading": "Six solution areas, one collaborative team",
+          "body": "Comprehensive marketing solutions for healthcare organizations, combined around what you need now."
+        },
+        {
+          "id": "formula",
+          "type": "preset",
+          "hidden": false,
+          "preset": "formula",
+          "providerLocked": true
+        },
+        {
+          "id": "team",
+          "type": "preset",
+          "hidden": false,
+          "preset": "team",
+          "providerLocked": false,
+          "heading": "Experts in senior care marketing"
+        },
+        {
+          "id": "references",
+          "type": "preset",
+          "hidden": false,
+          "preset": "references",
+          "providerLocked": false,
+          "heading": "What our clients say"
+        },
+        {
+          "id": "insights",
+          "type": "preset",
+          "hidden": false,
+          "preset": "insights",
+          "providerLocked": false,
+          "heading": "Writing on senior care, aging services and B2B marketing"
+        },
+        {
+          "id": "cta",
+          "type": "preset",
+          "hidden": false,
+          "preset": "cta",
+          "providerLocked": false,
+          "heading": "Ready to accelerate your growth?",
+          "body": "Let's collaborate to elevate your strategy and achieve measurable results."
+        }
+      ]
+    },
+    {
+      "seoTitle": "Solutions",
+      "metaDescription": "",
+      "archived": false,
+      "locked": false,
+      "id": "page_solutions",
+      "route": "/solutions",
+      "title": "Solutions",
+      "template": "marketing",
+      "navVisible": false,
+      "sections": [
+        {
+          "id": "designed",
+          "type": "designed",
+          "hidden": false,
+          "title": "Comprehensive marketing solutions, tailored to your goals",
+          "lead": "Six solution areas for healthcare and senior care organizations. Flexible solutions that meet you where you are, from launching something new to getting more from what you already have."
+        }
+      ]
+    },
+    {
+      "seoTitle": "Approach",
+      "metaDescription": "",
+      "archived": false,
+      "locked": false,
+      "id": "page_approach",
+      "route": "/approach",
+      "title": "Approach",
+      "template": "marketing",
+      "navVisible": false,
+      "sections": [
+        {
+          "id": "designed",
+          "type": "designed",
+          "hidden": false,
+          "title": "Helping you achieve your goals.",
+          "lead": "We collaborate with you to understand your goals, prioritize what matters most, and deliver measurable results that move your organization forward."
+        }
+      ]
+    },
+    {
+      "seoTitle": "About",
+      "metaDescription": "",
+      "archived": false,
+      "locked": false,
+      "id": "page_about",
+      "route": "/about",
+      "title": "About",
+      "template": "marketing",
+      "navVisible": false,
+      "sections": [
+        {
+          "id": "designed",
+          "type": "designed",
+          "hidden": false,
+          "title": "Build. Grow. Achieve. Maximize. Influence.",
+          "lead": "Mobilizing leading experts to help healthcare organizations focused on growth achieve their goals."
+        }
+      ]
+    },
+    {
+      "seoTitle": "Team",
+      "metaDescription": "",
+      "archived": false,
+      "locked": false,
+      "id": "page_team",
+      "route": "/team",
+      "title": "Team",
+      "template": "marketing",
+      "navVisible": false,
+      "sections": [
+        {
+          "id": "designed",
+          "type": "designed",
+          "hidden": false,
+          "title": "Experts in senior care marketing",
+          "lead": "Our collaborative team brings together experts with 20-35+ years of experience in healthcare marketing, senior living operations, content development, technology, and strategic advisory."
+        }
+      ]
+    },
+    {
+      "seoTitle": "References",
+      "metaDescription": "",
+      "archived": false,
+      "locked": false,
+      "id": "page_references",
+      "route": "/references",
+      "title": "References",
+      "template": "marketing",
+      "navVisible": false,
+      "sections": [
+        {
+          "id": "designed",
+          "type": "designed",
+          "hidden": false,
+          "title": "Trusted by leading healthcare organizations",
+          "lead": "What clients have said about working with us, and the kinds of organizations we serve."
+        }
+      ]
+    },
+    {
+      "seoTitle": "Insights",
+      "metaDescription": "",
+      "archived": false,
+      "locked": false,
+      "id": "page_insights",
+      "route": "/insights",
+      "title": "Insights",
+      "template": "marketing",
+      "navVisible": false,
+      "sections": [
+        {
+          "id": "designed",
+          "type": "designed",
+          "hidden": false,
+          "title": "Insights that drive growth",
+          "lead": "Market intelligence, strategic playbooks, and proven tactics for the longevity economy."
+        }
+      ]
+    },
+    {
+      "seoTitle": "Contact",
+      "metaDescription": "",
+      "archived": false,
+      "locked": false,
+      "id": "page_contact",
+      "route": "/contact",
+      "title": "Contact",
+      "template": "marketing",
+      "navVisible": false,
+      "sections": [
+        {
+          "id": "designed",
+          "type": "designed",
+          "hidden": false,
+          "title": "Let's collaborate",
+          "lead": "Helping you thrive in the longevity economy like never before. Ready to accelerate your growth? We're here to help."
+        }
+      ]
+    },
+    {
+      "seoTitle": "Privacy",
+      "metaDescription": "",
+      "archived": false,
+      "locked": true,
+      "id": "page_privacy",
+      "route": "/privacy",
+      "title": "Privacy",
+      "template": "legal",
+      "navVisible": false,
+      "sections": []
+    },
+    {
+      "seoTitle": "Terms",
+      "metaDescription": "",
+      "archived": false,
+      "locked": true,
+      "id": "page_terms",
+      "route": "/terms",
+      "title": "Terms",
+      "template": "legal",
+      "navVisible": false,
+      "sections": []
+    }
+  ]
+}

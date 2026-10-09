@@ -40,7 +40,10 @@ function copyOverlay(destination: string) {
     const target = path.join(destination, relative);
     // Draft content is written after the overlay. Do not put the template copy back on top of it.
     const isDraftContent =
-      relative === "src/content/pages/home.json" || relative.startsWith("src/content/blog/") || relative.startsWith("public/media/");
+      relative === "src/content/pages/home.json" ||
+      relative === "src/content/editor/site.json" ||
+      relative.startsWith("src/content/blog/") ||
+      relative.startsWith("public/media/");
     if (isDraftContent && fs.existsSync(target)) continue;
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.copyFileSync(file, target);

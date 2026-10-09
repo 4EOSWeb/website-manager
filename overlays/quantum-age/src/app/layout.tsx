@@ -4,6 +4,8 @@ import { PrototypeBanner, SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SmoothScroll } from "@/components/motion/smooth-scroll";
 import { EditorPreviewScript } from "@/components/site/editor-preview-script";
+import { EditorPreviewProvider } from "@/components/site/editor-preview-flag";
+import { EditorRegions } from "@/components/site/editor-regions";
 import { site } from "@/content/site";
 import "lenis/dist/lenis.css";
 import "./globals.css";
@@ -52,7 +54,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${figtree.variable} ${sourceSerif.variable}`}>
       <body className="flex min-h-dvh flex-col">
+        {process.env.EDITOR_PREVIEW === "1" ? null : <style>{`[data-hidden="true"]{display:none !important}`}</style>}
         <EditorPreviewScript />
+        <EditorPreviewProvider enabled={process.env.EDITOR_PREVIEW === "1"}>
         <SmoothScroll>
           <a
             href="#main"
@@ -63,10 +67,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <PrototypeBanner />
           <SiteHeader />
           <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
-            {children}
+            <EditorRegions>{children}</EditorRegions>
           </main>
           <SiteFooter />
         </SmoothScroll>
+        </EditorPreviewProvider>
       </body>
     </html>
   );

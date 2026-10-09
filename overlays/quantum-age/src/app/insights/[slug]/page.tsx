@@ -52,15 +52,18 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <header className="border-b border-stone">
           <div className="container-page pt-10 pb-12 md:pt-14 md:pb-16">
             <p className="eyebrow text-muted-foreground">Insights draft</p>
-            <h1 id="article-title" className="text-h1 mt-4 max-w-[52rem]">{structured.title}</h1>
-            <p className="mt-6 text-muted-foreground">{structured.authorDisplayName}</p>
+            <h1 id="article-title" className="text-h1 mt-4 max-w-[52rem]" data-blog-field="title">{structured.title}</h1>
+            <p className="mt-6 text-muted-foreground" data-blog-field="author">{structured.authorDisplayName}</p>
+            {structured.publishAt ? <p className="mt-3 text-sm text-muted-foreground">Requested publish time: {structured.publishAt}. The live site still updates only after review.</p> : null}
           </div>
         </header>
         <div className="container-page py-12 md:py-16">
           {structured.featuredImage?.src ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={structured.featuredImage.src} alt={structured.featuredImage.alt} className="mb-12 h-auto w-full max-w-[52rem] bg-stone" />
-          ) : null}
+            <img src={structured.featuredImage.src} alt={structured.featuredImage.alt} data-image="true" data-blog-field="featured" className="mb-12 h-auto w-full max-w-[52rem] bg-stone" />
+          ) : (
+            <p className="mb-8 text-sm text-muted-foreground" data-image="true" data-blog-field="featured">Add your first image</p>
+          )}
           <StructuredArticle post={structured} />
         </div>
       </article>
@@ -136,7 +139,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 className="mb-12 h-auto w-full rounded-sm bg-stone"
               />
             )}
-            <div id="article-body" className="prose-article" dangerouslySetInnerHTML={{ __html: article.body }} />
+            <div data-locked="provider">
+              <p className="mb-6 border border-stone bg-[#efebe4] px-4 py-3 text-sm">This article is kept as it was published. New Insights posts are edited as structured drafts. This one stays as it is.</p>
+              <div id="article-body" className="prose-article" dangerouslySetInnerHTML={{ __html: article.body }} />
+            </div>
             <ReadingProgress targetId="article-body" />
           </div>
           <aside className="lg:col-span-3 lg:col-start-10" aria-label="About this article">

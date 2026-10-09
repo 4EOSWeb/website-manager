@@ -1,5 +1,6 @@
 import { authorize, authzResponse } from "@/lib/authorize";
-import { blogDraftSchema, defaultHomeDraft, homeDraftSchema } from "@/lib/content-schema";
+import { blogDraftSchema } from "@/lib/content-schema";
+import { normalizeSiteDraft } from "@/lib/page-documents";
 import { prisma } from "@/lib/prisma";
 import { submitForPublish } from "@/lib/publish";
 
@@ -16,8 +17,7 @@ export async function POST(_request: Request, { params }: Params) {
           orderBy: { updatedAt: "desc" },
         })
       : null;
-    const home = homeDraftSchema.safeParse(draft?.draftData);
-    const posts = await prisma.blogPost.findMany({ where: { websiteId, status: "DRAFT" } });
+    const posts = await prisma.blogPost.findMany({ where: { websiteId, status: { in: ["DRAFT", "SCHEDULED"] } } });
     const blog = posts.flatMap((post) => {
       const parsed = blogDraftSchema.safeParse(post.content);
       return parsed.success ? [parsed.data] : [];
@@ -25,7 +25,7 @@ export async function POST(_request: Request, { params }: Params) {
     const request = await submitForPublish({
       user: actor.user,
       website: actor.website,
-      home: home.success ? home.data : defaultHomeDraft,
+      site: normalizeSiteDraft(draft?.draftData),
       posts: blog,
     });
     return Response.json({

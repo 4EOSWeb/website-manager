@@ -6,7 +6,7 @@ const internalPath = z
 
 const mediaPath = z
   .string()
-  .regex(/^$|^\/media\/[a-z0-9][a-z0-9._-]*\.(png|jpe?g|webp)$/i, "Choose an image from this website's library.");
+  .regex(/^$|^\/media\/[a-z0-9][a-z0-9._-]*\.(png|jpe?g|webp|svg)$/i, "Choose an image from this website's library.");
 
 export const heroImageSchema = z.object({
   src: mediaPath,
@@ -53,6 +53,13 @@ export const blogBlockSchema = z.discriminatedUnion("type", [
     ordered: z.boolean(),
     items: z.array(z.string().max(500)).max(20),
   }),
+  z.object({
+    type: z.literal("table"),
+    headers: z.array(z.string().max(80)).min(1).max(6),
+    rows: z.array(z.array(z.string().max(200)).max(6)).max(20),
+  }),
+  z.object({ type: z.literal("image"), src: mediaPath, alt: z.string().max(200) }),
+  z.object({ type: z.literal("link"), href: internalPath, label: z.string().max(120) }),
 ]);
 
 export const blogDraftSchema = z.object({
@@ -73,6 +80,7 @@ export const blogDraftSchema = z.object({
       alt: z.string().max(200),
     })
     .nullable(),
+  publishAt: z.string().max(40).optional(),
 });
 
 export type BlogDraft = z.infer<typeof blogDraftSchema>;
@@ -112,3 +120,236 @@ export const defaultBlogDraft: BlogDraft = {
 export function zodFieldErrors(error: z.ZodError): string {
   return error.issues.map((issue) => issue.message).join(" ");
 }
+
+/** Leftover test image. It is not part of the Quantum Age design. */
+export const COPPER_TEST_IMAGE = "/media/ee77ec25b974e4a0.png";
+
+export const PROVIDER_LOCK_MESSAGE =
+  "This item isn't typically editable through the website editor. Please contact your website provider if you need changes made to this section.";
+
+export const SITE_AUTHORS = [
+  "CC Andrews",
+  "Edie Deane",
+  "Tanya Hartsoe",
+  "Wendy Bullard",
+  "Louis Lenzmeier",
+  "Joe Whitt",
+  "Joanne Kaldy",
+  "Jaret Andrews",
+  "Meg LaPorte",
+  "Quantum Age",
+] as const;
+
+const share = z.number().finite().min(0).max(1);
+export const placementSchema = z
+  .object({
+    x: share,
+    y: share,
+    w: share,
+    h: share,
+  })
+  .strict();
+
+export type Placement = z.infer<typeof placementSchema>;
+
+const blockId = z.string().regex(/^[a-zA-Z0-9_-]{1,40}$/);
+
+const videoUrl = z
+  .string()
+  .trim()
+  .max(300)
+  .refine(
+    (value) => value === "" || /^https:\/\/(www\.)?(youtube\.com\/watch\?v=[\w-]+|youtu\.be\/[\w-]+|vimeo\.com\/\d+)/.test(value),
+    "Paste a YouTube or Vimeo link.",
+  );
+
+export const freeformItemSchema = z
+  .object({
+    id: blockId,
+    kind: z.enum(["text", "heading", "image", "button", "callout", "testimonial", "promo", "graphic"]),
+    hidden: z.boolean(),
+    locked: z.boolean(),
+    groupId: z.string().max(40).optional(),
+    zIndex: z.number().int().min(0).max(200),
+    text: z.string().max(4000).optional(),
+    href: z.string().max(300).optional(),
+    src: mediaPath.optional(),
+    alt: z.string().max(200).optional(),
+    caption: z.string().max(200).optional(),
+    desktop: placementSchema,
+    tablet: placementSchema.optional(),
+    mobile: placementSchema.optional(),
+  })
+  .strict();
+
+export type FreeformItem = z.infer<typeof freeformItemSchema>;
+
+const sectionBase = { id: blockId, hidden: z.boolean() };
+
+export const sectionSchema = z.discriminatedUnion("type", [
+  z
+    .object({
+      ...sectionBase,
+      type: z.literal("preset"),
+      preset: z.enum(["hero", "audience", "who", "solutions", "formula", "team", "references", "insights", "cta"]),
+      providerLocked: z.boolean(),
+      tagline: z.string().max(160).optional(),
+      positioning: z.string().max(400).optional(),
+      buttonLabel: z.string().max(60).optional(),
+      buttonHref: internalPath.optional(),
+      heroImage: heroImageSchema.optional(),
+      overlayName: z.string().max(80).optional(),
+      overlay: z.array(freeformItemSchema).max(40).optional(),
+      heading: z.string().max(200).optional(),
+      body: z.string().max(2000).optional(),
+    })
+    .strict(),
+  z.object({ ...sectionBase, type: z.literal("heading"), text: z.string().max(200), level: z.union([z.literal(2), z.literal(3)]) }).strict(),
+  z.object({ ...sectionBase, type: z.literal("paragraph"), text: z.string().max(4000) }).strict(),
+  z.object({ ...sectionBase, type: z.literal("text"), text: z.string().max(4000) }).strict(),
+  z.object({ ...sectionBase, type: z.literal("button"), label: z.string().max(60), href: internalPath }).strict(),
+  z.object({ ...sectionBase, type: z.literal("image"), src: mediaPath, alt: z.string().max(200), caption: z.string().max(200) }).strict(),
+  z
+    .object({
+      ...sectionBase,
+      type: z.literal("gallery"),
+      images: z.array(z.object({ src: mediaPath, alt: z.string().max(200) }).strict()).max(12),
+    })
+    .strict(),
+  z.object({ ...sectionBase, type: z.literal("divider") }).strict(),
+  z.object({ ...sectionBase, type: z.literal("spacer"), size: z.enum(["s", "m", "l"]) }).strict(),
+  z.object({ ...sectionBase, type: z.literal("quote"), text: z.string().max(1000), cite: z.string().max(120) }).strict(),
+  z.object({ ...sectionBase, type: z.literal("video"), url: videoUrl }).strict(),
+  z
+    .object({
+      ...sectionBase,
+      type: z.literal("cta"),
+      heading: z.string().max(160),
+      body: z.string().max(400),
+      label: z.string().max(60),
+      href: internalPath,
+    })
+    .strict(),
+  z.object({ ...sectionBase, type: z.literal("card"), heading: z.string().max(120), body: z.string().max(600) }).strict(),
+  z
+    .object({
+      ...sectionBase,
+      type: z.literal("features"),
+      heading: z.string().max(160),
+      items: z.array(z.object({ title: z.string().max(80), body: z.string().max(240) }).strict()).max(6),
+    })
+    .strict(),
+  z
+    .object({
+      ...sectionBase,
+      type: z.literal("faq"),
+      heading: z.string().max(160),
+      items: z.array(z.object({ q: z.string().max(200), a: z.string().max(800) }).strict()).max(12),
+    })
+    .strict(),
+  z
+    .object({
+      ...sectionBase,
+      type: z.literal("testimonial"),
+      quote: z.string().max(600),
+      name: z.string().max(80),
+      role: z.string().max(80),
+    })
+    .strict(),
+  z
+    .object({
+      ...sectionBase,
+      type: z.literal("form"),
+      nameLabel: z.string().max(40),
+      emailLabel: z.string().max(40),
+      messageLabel: z.string().max(40),
+      buttonLabel: z.string().max(40),
+    })
+    .strict(),
+  z.object({ ...sectionBase, type: z.literal("freeform"), name: z.string().max(80), items: z.array(freeformItemSchema).max(40) }).strict(),
+  z.object({ ...sectionBase, type: z.literal("embed"), title: z.string().max(120), url: z.string().trim().url().max(300) }).strict(),
+  z.object({ ...sectionBase, type: z.literal("designed"), title: z.string().max(200), lead: z.string().max(800) }).strict(),
+]);
+
+export type Section = z.infer<typeof sectionSchema>;
+
+const BUILT_IN_ROUTES = new Set([
+  "/",
+  "/about",
+  "/approach",
+  "/solutions",
+  "/team",
+  "/references",
+  "/insights",
+  "/contact",
+  "/privacy",
+  "/terms",
+  "/prototype-notes",
+]);
+
+const CUSTOM_TEMPLATES = new Set(["blank", "landing", "service", "resource", "insights-landing"]);
+
+export const pageDocumentSchema = z
+  .object({
+    id: blockId,
+    route: z.string().regex(/^\/(?:[a-z0-9]+(?:-[a-z0-9]+)*)?$/, "Use a short address such as /new-service."),
+    title: z.string().trim().min(1).max(80),
+    template: z.enum(["home", "marketing", "legal", "blank", "landing", "service", "resource", "insights-landing"]),
+    navVisible: z.boolean(),
+    archived: z.boolean(),
+    seoTitle: z.string().max(70),
+    metaDescription: z.string().max(160),
+    locked: z.boolean(),
+    sections: z.array(sectionSchema).max(80),
+  })
+  .strict();
+
+export type PageDocument = z.infer<typeof pageDocumentSchema>;
+
+export const sectionTemplateSchema = z
+  .object({
+    id: blockId,
+    name: z.string().trim().min(1).max(80),
+    section: sectionSchema,
+  })
+  .strict();
+
+export const siteDraftSchema = z
+  .object({
+    version: z.literal(2),
+    pages: z.array(pageDocumentSchema).min(1).max(40),
+    sectionTemplates: z.array(sectionTemplateSchema).max(40),
+  })
+  .strict()
+  .superRefine((site, ctx) => {
+    const routes = new Set<string>();
+    if (!site.pages.some((page) => page.route === "/")) {
+      ctx.addIssue({ code: "custom", message: "The homepage is required." });
+    }
+    for (const page of site.pages) {
+      if (routes.has(page.route)) ctx.addIssue({ code: "custom", message: "Two pages cannot share a web address." });
+      routes.add(page.route);
+      if (page.route === "/" && page.archived) ctx.addIssue({ code: "custom", message: "The homepage cannot be archived." });
+      if (CUSTOM_TEMPLATES.has(page.template) && BUILT_IN_ROUTES.has(page.route)) {
+        ctx.addIssue({ code: "custom", message: "That address is already used by this website." });
+      }
+      const ids = new Set<string>();
+      for (const section of page.sections) {
+        if (ids.has(section.id)) ctx.addIssue({ code: "custom", message: "Each section needs its own place on the page." });
+        ids.add(section.id);
+        if (section.type === "embed" && !section.url.startsWith("https://")) {
+          ctx.addIssue({ code: "custom", message: "An embed needs an https link." });
+        }
+        if (section.type === "freeform") {
+          const itemIds = new Set<string>();
+          for (const item of section.items) {
+            if (itemIds.has(item.id)) ctx.addIssue({ code: "custom", message: "Each item in a zone needs its own place." });
+            itemIds.add(item.id);
+          }
+        }
+      }
+    }
+  });
+
+export type SiteDraft = z.infer<typeof siteDraftSchema>;
+export type SectionTemplate = z.infer<typeof sectionTemplateSchema>;

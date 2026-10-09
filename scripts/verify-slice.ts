@@ -7,6 +7,7 @@ import { can, landingPath, permissionsFor } from "../src/lib/roles.ts";
 import { assertAllowedPath, commitAllowedChanges, openPullRequest } from "../src/lib/publish-git.ts";
 import { rewritePreviewBody } from "../src/lib/preview-proxy.ts";
 import { sniffImage } from "../src/lib/images.ts";
+import { COPPER_TEST_IMAGE, defaultHomeDraft, placementSchema } from "../src/lib/content-schema.ts";
 
 const exec = promisify(execFile);
 
@@ -34,6 +35,11 @@ assert(rejected, "path traversal is rejected");
 const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0]);
 assert(sniffImage(png) === "png", "png signature is recognized");
 assert(sniffImage(Buffer.from("not an image")) === null, "text is not an image");
+assert(placementSchema.safeParse({ x: 0.1, y: 0.2, w: 0.3, h: 0.4 }).success, "a placement share is accepted");
+assert(!placementSchema.safeParse({ x: 10, y: 40, w: 300, h: 180 }).success, "pixel positions are rejected");
+assert(!placementSchema.safeParse({ x: 0.1, y: 0.2, w: 0.3, h: 0.4, width: 400 }).success, "pixel fields are rejected");
+assert(COPPER_TEST_IMAGE === "/media/ee77ec25b974e4a0.png", "the leftover test image is identified");
+assert(defaultHomeDraft.heroImage.src === "", "a new homepage starts without an image");
 
 const rewritten = rewritePreviewBody('<a href="/about">About</a>', "/preview/web_quantum_age", "text/html", {
   accessToken: "abc.def",

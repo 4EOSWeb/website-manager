@@ -2,7 +2,9 @@ import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { recordAudit } from "@/lib/audit";
-import type { HomeDraft, BlogDraft } from "@/lib/content-schema";
+import type { BlogDraft, SiteDraft } from "@/lib/content-schema";
+import { collectMedia, changeLines } from "@/lib/editor-ops";
+import { heroFields } from "@/lib/page-documents";
 import { githubAppConfigured } from "@/lib/dev-auth";
 import { installationClient, pushBranch } from "@/lib/github";
 import { mediaRoot } from "@/lib/media";
@@ -20,73 +22,72 @@ const ADAPTER_FILES = [
   "src/app/insights/page.tsx",
   "src/app/insights/[slug]/page.tsx",
   "src/components/site/hero-content-image.tsx",
-  "src/components/site/editor-preview-script.tsx",
+  "src/components/site/canvas-script.ts",
   "src/components/site/structured-article.tsx",
+  "src/components/site/editor-regions.tsx",
+  "src/components/site/home-canvas.tsx",
+  "src/components/site/section-view.tsx",
+  "src/components/site/blocks.tsx",
+  "src/components/site/nav-links.tsx",
+  "src/components/site/mobile-nav.tsx",
   "src/lib/structured-posts.ts",
+  "src/lib/editor-site.ts",
+  "src/lib/editor-nav.ts",
+  "src/app/[slug]/page.tsx",
+  "src/content/editor/site.json",
 ];
 
-export async function syncDraftToWorkspace(websiteId: string, home: HomeDraft, posts: BlogDraft[]) {
+function mediaFiles(websiteId: string, names: Set<string>) {
+  const files: { relativePath: string; contents: string | Buffer }[] = [];
+  for (const filename of names) {
+    if (!/^[\w.-]+$/.test(filename)) continue;
+    const stored = path.join(mediaRoot(websiteId), filename);
+    if (fs.existsSync(stored)) files.push({ relativePath: `public/media/${filename}`, contents: fs.readFileSync(stored) });
+  }
+  return files;
+}
+
+export async function syncDraftToWorkspace(websiteId: string, site: SiteDraft, posts: BlogDraft[]) {
   const dir = await ensureWorkspace(websiteId);
+  const home = heroFields(site);
+  const names = collectMedia(site);
+  for (const post of posts) collectMedia(post, names);
   const files: { relativePath: string; contents: string | Buffer }[] = [
+    { relativePath: "src/content/editor/site.json", contents: `${JSON.stringify(site, null, 2)}\n` },
     { relativePath: "src/content/pages/home.json", contents: `${JSON.stringify(home, null, 2)}\n` },
+    ...mediaFiles(websiteId, names),
   ];
   for (const post of posts) {
     files.push({
       relativePath: `src/content/blog/${post.slug}.json`,
       contents: `${JSON.stringify(post, null, 2)}\n`,
     });
-    if (post.featuredImage?.src) {
-      const filename = path.basename(post.featuredImage.src);
-      const stored = path.join(mediaRoot(websiteId), filename);
-      if (fs.existsSync(stored)) {
-        files.push({ relativePath: `public/media/${filename}`, contents: fs.readFileSync(stored) });
-      }
-    }
-  }
-  if (home.heroImage.src) {
-    const filename = path.basename(home.heroImage.src);
-    const stored = path.join(mediaRoot(websiteId), filename);
-    if (fs.existsSync(stored)) {
-      files.push({ relativePath: `public/media/${filename}`, contents: fs.readFileSync(stored) });
-    }
   }
   writePreviewContent(dir, files);
   return dir;
 }
 
-export function changeSummary(home: HomeDraft, posts: BlogDraft[]) {
-  const lines = [
-    `Heading: ${home.tagline}`,
-    `Paragraph: ${home.positioning}`,
-    `Button: ${home.primaryButton.label} → ${home.primaryButton.href}`,
-  ];
-  if (home.heroImage.src) {
-    lines.push(
-      `Image placed ${home.heroImage.placement === "beside-mark" ? "beside the logo" : "with the introduction"}, aligned ${home.heroImage.align}.`,
-    );
-  }
-  for (const post of posts) lines.push(`Insights draft: ${post.title}`);
-  return lines.join("\n");
+export function changeSummary(site: SiteDraft, posts: BlogDraft[]) {
+  return changeLines(site, posts);
 }
 
 export async function submitForPublish(options: {
   user: User;
   website: Website;
-  home: HomeDraft;
+  site: SiteDraft;
   posts: BlogDraft[];
 }) {
-  const dir = await syncDraftToWorkspace(options.website.id, options.home, options.posts);
+  const dir = await syncDraftToWorkspace(options.website.id, options.site, options.posts);
   const slug = options.website.githubRepository.replace(/[^a-z0-9-]/gi, "").toLowerCase() || "site";
   const branch = `editor/${slug}/${randomBytes(4).toString("hex")}`;
+  const mediaNames = collectMedia(options.site);
+  for (const post of options.posts) collectMedia(post, mediaNames);
   const files = [
     ...ADAPTER_FILES,
     "src/content/pages/home.json",
     ...options.posts.map((post) => `src/content/blog/${post.slug}.json`),
+    ...[...mediaNames].filter((filename) => fs.existsSync(path.join(dir, "public", "media", filename))).map((filename) => `public/media/${filename}`),
   ];
-  if (options.home.heroImage.src) files.push(`public/media/${path.basename(options.home.heroImage.src)}`);
-  for (const post of options.posts) {
-    if (post.featuredImage?.src) files.push(`public/media/${path.basename(post.featuredImage.src)}`);
-  }
   const committed = await commitAllowedChanges({
     cwd: dir,
     branch,
@@ -95,7 +96,7 @@ export async function submitForPublish(options: {
   });
   let status: "AWAITING_REVIEW" | "SAVED_LOCALLY" | "PUBLICATION_FAILED" = "SAVED_LOCALLY";
   let pullRequestUrl: string | null = null;
-  let summary = changeSummary(options.home, options.posts);
+  let summary = changeSummary(options.site, options.posts);
   if (!committed.commitSha) {
     summary = "Nothing new to send. The live website is unchanged.";
   } else if (githubAppConfigured() && options.website.githubInstallationId) {
