@@ -593,3 +593,34 @@ Routes on the version 3 draft: `/`, `/about`, `/approach`, `/contact`, `/insight
 - Destination adapter file: `adapters/quantum-age/migrate.ts` for the conversion. The column stays generic.
 - Migration risk: Overwriting `draft_data` before backups exist would lose edits. The older row must not be treated as a version 3 site.
 - Test required: `tests/unit/migrate-qa-draft.test.ts` on a copy, not on this database. `updated_at` was not changed by this read. Opening the editor earlier in the audit did move the timestamp; the payload still matched the e2e snapshot.
+
+## Synthesis
+
+### Platform modules
+
+These modules must not contain the strings `quantum-age`, `Quantum Age`, `web_quantum_age`, `insights`, `plum`, `brand-mark`, `Rings`, or `FormulaStory` as required behavior:
+
+- `src/platform/document/` — visual document version 1
+- `src/platform/registry/` — component definitions
+- `src/platform/adapter/` — the adapter contract
+- `src/platform/drag/` — parent resolution and reparenting
+- `src/platform/responsive/` — breakpoints and reflow
+- `src/platform/elements/` — generic node factories
+- `src/platform/canvas/` — preview runtime
+- `src/components/editor/` — chrome that talks to the platform, not to one site
+- `src/components/product/` — product screens
+- `src/app/` — routes that load an adapter by website id
+
+### Adapter files
+
+Quantum Age knowledge lands in `adapters/quantum-age/`: `metadata.ts`, `theme.ts`, `routes.ts`, `page-rules.ts`, `articles.ts`, `templates.ts`, `locking.ts`, `seed.ts`, `serialize.ts`, `migrate.ts`, `publish-allowlist.ts`, `commands.ts`, `media.ts`, `components/hero.ts`, `components/logo.ts`, `components/insights.ts`, and `adapter.ts`.
+
+### Rule for public components
+
+Do not edit `overlays/quantum-age/src/components/site/home-canvas.tsx`, `hero-content-image.tsx`, or other public page components to make the editor generic. The adapter describes them. The public renderer keeps rendering the current site. A later step may replace the overlay canvas script with the generic runtime. That replacement must not change the public page when `EDITOR_PREVIEW` is unset.
+
+### What stays in the hub during the transition
+
+Version 3 parsing, `flow-seed.ts`, and the current publish path stay until step 19.25. Each removal step has to show the editor, the preview, and one public page still work.
+
+This audit changed only `docs/architecture-separation.md`.
