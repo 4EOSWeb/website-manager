@@ -145,7 +145,7 @@ export function canvasScript(origin: string) {
       var item = node.getAttribute("data-item-id") ? node : null;
       var sectionNode = sectionOf(node);
       var actions = item
-        ? [["duplicate", "Duplicate"], ["hide", node.getAttribute("data-hidden") ? "Show" : "Hide"], ["lock", node.getAttribute("data-item-locked") ? "Unlock" : "Lock"], ["forward", "Forward"], ["back", "Back"], ["group", "Group"], ["delete", "Delete"]]
+        ? [["duplicate", "Duplicate"], ["hide", node.getAttribute("data-hidden") ? "Show" : "Hide"], ["drag", "Drag"], ["forward", "Forward"], ["back", "Back"], ["delete", "Delete"]]
         : [["duplicate", "Duplicate"], ["up", "Move up"], ["down", "Move down"], ["hide", node.getAttribute("data-hidden") ? "Show" : "Hide"], ["delete", "Delete"], ["template", "Save as template"], ["drag", "Drag"]];
       if (sectionNode && sectionNode.getAttribute("data-section-type") === "designed") actions = [["hide", "Hide"], ["drag", "Drag"]];
       if (!item && sectionNode && sectionNode.getAttribute("data-locked") === "provider") actions = [];
@@ -334,8 +334,16 @@ export function canvasScript(origin: string) {
       if (!drag) return;
       if (drag.kind === "section") {
         document.querySelectorAll(".eos-gap").forEach(function (node) { node.classList.remove("is-hot"); });
-        var under = document.elementFromPoint(event.clientX, event.clientY);
-        var gapNode = under && under.closest ? under.closest(".eos-gap") : null;
+        var gapNode = null;
+        var nearest = Infinity;
+        document.querySelectorAll(".eos-gap").forEach(function (node) {
+          var rect = node.getBoundingClientRect();
+          var distance = Math.abs(event.clientY - (rect.top + rect.height / 2));
+          if (distance < nearest) {
+            nearest = distance;
+            gapNode = node;
+          }
+        });
         if (gapNode) {
           gapNode.classList.add("is-hot");
           hotGap = gapNode;

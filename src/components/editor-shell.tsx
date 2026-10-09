@@ -118,6 +118,8 @@ export function EditorShell(props: {
 
   const page = pageByRoute(site, path);
   const section = page?.sections.find((item) => item.id === selection.sectionId);
+  const selectedBlock = section?.type === "flow" ? section.blocks.find((block) => block.id === selection.itemId) : undefined;
+  const selectedText = selectedBlock?.text && typeof selectedBlock.text === "object" ? selectedBlock.text.text : "";
   const activePost = posts.find((item) => path === `/insights/${item.slug}`);
 
   function remember(filename: string) {
@@ -259,6 +261,13 @@ export function EditorShell(props: {
       window.removeEventListener("keydown", reset);
     };
   }, []);
+
+  function formatBlock(kind: "bold" | "italic" | "clear") {
+    if (!selectedBlock || section?.type !== "flow") return;
+    const current = selectedBlock.text && typeof selectedBlock.text === "object" ? selectedBlock.text : { text: "", marks: [] };
+    const marks = kind === "clear" || current.text.length === 0 ? [] : [{ start: 0, end: current.text.length, kind }];
+    commit(applyText(site, path, section.id, "text", current.text, selectedBlock.id, marks), false);
+  }
 
   function runAction(action: string, sectionId: string, itemId: string, overlay: boolean, itemIdsFromCanvas: string[] = []) {
     if (action === "drag" || !sectionId) return;
@@ -752,6 +761,20 @@ export function EditorShell(props: {
               onDelete={(filename) => void removeMedia(filename)}
             />
           ) : null}
+          {selectedBlock && ["eyebrow", "heading", "paragraph", "button", "link", "card", "quote", "person"].includes(selectedBlock.kind) ? (
+            <div className="mb-4 grid gap-2 border border-[var(--line)] p-3">
+              <p className="font-medium">Text</p>
+              <p>{selectedText}</p>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => formatBlock("bold")}>Bold</button>
+                <button type="button" onClick={() => formatBlock("italic")}>Italic</button>
+                <button type="button" onClick={() => formatBlock("clear")}>Clear formatting</button>
+              </div>
+              {selectedBlock.kind === "button" || selectedBlock.kind === "link" ? (
+                <label>Where this goes<input className="field" value={selectedBlock.href ?? ""} onChange={(event) => section && commit(applyText(site, path, section.id, "href", event.target.value, selectedBlock.id), false)} /></label>
+              ) : null}
+            </div>
+          ) : null}
           {panel === "page" && !selection.locked ? (
             <Settings
               page={page}
@@ -989,7 +1012,7 @@ function Settings(props: {
           <button className="bg-[var(--ink)] px-3 py-2 text-white" type="submit">Save template</button>
         </form>
       ) : null}
-      {props.page && props.page.route !== "/" ? (
+      {props.page && !props.selection.sectionId && props.page.route !== "/" ? (
         <div className="grid gap-2 border border-[var(--line)] p-3">
           <p className="font-medium">{props.page.archived ? "Archived" : "This page"}</p>
           <label>Title in search results<input className="field" disabled={disabled} value={props.page.seoTitle} onChange={(event) => props.onPage({ seoTitle: event.target.value })} /></label>
@@ -1003,7 +1026,7 @@ function Settings(props: {
           ) : null}
         </div>
       ) : null}
-      {props.page?.route === "/" ? (
+      {props.page?.route === "/" && !props.selection.sectionId ? (
         <label>Title in search results<input className="field" disabled={disabled} value={props.page.seoTitle} onChange={(event) => props.onPage({ seoTitle: event.target.value })} /></label>
       ) : null}
       {props.section?.type === "freeform" ? (
