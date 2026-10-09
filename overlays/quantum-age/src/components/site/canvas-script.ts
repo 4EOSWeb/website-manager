@@ -111,7 +111,7 @@ function inline(fn: (...args: never[]) => unknown) {
 export function canvasScript(origin: string) {
   return `(function () {
     var origin = ${JSON.stringify(origin)};
-    if (location.search.indexOf("clean=1") !== -1) return;
+    if (location.search.indexOf("clean=1") !== -1 || window.parent === window) return;
     var LOCK = ${JSON.stringify(LOCK)};
     var COLORS = ${JSON.stringify(COLORS)};
     var ICONS = ${JSON.stringify(ICONS)};
@@ -160,7 +160,7 @@ export function canvasScript(origin: string) {
     }
     function topSections() {
       return Array.prototype.filter.call(document.querySelectorAll("[data-section-id]"), function (node) {
-        return !node.parentElement || !node.parentElement.closest("[data-section-id]");
+        return !node.parentElement || !node.parentElement.closest("[data-section-id], .eos-ui");
       });
     }
     function sectionOf(node) { return closest(node, "[data-section-id]"); }
@@ -643,6 +643,9 @@ export function canvasScript(origin: string) {
       var copy = node.cloneNode(true);
       copy.querySelectorAll(".eos-ui, .eos-handle, .eos-gap, iframe, video, audio, script").forEach(function (entry) { entry.remove(); });
       copy.classList.remove("eos-selected", "eos-hover");
+      [copy].concat(Array.prototype.slice.call(copy.querySelectorAll("[data-section-id], [data-item-id], [data-field], [id]"))).forEach(function (entry) {
+        ["data-section-id", "data-item-id", "data-block-id", "data-field", "data-freeform", "id"].forEach(function (name) { entry.removeAttribute(name); });
+      });
       copy.style.width = rect.width + "px";
       copy.style.position = "static";
       copy.style.margin = "0";
@@ -1494,7 +1497,11 @@ export function canvasScript(origin: string) {
       if (scheduled) return;
       var relevant = records.some(function (record) {
         var target = record.target;
-        return !(target && target.closest && target.closest(".eos-ui, .eos-gap, .eos-editing"));
+        if (target && target.closest && target.closest(".eos-ui, .eos-gap, .eos-editing")) return false;
+        var changed = Array.prototype.slice.call(record.addedNodes).concat(Array.prototype.slice.call(record.removedNodes));
+        return changed.some(function (node) {
+          return !(node.nodeType === 1 && node.matches && node.matches(".eos-ui, .eos-gap, .eos-handle, .eos-guide, .eos-insert-line"));
+        });
       });
       if (!relevant) return;
       scheduled = true;
