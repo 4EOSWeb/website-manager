@@ -456,3 +456,27 @@ Shared controls for links, alt text, and text style stay reusable. Modes that kn
 - Test required: The overlay items are still selectable.
 
 Reusable pieces that stay: link picker, alt text, fit and focal point, and text style. Image Content still offers Choose image. Those are not Quantum Age names.
+
+## Preview script
+
+`src/platform` will not import `overlays/quantum-age/src/components/site/canvas-script.ts`. The generic runtime is copied from `src/platform/canvas/` into the site. Legacy `4eos-reorder-block` stays until step 11.31.
+
+### overlays/quantum-age/src/components/site/canvas-script.ts
+
+- Current file: `overlays/quantum-age/src/components/site/canvas-script.ts`
+- Current behavior: Selection and the toolbar use `.eos-bar`. Line 1340 returns early when the event target is inside `.eos-bar`, so Enter on More actions is not swallowed. Drag of flow blocks posts `4eos-reorder-block` (lines 609 and 787), which reorders inside the parent. Freeform items use `readBox` and `applyBox` (lines 612 and 618) and post `4eos-place` with a `data-freeform` zone (line 637). Labels include “Freeform zone”, “Insights list”, and “Logo mark” (line 202).
+- Why it is site-specific: The script knows this document’s freeform zones, Insights, and the logo mark. Reorder-only drag is the current limit.
+- Generic replacement: `src/platform/canvas/` handles selection, drag, toolbar, and parent-relative boxes. The overlay file becomes a thin loader in step 11.31.
+- Destination adapter file: none. The runtime is platform code. The Quantum Age labels move to `adapters/quantum-age` component display names.
+- Migration risk: Removing the script before the generic runtime is synced will break selection. The public site must not load the editor runtime without `EDITOR_PREVIEW`.
+- Test required: After step 11.31, Playwright covers flow reorder, canvas place, text selection, and More actions. This audit step does not edit the script.
+
+### overlays/quantum-age/src/components/site/canvas/targets.ts
+
+- Current file: `overlays/quantum-age/src/components/site/canvas/targets.ts`
+- Current behavior: Insertion index and snap helpers for the current canvas.
+- Why it is site-specific: They live in the Quantum Age overlay even when the math is generic.
+- Generic replacement: `src/platform/drag/` and `src/platform/canvas/`.
+- Destination adapter file: none.
+- Migration risk: Unit tests import this overlay file. They must import the platform copies after the move.
+- Test required: `tests/unit/canvas.test.ts` still passes until the import path changes, then the same assertions run against the platform module.
