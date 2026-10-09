@@ -31,3 +31,32 @@ export { validateAdapterIdentity, type AdapterIdentity } from "./adapter-validat
 export { discoverAdapters } from "./discover-adapters";
 
 export { capabilityNames, hasCapability, type CapabilityFlags, type CapabilityName } from "./capabilities";
+
+export {
+  DOCUMENT_VERSION,
+  assertUniqueIds,
+  canvasBoxSchema,
+  defaultCanvasStrategy,
+  inheritedBreakpoints,
+  layoutSchema,
+  migrateDocument,
+  migrations,
+  nodeSchema,
+  nodeTypes,
+  pageSchema,
+  resolveBreakpoint,
+  resolveMissingBreakpoint,
+  resolveReflow,
+  resolveScale,
+  switchLayout,
+  validateDocument,
+  visualDocumentSchema,
+  type LayoutSettings,
+  type MigrationStep,
+  type NodeDocument,
+  type NodeType,
+  type PageDocumentV1,
+  type ResponsiveStrategy,
+  type VisualDocument,
+  type VisualPage,
+} from "./document";
