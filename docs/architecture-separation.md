@@ -540,3 +540,37 @@ The platform may enforce a lock flag. It may not name Rings, FormulaStory, or th
 - Destination adapter file: `adapters/quantum-age/components/hero.ts`
 - Migration risk: The hero frame must stay locked for a client editor. Editable text props on it must stay editable if they are editable today.
 - Test required: The browser check on 9 Oct 2026 selected the locked hero and showed that sentence. Draft JSON still matched `tests/e2e/.auth/drafts.json` afterward. Opening the editor did move `draft_0ddb6f7c7f7a.updated_at`; the payload did not change.
+
+## Templates
+
+Templates are adapter data. The platform schema must not contain `insights-landing`.
+
+### src/lib/content-schema.ts
+
+- Current file: `src/lib/content-schema.ts`, lines 478 and 485
+- Current behavior: Templates are `home`, `marketing`, `legal`, `blank`, `landing`, `service`, `resource`, and `insights-landing`. `CUSTOM_TEMPLATES` is the last five.
+- Why it is site-specific: `insights-landing` and the marketing/legal split are this site’s page kinds.
+- Generic replacement: `adapter.templates`. A page stores a template id string, not a platform enum.
+- Destination adapter file: `adapters/quantum-age/templates.ts`
+- Migration risk: Existing pages store these template strings. The migrator must map them to adapter template ids.
+- Test required: `tests/unit/qa-templates.test.ts`
+
+### src/components/editor/dialogs.tsx
+
+- Current file: `src/components/editor/dialogs.tsx`, line 19
+- Current behavior: The new-page dialog offers “Insights landing page” for `insights-landing`.
+- Why it is site-specific: The option names one site’s collection.
+- Generic replacement: The dialog lists `adapter.templates` whose `pageCreation` is true.
+- Destination adapter file: `adapters/quantum-age/templates.ts`
+- Migration risk: A second site must not see this option.
+- Test required: Harbor’s page dialog does not list Insights. Quantum Age’s dialog can list it until the adapter replaces the enum.
+
+### src/lib/page-documents.ts
+
+- Current file: `src/lib/page-documents.ts`, around line 178
+- Current behavior: `insights-landing` seeds a heading “Insights” and a paragraph about writing from the team.
+- Why it is site-specific: The starter copy names Insights.
+- Generic replacement: The template’s `starterNodes` on the adapter.
+- Destination adapter file: `adapters/quantum-age/templates.ts`
+- Migration risk: Creating a page with that template must still produce a usable page for Quantum Age.
+- Test required: Create-page unit test for the adapter template, later. Do not create a page in this audit.
