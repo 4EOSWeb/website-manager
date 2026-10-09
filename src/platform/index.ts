@@ -18,3 +18,5 @@ export {
 } from "./errors";
 
 export { err, ok, type Err, type Ok, type Result } from "./result";
+
+export { createPlatformId, isPlatformId, type PlatformIdPrefix } from "./ids";
