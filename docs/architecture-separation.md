@@ -506,3 +506,37 @@ Page capabilities replace a permanent managed state. Existing HTML bodies stay i
 - Test required: An article route still renders. A missing slug still 404s under `ensureStatic = "navigation"`. No HTML textarea is shown.
 
 Blog drafts in `src/lib/content-schema.ts` (`blogDraftSchema`) are a separate JSON shape from the visual document. They stay until the article template and the migrator cover them.
+
+## Locking
+
+The platform may enforce a lock flag. It may not name Rings, FormulaStory, or the logo. A locked node cannot be moved, deleted, or restyled unless the adapter allows unlock for that role.
+
+### overlays/quantum-age/4eos.editor.config.json
+
+- Current file: `overlays/quantum-age/4eos.editor.config.json`, `lockedComponents`
+- Current behavior: Lists `Rings`, `FormulaStory`, `globals.css`, `next.config.ts`, and `start-site.ps1`.
+- Why it is site-specific: Those are this site’s components and files.
+- Generic replacement: `externalLockedFiles` and component lock policy on the adapter.
+- Destination adapter file: `adapters/quantum-age/locking.ts`
+- Migration risk: Unlocking these files in a publish commit would let the editor rewrite production code.
+- Test required: `tests/unit/qa-adapter-locking.test.ts`. The names must not appear in `src/platform`.
+
+### Preset providerLocked and block locked
+
+- Current file: `src/lib/content-schema.ts` preset `providerLocked`, flow block `locked`, page `locked`
+- Current behavior: `deleteBlock` keeps a block when `block.locked` is true (`src/lib/editor-ops.ts` line 609). Preset sections with `providerLocked` cannot be deleted or hidden. Locked pages show “This page is managed for you.”
+- Why it is site-specific: Which nodes start locked is this site’s policy. The flag itself is generic.
+- Generic replacement: `locked` and `lockId` on the node. The adapter sets them.
+- Destination adapter file: `adapters/quantum-age/locking.ts`
+- Migration risk: A locked region that becomes unlocked is a failed migration.
+- Test required: `tests/unit/migrate-locks.test.ts`
+
+### Refusal seen in the editor
+
+- Current file: `src/lib/content-schema.ts` `PROVIDER_LOCK_MESSAGE`, rendered by `src/components/editor/inspector/index.tsx`
+- Current behavior: Selecting the locked Home hero shows “This item isn't typically editable through the website editor. Please contact your website provider if you need changes made to this section.”
+- Why it is site-specific: The message is generic. The hero being locked is not.
+- Generic replacement: The same idea, with the lock coming from the adapter. The platform does not decide that the hero is locked.
+- Destination adapter file: `adapters/quantum-age/components/hero.ts`
+- Migration risk: The hero frame must stay locked for a client editor. Editable text props on it must stay editable if they are editable today.
+- Test required: The browser check on 9 Oct 2026 selected the locked hero and showed that sentence. Draft JSON still matched `tests/e2e/.auth/drafts.json` afterward. Opening the editor did move `draft_0ddb6f7c7f7a.updated_at`; the payload did not change.
