@@ -14,6 +14,9 @@ function contentType(filename: string) {
   if (filename.endsWith(".png")) return "image/png";
   if (filename.endsWith(".webp")) return "image/webp";
   if (filename.endsWith(".svg")) return "image/svg+xml";
+  if (filename.endsWith(".mp3")) return "audio/mpeg";
+  if (filename.endsWith(".wav")) return "audio/wav";
+  if (filename.endsWith(".m4a")) return "audio/mp4";
   return "image/jpeg";
 }
 
@@ -98,7 +101,7 @@ export async function POST(request: Request, { params }: Params) {
       usedBy: [] as string[],
     });
   } catch (error) {
-    if (error instanceof Error && /image|5 MB/.test(error.message)) {
+    if (error instanceof Error && /image|audio|5 MB|8 MB/.test(error.message)) {
       return Response.json({ message: error.message }, { status: 400 });
     }
     return authzResponse(error);

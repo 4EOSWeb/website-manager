@@ -1,8 +1,14 @@
-import { HomeCanvas } from "@/components/site/home-canvas";
+import type { Metadata } from "next";
+import { PageCanvas } from "@/components/site/flow-section";
 import { readEditorPage } from "@/lib/editor-site";
+
+export const metadata: Metadata = {
+  title: "Home",
+  description: "Senior care marketing and strategy.",
+};
 
 export default function HomePage() {
   const page = readEditorPage("/");
   if (!page || page.archived) return null;
-  return <HomeCanvas page={page} />;
+  return <PageCanvas page={page} />;
 }

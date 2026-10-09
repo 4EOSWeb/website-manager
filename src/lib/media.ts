@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { imageSize, sanitizeSvg, sniffImage } from "@/lib/images";
+import { imageSize, sanitizeSvg, sniffAudio, sniffImage } from "@/lib/images";
 import { prisma } from "@/lib/prisma";
 
 const MAX_BYTES = 5_000_000;
@@ -14,12 +14,14 @@ export function mediaRoot(websiteId: string) {
 }
 
 export async function storeImage(options: { websiteId: string; userId: string; bytes: Buffer; altText: string }) {
-  if (options.bytes.length === 0 || options.bytes.length > MAX_BYTES) {
-    throw new Error("Use an image smaller than 5 MB.");
+  const audio = sniffAudio(options.bytes);
+  const limit = audio ? 8_000_000 : MAX_BYTES;
+  if (options.bytes.length === 0 || options.bytes.length > limit) {
+    throw new Error(audio ? "Use an audio file smaller than 8 MB." : "Use an image smaller than 5 MB.");
   }
-  const raster = sniffImage(options.bytes);
-  const svg = raster ? null : sanitizeSvg(options.bytes);
-  const kind = raster ?? (svg ? "svg" : null);
+  const raster = audio ? null : sniffImage(options.bytes);
+  const svg = raster || audio ? null : sanitizeSvg(options.bytes);
+  const kind = audio ?? raster ?? (svg ? "svg" : null);
   const bytes = svg ?? options.bytes;
   if (!kind) throw new Error("Use a PNG, JPEG, WebP, or SVG image.");
   const checksum = createHash("sha256").update(bytes).digest("hex");

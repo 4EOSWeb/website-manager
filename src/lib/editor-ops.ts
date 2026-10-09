@@ -99,7 +99,7 @@ function setField(section: Section, field: string, value: string): Section {
   return { ...section, [field]: value } as Section;
 }
 
-export function applyText(site: SiteDraft, route: string, sectionId: string, field: string, value: string, itemId?: string): SiteDraft {
+export function applyText(site: SiteDraft, route: string, sectionId: string, field: string, value: string, itemId?: string, marks?: { start: number; end: number; kind: "bold" | "italic" | "link" | "color"; href?: string; color?: string }[]): SiteDraft {
   return mapSection(site, route, sectionId, (section) => {
     if (section.type === "preset" && section.providerLocked) return section;
     if (itemId && section.type === "freeform") {
@@ -112,6 +112,20 @@ export function applyText(site: SiteDraft, route: string, sectionId: string, fie
       return {
         ...section,
         overlay: section.overlay.map((item) => (item.id === itemId ? { ...item, [field]: value } : item)),
+      };
+    }
+    if (itemId && section.type === "flow") {
+      return {
+        ...section,
+        blocks: section.blocks.map((block) => {
+          if (block.id !== itemId || block.locked) return block;
+          if (field === "text" || field === "detail") {
+            const current = block[field];
+            const kept = marks ?? (current && typeof current === "object" ? current.marks : []);
+            return { ...block, [field]: { text: value, marks: kept } };
+          }
+          return { ...block, [field]: value };
+        }),
       };
     }
     return setField(section, field, value);
@@ -339,7 +353,7 @@ export function setNavVisible(site: SiteDraft, route: string, navVisible: boolea
   return mapPage(site, route, (page) => ({ ...page, navVisible }));
 }
 
-export function updatePageMeta(site: SiteDraft, route: string, patch: Partial<Pick<PageDocument, "title" | "seoTitle" | "metaDescription" | "navVisible">>): SiteDraft {
+export function updatePageMeta(site: SiteDraft, route: string, patch: Partial<Pick<PageDocument, "title" | "seoTitle" | "metaDescription" | "navVisible" | "navLabel" | "parentRoute" | "hideHeader" | "shareImage">>): SiteDraft {
   return mapPage(site, route, (page) => ({ ...page, ...patch }));
 }
 
@@ -386,14 +400,102 @@ export function imageUsage(site: SiteDraft, posts: BlogDraft[], filename: string
   return [...new Set(names)];
 }
 
+export function moveFlowBlock(site: SiteDraft, route: string, sectionId: string, from: number, to: number): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    if (section.type !== "flow") return section;
+    if (from < 0 || to < 0 || from >= section.blocks.length || to > section.blocks.length || from === to || to === from + 1) return section;
+    const blocks = [...section.blocks];
+    const [moved] = blocks.splice(from, 1);
+    if (!moved) return section;
+    blocks.splice(from < to ? to - 1 : to, 0, moved);
+    return { ...section, blocks };
+  });
+}
+
+export function setBlockHidden(site: SiteDraft, route: string, sectionId: string, blockId: string, hidden: boolean): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    if (section.type !== "flow") return section;
+    return { ...section, blocks: section.blocks.map((block) => (block.id === blockId && !block.locked ? { ...block, hidden } : block)) };
+  });
+}
+
+export function deleteFlowBlock(site: SiteDraft, route: string, sectionId: string, blockId: string): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    if (section.type !== "flow") return section;
+    return { ...section, blocks: section.blocks.filter((block) => block.id !== blockId || block.locked) };
+  });
+}
+
+export function duplicateFlowBlock(site: SiteDraft, route: string, sectionId: string, blockId: string): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    if (section.type !== "flow") return section;
+    const index = section.blocks.findIndex((block) => block.id === blockId);
+    const source = section.blocks[index];
+    if (!source || source.locked) return section;
+    const copy = { ...structuredClone(source), id: createId("blk"), locked: false, pin: false };
+    const blocks = [...section.blocks];
+    blocks.splice(index + 1, 0, copy);
+    return { ...section, blocks };
+  });
+}
+
+export function pinBlock(site: SiteDraft, route: string, sectionId: string, blockId: string, pin: boolean): SiteDraft {
+  return {
+    ...site,
+    pages: site.pages.map((page) =>
+      page.route !== route
+        ? page
+        : {
+            ...page,
+            sections: page.sections.map((section) =>
+              section.type !== "flow"
+                ? section
+                : {
+                    ...section,
+                    blocks: section.blocks.map((block) => ({
+                      ...block,
+                      pin: pin && section.id === sectionId && block.id === blockId,
+                    })),
+                  },
+            ),
+          },
+    ),
+  };
+}
+
+export function reorderPages(site: SiteDraft, from: number, to: number): SiteDraft {
+  if (from < 0 || to < 0 || from >= site.pages.length || to > site.pages.length || from === to || to === from + 1) return site;
+  const pages = [...site.pages];
+  const [moved] = pages.splice(from, 1);
+  if (!moved || moved.route === "/") return site;
+  pages.splice(from < to ? to - 1 : to, 0, moved);
+  const home = pages.findIndex((page) => page.route === "/");
+  if (home > 0) {
+    const [homepage] = pages.splice(home, 1);
+    if (homepage) pages.unshift(homepage);
+  }
+  return { ...site, pages };
+}
+
+export function patchChrome(site: SiteDraft, chrome: SiteDraft["chrome"]): SiteDraft {
+  return { ...site, chrome };
+}
+
 export function changeLines(site: SiteDraft, posts: BlogDraft[]) {
   const lines: string[] = [];
   for (const page of site.pages) {
     if (page.archived) lines.push(`${page.title} is archived and stays off the public site after review.`);
     else if (page.template !== "home" && page.template !== "marketing" && page.template !== "legal") lines.push(`Page: ${page.title} (${page.route})`);
+    for (const section of page.sections) {
+      if (section.type === "form" && section.recipient) lines.push(`Form on ${page.title} keeps messages for ${section.recipient}. It does not send email until mail is connected.`);
+      if (section.type === "newsletter" && section.recipient) lines.push(`Newsletter on ${page.title} keeps signups for ${section.recipient}. It does not send email until mail is connected.`);
+    }
   }
-  const hero = site.pages.find((page) => page.route === "/")?.sections.find((section) => section.type === "preset" && section.preset === "hero");
-  if (hero && hero.type === "preset" && hero.tagline) lines.push(`Heading: ${hero.tagline}`);
+  const hero = site.pages.find((page) => page.route === "/")?.sections.find((section) => section.type === "flow" && section.layout === "hero");
+  const heading = hero && hero.type === "flow" ? hero.blocks.find((block) => block.kind === "heading") : undefined;
+  const headingText = heading?.text && typeof heading.text === "object" ? heading.text.text : "";
+  if (headingText) lines.push(`Heading: ${headingText}`);
+  if (site.chrome.analyticsId) lines.push(`Analytics id saved for review: ${site.chrome.analyticsId}. It is not added to the live site by this editor.`);
   for (const post of posts) {
     lines.push(`Insights draft: ${post.title}`);
     if (post.publishAt) {

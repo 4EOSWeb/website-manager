@@ -9,6 +9,8 @@ import {
   homeDraftSchema,
   siteDraftSchema,
 } from "./content-schema";
+import { defaultSiteDocument, upgradeDraft } from "./flow-seed";
+import { sanitizeMarks } from "./rich-text";
 
 export function createId(prefix: string) {
   const bytes = globalThis.crypto.getRandomValues(new Uint8Array(4));
@@ -32,9 +34,16 @@ export const LIBRARY_BLOCKS = [
   { type: "features", label: "Feature section" },
   { type: "faq", label: "FAQ" },
   { type: "testimonial", label: "Testimonial" },
-  { type: "form", label: "Contact form" },
+  { type: "form", label: "Form" },
   { type: "freeform", label: "Freeform zone" },
   { type: "embed", label: "Embed" },
+  { type: "audio", label: "Audio" },
+  { type: "line", label: "Line" },
+  { type: "map", label: "Map" },
+  { type: "search", label: "Search" },
+  { type: "newsletter", label: "Newsletter" },
+  { type: "social", label: "Social links" },
+  { type: "insights-summary", label: "Summary" },
 ] as const;
 
 export type LibraryBlock = (typeof LIBRARY_BLOCKS)[number]["type"];
@@ -92,6 +101,20 @@ export function createSection(type: LibraryBlock, name = "Freeform zone"): Secti
       return { id, type, hidden, name, items: [] };
     case "embed":
       return { id, type, hidden, title: "Embedded page", url: "https://example.com" };
+    case "audio":
+      return { id, type, hidden, src: "", label: "Listen" };
+    case "line":
+      return { id, type, hidden };
+    case "map":
+      return { id, type, hidden, address: "" };
+    case "search":
+      return { id, type, hidden, label: "Search this site" };
+    case "newsletter":
+      return { id, type, hidden, heading: "Get the next note", buttonLabel: "Sign up", recipient: "" };
+    case "social":
+      return { id, type, hidden, links: [] };
+    case "insights-summary":
+      return { id, type, hidden, heading: "Latest insights" };
     default:
       return { id, type: "paragraph", hidden, text: "" };
   }
@@ -114,189 +137,27 @@ export function createFreeformItem(kind: FreeformItem["kind"], index: number): F
   };
 }
 
-function preset(
-  id: string,
-  presetName: Extract<Section, { type: "preset" }>["preset"],
-  fields: Partial<Extract<Section, { type: "preset" }>> = {},
-): Section {
-  return {
-    id,
-    type: "preset",
-    hidden: false,
-    preset: presetName,
-    providerLocked: presetName === "formula",
-    ...fields,
-  };
-}
-
-function designed(title: string, lead: string): Section {
-  return { id: "designed", type: "designed", hidden: false, title, lead };
-}
-
-function page(input: Omit<PageDocument, "seoTitle" | "metaDescription" | "archived" | "locked"> & Partial<PageDocument>): PageDocument {
-  return {
-    seoTitle: input.title,
-    metaDescription: "",
-    archived: false,
-    locked: false,
-    ...input,
-  };
-}
-
 export function defaultSiteDraft(): SiteDraft {
-  return {
-    version: 2,
-    sectionTemplates: [],
-    pages: [
-      page({
-        id: "page_home",
-        route: "/",
-        title: "Home",
-        template: "home",
-        navVisible: true,
-        sections: [
-          preset("hero", "hero", {
-            tagline: defaultHomeDraft.tagline,
-            positioning: defaultHomeDraft.positioning,
-            buttonLabel: defaultHomeDraft.primaryButton.label,
-            buttonHref: defaultHomeDraft.primaryButton.href,
-            heroImage: emptyImage(),
-            overlayName: "Hero callouts",
-            overlay: [],
-          }),
-          preset("audience", "audience", { heading: "Who we work with" }),
-          preset("who", "who", { heading: "An agile, responsive ally — an extension of your team" }),
-          preset("solutions", "solutions", {
-            heading: "Six solution areas, one collaborative team",
-            body: "Comprehensive marketing solutions for healthcare organizations, combined around what you need now.",
-          }),
-          preset("formula", "formula", { providerLocked: true }),
-          preset("team", "team", { heading: "Experts in senior care marketing" }),
-          preset("references", "references", { heading: "What our clients say" }),
-          preset("insights", "insights", { heading: "Writing on senior care, aging services and B2B marketing" }),
-          preset("cta", "cta", {
-            heading: "Ready to accelerate your growth?",
-            body: "Let's collaborate to elevate your strategy and achieve measurable results.",
-          }),
-        ],
-      }),
-      page({
-        id: "page_solutions",
-        route: "/solutions",
-        title: "Solutions",
-        template: "marketing",
-        navVisible: false,
-        sections: [
-          designed(
-            "Comprehensive marketing solutions, tailored to your goals",
-            "Six solution areas for healthcare and senior care organizations. Flexible solutions that meet you where you are, from launching something new to getting more from what you already have.",
-          ),
-        ],
-      }),
-      page({
-        id: "page_approach",
-        route: "/approach",
-        title: "Approach",
-        template: "marketing",
-        navVisible: false,
-        sections: [
-          designed(
-            "Helping you achieve your goals.",
-            "We collaborate with you to understand your goals, prioritize what matters most, and deliver measurable results that move your organization forward.",
-          ),
-        ],
-      }),
-      page({
-        id: "page_about",
-        route: "/about",
-        title: "About",
-        template: "marketing",
-        navVisible: false,
-        sections: [
-          designed(
-            "Build. Grow. Achieve. Maximize. Influence.",
-            "Mobilizing leading experts to help healthcare organizations focused on growth achieve their goals.",
-          ),
-        ],
-      }),
-      page({
-        id: "page_team",
-        route: "/team",
-        title: "Team",
-        template: "marketing",
-        navVisible: false,
-        sections: [
-          designed(
-            "Experts in senior care marketing",
-            "Our collaborative team brings together experts with 20-35+ years of experience in healthcare marketing, senior living operations, content development, technology, and strategic advisory.",
-          ),
-        ],
-      }),
-      page({
-        id: "page_references",
-        route: "/references",
-        title: "References",
-        template: "marketing",
-        navVisible: false,
-        sections: [
-          designed(
-            "Trusted by leading healthcare organizations",
-            "What clients have said about working with us, and the kinds of organizations we serve.",
-          ),
-        ],
-      }),
-      page({
-        id: "page_insights",
-        route: "/insights",
-        title: "Insights",
-        template: "marketing",
-        navVisible: false,
-        sections: [
-          designed(
-            "Insights that drive growth",
-            "Market intelligence, strategic playbooks, and proven tactics for the longevity economy.",
-          ),
-        ],
-      }),
-      page({
-        id: "page_contact",
-        route: "/contact",
-        title: "Contact",
-        template: "marketing",
-        navVisible: false,
-        sections: [
-          designed(
-            "Let's collaborate",
-            "Helping you thrive in the longevity economy like never before. Ready to accelerate your growth? We're here to help.",
-          ),
-        ],
-      }),
-      page({
-        id: "page_privacy",
-        route: "/privacy",
-        title: "Privacy",
-        template: "legal",
-        navVisible: false,
-        locked: true,
-        sections: [],
-      }),
-      page({
-        id: "page_terms",
-        route: "/terms",
-        title: "Terms",
-        template: "legal",
-        navVisible: false,
-        locked: true,
-        sections: [],
-      }),
-    ],
-  };
+  return defaultSiteDocument();
 }
+
 
 function withText(type: "heading" | "paragraph", text: string): Section {
   const section = createSection(type);
   if (section.type === "heading" || section.type === "paragraph") return { ...section, text };
   return section;
+}
+
+export function catalogSection(layout: "hero" | "split" | "cards" | "list" | "stack"): Section {
+  const id = createId("sec");
+  const blocks: Extract<Section, { type: "flow" }>["blocks"] = [
+    { id: createId("blk"), kind: "heading", hidden: false, text: { text: layout === "hero" ? "Add a heading" : "A new section", marks: [] } },
+    { id: createId("blk"), kind: "paragraph", hidden: false, text: { text: "Click to add content", marks: [] } },
+  ];
+  if (layout === "cards" || layout === "list") {
+    blocks.push({ id: createId("blk"), kind: "card", hidden: false, text: { text: "First point", marks: [] } });
+  }
+  return { id, type: "flow", hidden: false, editorName: "Section", layout, blocks };
 }
 
 export function templateSections(template: PageDocument["template"]): Section[] {
@@ -351,8 +212,20 @@ function migrateHomeDraft(data: unknown): SiteDraft | null {
   return site;
 }
 
+function sanitizeRich(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sanitizeRich);
+  if (!value || typeof value !== "object") return value;
+  const record = value as Record<string, unknown>;
+  const next: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(record)) next[key] = sanitizeRich(entry);
+  if (typeof next.text === "string" && Array.isArray(record.marks)) {
+    next.marks = sanitizeMarks(next.text, record.marks as Parameters<typeof sanitizeMarks>[1]);
+  }
+  return next;
+}
+
 export function normalizeSiteDraft(data: unknown): SiteDraft {
-  const cleaned = stripCopper(data);
+  const cleaned = sanitizeRich(stripCopper(upgradeDraft(data)));
   const parsed = siteDraftSchema.safeParse(cleaned);
   if (parsed.success) return parsed.data;
   return migrateHomeDraft(cleaned) ?? defaultSiteDraft();
@@ -360,16 +233,32 @@ export function normalizeSiteDraft(data: unknown): SiteDraft {
 
 export function heroFields(site: SiteDraft) {
   const home = site.pages.find((item) => item.route === "/");
-  const hero = home?.sections.find((section) => section.type === "preset" && section.preset === "hero");
-  if (!hero || hero.type !== "preset") return defaultHomeDraft;
+  const flow = home?.sections.find((section) => section.type === "flow" && section.layout === "hero");
+  const preset = home?.sections.find((section) => section.type === "preset" && section.preset === "hero");
+  if (flow && flow.type === "flow") {
+    const heading = flow.blocks.find((item) => item.kind === "heading");
+    const paragraph = flow.blocks.find((item) => item.kind === "paragraph");
+    const button = flow.blocks.find((item) => item.kind === "button");
+    const image = flow.blocks.find((item) => item.kind === "image" && item.src);
+    return {
+      tagline: (typeof heading?.text === "object" ? heading.text.text : "") || defaultHomeDraft.tagline,
+      positioning: (typeof paragraph?.text === "object" ? paragraph.text.text : "") || defaultHomeDraft.positioning,
+      primaryButton: {
+        label: (typeof button?.text === "object" ? button.text.text : "") || defaultHomeDraft.primaryButton.label,
+        href: button?.href || defaultHomeDraft.primaryButton.href,
+      },
+      heroImage: image?.src ? { ...emptyImage(), src: image.src, alt: image.alt ?? "" } : emptyImage(),
+    };
+  }
+  if (!preset || preset.type !== "preset") return defaultHomeDraft;
   return {
-    tagline: hero.tagline || defaultHomeDraft.tagline,
-    positioning: hero.positioning || defaultHomeDraft.positioning,
+    tagline: preset.tagline || defaultHomeDraft.tagline,
+    positioning: preset.positioning || defaultHomeDraft.positioning,
     primaryButton: {
-      label: hero.buttonLabel || defaultHomeDraft.primaryButton.label,
-      href: hero.buttonHref || defaultHomeDraft.primaryButton.href,
+      label: preset.buttonLabel || defaultHomeDraft.primaryButton.label,
+      href: preset.buttonHref || defaultHomeDraft.primaryButton.href,
     },
-    heroImage: hero.heroImage?.src ? hero.heroImage : emptyImage(),
+    heroImage: preset.heroImage?.src ? preset.heroImage : emptyImage(),
   };
 }
 

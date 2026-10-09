@@ -16,7 +16,7 @@ async function requestPath() {
 export async function EditorRegions({ children }: { children: React.ReactNode }) {
   const path = await requestPath();
   const page = readEditorPage(path);
-  if (!page || path === "/" || page.template === "blank" || page.template === "landing" || page.template === "service" || page.template === "resource" || page.template === "insights-landing") {
+  if (!page || path === "/" || page.sections.some((section) => section.type === "flow") || page.template === "blank" || page.template === "landing" || page.template === "service" || page.template === "resource" || page.template === "insights-landing") {
     return children;
   }
   if (page.archived && !previewMode) return null;

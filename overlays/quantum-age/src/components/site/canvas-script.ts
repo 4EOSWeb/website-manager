@@ -37,7 +37,7 @@ export function canvasScript(origin: string) {
       if (!document.getElementById("eos-style")) {
         var style = document.createElement("style");
         style.id = "eos-style";
-        style.textContent = ".eos-gap{position:relative;height:28px;margin:-14px 0;z-index:30;display:flex;align-items:center;justify-content:center}.eos-gap .eos-line{position:absolute;left:8%;right:8%;height:2px;background:#8C4A2F;transform:scaleX(0);transition:transform .18s ease}.eos-plus{position:relative;z-index:1;width:28px;height:28px;border:0;border-radius:999px;background:#8C4A2F;color:#fff;font:700 18px/1 sans-serif;opacity:0;transition:opacity .18s ease}.eos-gap:hover,.eos-gap.is-hot{height:42px}.eos-gap:hover .eos-plus,.eos-gap.is-hot .eos-plus,.eos-gap:focus-within .eos-plus{opacity:1}.eos-gap:hover .eos-line,.eos-gap.is-hot .eos-line{transform:scaleX(1)}.eos-selected{outline:2px solid #8C4A2F;outline-offset:4px}.eos-lock{position:absolute;top:8px;left:8px;z-index:40;display:inline-flex;gap:6px;align-items:center;background:#1c1915;color:#fff;font:600 12px/1.2 sans-serif;padding:6px 8px;pointer-events:none}.eos-lock:before{content:'';width:10px;height:8px;border:2px solid #fff;border-top:0;display:inline-block;box-shadow:inset 0 8px 0 -6px #fff}.eos-bar,.eos-menu{position:fixed;z-index:70;display:flex;gap:4px;background:#fff;border:1px solid #ddd6cb;padding:4px;box-shadow:0 8px 24px rgba(28,25,21,.12)}.eos-bar button,.eos-menu button{border:0;background:transparent;padding:6px 8px;font:600 12px/1 sans-serif;color:#1c1915}.eos-bar button:hover,.eos-menu button:hover{background:#f4f1eb}.eos-handle{position:absolute;width:10px;height:10px;background:#fff;border:2px solid #8C4A2F;right:-6px;bottom:-6px;cursor:nwse-resize}[data-hidden=true]{opacity:.55}";
+        style.textContent = ".eos-gap{position:relative;height:28px;margin:-14px 0;z-index:30;display:flex;align-items:center;justify-content:center}.eos-gap .eos-line{position:absolute;left:8%;right:8%;height:2px;background:#8C4A2F;transform:scaleX(0);transition:transform .18s ease}.eos-plus{position:relative;z-index:1;width:28px;height:28px;border:0;border-radius:999px;background:#8C4A2F;color:#fff;font:700 18px/1 sans-serif;opacity:0;transition:opacity .18s ease}.eos-gap:hover,.eos-gap.is-hot{height:42px}.eos-gap:hover .eos-plus,.eos-gap.is-hot .eos-plus,.eos-gap:focus-within .eos-plus,.eos-selected + .eos-gap .eos-plus,.eos-gap:has(+ .eos-selected) .eos-plus{opacity:1}.eos-selected + .eos-gap .eos-line,.eos-gap:has(+ .eos-selected) .eos-line{transform:scaleX(1)}.eos-grid{background-image:linear-gradient(to right, rgba(140,74,47,.25) 1px, transparent 1px),linear-gradient(to bottom, rgba(140,74,47,.25) 1px, transparent 1px);background-size:8.33% 40px}.eos-gap:hover .eos-line,.eos-gap.is-hot .eos-line{transform:scaleX(1)}.eos-selected{outline:2px solid #8C4A2F;outline-offset:4px}.eos-nw{left:0;top:0;cursor:nwse-resize}.eos-ne{right:0;top:0;cursor:nesw-resize}.eos-sw{left:0;bottom:0;cursor:nesw-resize}.eos-se{right:0;bottom:0;cursor:nwse-resize}.eos-lock{position:absolute;top:8px;left:8px;z-index:40;display:inline-flex;gap:6px;align-items:center;background:#1c1915;color:#fff;font:600 12px/1.2 sans-serif;padding:6px 8px;pointer-events:none}.eos-lock:before{content:'';width:10px;height:8px;border:2px solid #fff;border-top:0;display:inline-block;box-shadow:inset 0 8px 0 -6px #fff}.eos-bar,.eos-menu{position:fixed;z-index:70;display:flex;gap:4px;background:#fff;border:1px solid #ddd6cb;padding:4px;box-shadow:0 8px 24px rgba(28,25,21,.12)}.eos-bar button,.eos-menu button{border:0;background:transparent;padding:6px 8px;font:600 12px/1 sans-serif;color:#1c1915}.eos-bar button:hover,.eos-menu button:hover{background:#f4f1eb}.eos-handle{position:absolute;width:10px;height:10px;background:#fff;border:2px solid #8C4A2F;right:-6px;bottom:-6px;cursor:nwse-resize}[data-hidden=true]{opacity:.55}";
         document.head.appendChild(style);
       }
       document.querySelectorAll("[data-locked=provider]").forEach(function (node) {
@@ -151,11 +151,14 @@ export function canvasScript(origin: string) {
       if (!item && sectionNode && sectionNode.getAttribute("data-locked") === "provider") actions = [];
       if (actions.length) showBar(node, actions);
       if (item) {
-        var handle = document.createElement("button");
-        handle.className = "eos-handle";
-        handle.type = "button";
-        handle.setAttribute("aria-label", "Resize");
-        item.appendChild(handle);
+        ["nw", "ne", "sw", "se"].forEach(function (corner) {
+          var handle = document.createElement("button");
+          handle.className = "eos-handle eos-" + corner;
+          handle.type = "button";
+          handle.dataset.corner = corner;
+          handle.setAttribute("aria-label", "Resize");
+          item.appendChild(handle);
+        });
       }
       post({
         type: "4eos-select",
@@ -190,14 +193,40 @@ export function canvasScript(origin: string) {
         post({ type: "4eos-blog", field: field.getAttribute("data-blog-field") || "text", index: field.getAttribute("data-blog-block"), value: field.textContent || "" });
         return;
       }
+      if (field.hasAttribute("data-nav-route")) {
+        post({ type: "4eos-nav", route: field.getAttribute("data-nav-route"), value: field.textContent || "" });
+        return;
+      }
+      if (field.hasAttribute("data-chrome-field")) {
+        post({ type: "4eos-chrome", field: field.getAttribute("data-chrome-field"), value: field.textContent || "" });
+        return;
+      }
       post({
         type: "4eos-text",
         sectionId: section ? section.getAttribute("data-section-id") : "",
         itemId: item ? item.getAttribute("data-item-id") : "",
         field: name || "text",
         value: field.textContent || "",
+        marks: readMarks(field),
         overlay: overlayOf(field),
       });
+    }
+    function readMarks(field) {
+      var text = field.textContent || "";
+      var marks = [];
+      function walk(node, offset) {
+        if (node.nodeType === 3) return offset + (node.textContent || "").length;
+        var start = offset;
+        var next = offset;
+        for (var i = 0; i < node.childNodes.length; i++) next = walk(node.childNodes[i], next);
+        var name = node.nodeName;
+        if (name === "STRONG" || name === "B") marks.push({ start: start, end: next, kind: "bold" });
+        if (name === "EM" || name === "I") marks.push({ start: start, end: next, kind: "italic" });
+        if (name === "A") marks.push({ start: start, end: next, kind: "link", href: node.getAttribute("href") || "" });
+        return next;
+      }
+      walk(field, 0);
+      return marks.filter(function (mark) { return mark.end > mark.start && mark.end <= text.length; });
     }
     function readBox(item) {
       var rect = item.getBoundingClientRect();
@@ -247,6 +276,8 @@ export function canvasScript(origin: string) {
       return box;
     }
     var drag = null;
+    var pendingSection = null;
+    var pendingBlock = null;
     document.addEventListener("pointerdown", function (event) {
       var target = event.target;
       if (!target || !target.closest) return;
@@ -259,6 +290,10 @@ export function canvasScript(origin: string) {
         event.preventDefault();
         return;
       }
+      var sectionBody = target.closest("[data-section-id]");
+      if (sectionBody && !target.closest("[data-field],a,button,input,textarea") && !itemOf(target)) {
+        pendingSection = { section: sectionBody, x: event.clientX, y: event.clientY };
+      }
       var handle = target.closest(".eos-handle");
       var item = itemOf(target);
       if ((handle || item) && item && item.getAttribute("data-item-locked") !== "true" && !editing) {
@@ -270,11 +305,32 @@ export function canvasScript(origin: string) {
             if (fellow !== item) fellows.push({ node: fellow, box: readBox(fellow) });
           });
         }
-        drag = { kind: handle ? "resize" : "item", item: item, box: box, x: event.clientX, y: event.clientY, fellows: fellows };
-        event.preventDefault();
+        var flow = item.closest('[data-section-type="flow"]');
+        if (flow && flow.getAttribute("data-layout") !== "fluid" && !handle) {
+          var blocks = Array.prototype.filter.call(flow.querySelectorAll("[data-item-id]"), function () { return true; });
+          pendingBlock = { item: item, sectionId: flow.getAttribute("data-section-id"), from: blocks.indexOf(item), x: event.clientX, y: event.clientY };
+        } else {
+          drag = { kind: handle ? "resize" : "item", corner: handle ? handle.dataset.corner : "", item: item, box: box, x: event.clientX, y: event.clientY, fellows: fellows };
+          event.preventDefault();
+        }
       }
     });
     document.addEventListener("pointermove", function (event) {
+      if (pendingBlock && !drag) {
+        var blockMoved = Math.abs(event.clientX - pendingBlock.x) + Math.abs(event.clientY - pendingBlock.y);
+        if (blockMoved > 8) {
+          drag = { kind: "block", item: pendingBlock.item, sectionId: pendingBlock.sectionId, from: pendingBlock.from, to: pendingBlock.from };
+          pendingBlock = null;
+        }
+      }
+      if (pendingSection && !drag) {
+        var moved = Math.abs(event.clientX - pendingSection.x) + Math.abs(event.clientY - pendingSection.y);
+        if (moved > 8) {
+          var sections = topSections();
+          drag = { kind: "section", from: sections.indexOf(pendingSection.section) };
+          pendingSection = null;
+        }
+      }
       if (!drag) return;
       if (drag.kind === "section") {
         document.querySelectorAll(".eos-gap").forEach(function (node) { node.classList.remove("is-hot"); });
@@ -286,14 +342,26 @@ export function canvasScript(origin: string) {
         }
         return;
       }
+      if (drag.kind === "block") {
+        var blocks = Array.prototype.slice.call(drag.item.parentElement ? drag.item.parentElement.children : []);
+        var under = document.elementFromPoint(event.clientX, event.clientY);
+        var target = under && under.closest ? under.closest("[data-item-id]") : null;
+        if (target && blocks.indexOf(target) >= 0) drag.to = blocks.indexOf(target);
+        return;
+      }
       var zone = drag.item.closest("[data-freeform]");
       var rect = zone.getBoundingClientRect();
       var dx = (event.clientX - drag.x) / (rect.width || 1);
       var dy = (event.clientY - drag.y) / (rect.height || 1);
       var next = { x: drag.box.x, y: drag.box.y, w: drag.box.w, h: drag.box.h };
       if (drag.kind === "resize") {
-        next.w = Math.max(0.08, drag.box.w + dx);
-        next.h = Math.max(0.08, drag.box.h + dy);
+        var corner = drag.corner || "se";
+        var left = corner.indexOf("w") >= 0;
+        var top = corner.indexOf("n") >= 0;
+        next.w = Math.max(0.08, drag.box.w + (left ? -dx : dx));
+        next.h = Math.max(0.08, drag.box.h + (top ? -dy : dy));
+        if (left) next.x = drag.box.x + drag.box.w - next.w;
+        if (top) next.y = drag.box.y + drag.box.h - next.h;
       } else {
         next.x = drag.box.x + dx;
         next.y = drag.box.y + dy;
@@ -308,7 +376,12 @@ export function canvasScript(origin: string) {
       drag.latest = next;
     });
     document.addEventListener("pointerup", function () {
+      pendingSection = null;
+      pendingBlock = null;
       if (!drag) return;
+      if (drag.kind === "block" && drag.from !== drag.to) {
+        post({ type: "4eos-reorder-block", sectionId: drag.sectionId, from: drag.from, to: drag.to });
+      }
       if (drag.kind === "section" && hotGap) {
         post({ type: "4eos-move", from: drag.from, to: Number(hotGap.dataset.index) });
       }
@@ -468,6 +541,9 @@ export function canvasScript(origin: string) {
         event.preventDefault();
         post({ type: "4eos-key", key: "z", shift: event.shiftKey });
         return;
+      }
+      if ((event.key === "g" || event.key === "G") && !editing) {
+        document.body.classList.toggle("eos-grid");
       }
       if (event.key === "Escape") {
         if (editing) editing.blur();

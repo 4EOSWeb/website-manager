@@ -23,6 +23,16 @@ const ADAPTER_FILES = new Set([
   "src/lib/structured-posts.ts",
   "src/lib/editor-site.ts",
   "src/lib/editor-nav.ts",
+  "src/app/about/page.tsx",
+  "src/app/approach/page.tsx",
+  "src/app/solutions/page.tsx",
+  "src/app/team/page.tsx",
+  "src/app/references/page.tsx",
+  "src/app/contact/page.tsx",
+  "src/app/search/page.tsx",
+  "src/components/site/flow-section.tsx",
+  "src/components/site/site-header.tsx",
+  "src/components/site/site-footer.tsx",
   "src/app/[slug]/page.tsx",
   "src/content/pages/home.json",
   "src/content/editor/site.json",
@@ -34,7 +44,7 @@ export function assertAllowedPath(filePath: string) {
   }
   const content =
     filePath.startsWith("src/content/blog/") && filePath.endsWith(".json") ||
-    filePath.startsWith("public/media/") && /\.(png|jpe?g|webp|svg)$/i.test(filePath);
+    filePath.startsWith("public/media/") && /\.(png|jpe?g|webp|svg|mp3|wav|m4a|ico)$/i.test(filePath);
   if (!ADAPTER_FILES.has(filePath) && !content) throw new Error("That file cannot be saved.");
 }
 

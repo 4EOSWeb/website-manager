@@ -35,6 +35,32 @@ export type EditorSection = {
   images?: { src?: string; alt?: string }[];
   items?: { title?: string; body?: string; q?: string; a?: string; id?: string; kind?: string; hidden?: boolean; locked?: boolean; groupId?: string; zIndex?: number; text?: string; href?: string; src?: string; alt?: string; caption?: string; desktop?: Share; tablet?: Share; mobile?: Share }[];
   overlay?: EditorSection["items"];
+  blocks?: {
+    id: string;
+    kind: string;
+    hidden?: boolean;
+    locked?: boolean;
+    pin?: boolean;
+    fit?: string;
+    text?: { text: string; marks?: { start: number; end: number; kind: string; href?: string; color?: string }[] } | string;
+    detail?: { text: string; marks?: { start: number; end: number; kind: string; href?: string; color?: string }[] } | string;
+    href?: string;
+    src?: string;
+    alt?: string;
+    zIndex?: number;
+    desktop?: Share;
+    tablet?: Share;
+    mobile?: Share;
+  }[];
+  layout?: string;
+  hideOn?: ("desktop" | "tablet" | "mobile")[];
+  style?: { background?: string; color?: string; padding?: string; minHeight?: string; overlay?: number };
+  fields?: { id: string; label: string; kind: string; required: boolean }[];
+  thankYou?: string;
+  recipient?: string;
+  address?: string;
+  links?: { label: string; href: string }[];
+  layoutName?: string;
   heroImage?: {
     src: string;
     alt: string;
@@ -58,6 +84,10 @@ export type EditorPage = {
   locked?: boolean;
   seoTitle?: string;
   metaDescription?: string;
+  navLabel?: string;
+  parentRoute?: string;
+  shareImage?: string;
+  hideHeader?: boolean;
   sections: EditorSection[];
 };
 
@@ -75,12 +105,23 @@ const BUILT_IN = new Set([
   "/prototype-notes",
 ]);
 
-export function readSite(): { pages: EditorPage[] } {
+export type EditorChrome = {
+  header: { logo: string; siteName: string; buttonLabel: string; buttonHref: string; sticky: boolean; social: { label: string; href: string }[]; hiddenOn: string[]; phoneCompact: boolean };
+  footer: { copyright: string; note: string; links: { label: string; href: string }[]; contact: string[]; social: { label: string; href: string }[]; images: { src: string; alt: string }[] };
+  announcement: { enabled: boolean; text: string; href: string };
+  profile: { name: string; phone: string; email: string; address: string };
+  theme: { ink: string; plum: string; green: string; paper: string; font: "serif" | "sans"; button: "filled" | "outline"; spacing: "compact" | "comfortable" | "roomy" };
+  favicon: string;
+  cookieText: string;
+  analyticsId: string;
+};
+
+export function readSite(): { pages: EditorPage[]; chrome?: EditorChrome } {
   const file = path.join(process.cwd(), "src/content/editor/site.json");
   if (!fs.existsSync(file)) return { pages: [] };
   try {
-    const parsed = JSON.parse(fs.readFileSync(file, "utf8")) as { pages?: EditorPage[] };
-    return { pages: Array.isArray(parsed.pages) ? parsed.pages : [] };
+    const parsed = JSON.parse(fs.readFileSync(file, "utf8")) as { pages?: EditorPage[]; chrome?: EditorChrome };
+    return { pages: Array.isArray(parsed.pages) ? parsed.pages : [], chrome: parsed.chrome };
   } catch {
     return { pages: [] };
   }

@@ -150,8 +150,6 @@ export const placementSchema = z
   })
   .strict();
 
-export type Placement = z.infer<typeof placementSchema>;
-
 const blockId = z.string().regex(/^[a-zA-Z0-9_-]{1,40}$/);
 
 const videoUrl = z
@@ -162,6 +160,133 @@ const videoUrl = z
     (value) => value === "" || /^https:\/\/(www\.)?(youtube\.com\/watch\?v=[\w-]+|youtu\.be\/[\w-]+|vimeo\.com\/\d+)/.test(value),
     "Paste a YouTube or Vimeo link.",
   );
+
+const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+
+export const richMarkSchema = z
+  .object({
+    start: z.number().int().min(0),
+    end: z.number().int().min(0),
+    kind: z.enum(["bold", "italic", "link", "color"]),
+    href: z.string().max(300).optional(),
+    color: hexColor.optional(),
+  })
+  .strict();
+
+export const richTextSchema = z.preprocess(
+  (value) => (typeof value === "string" ? { text: value, marks: [] } : value),
+  z
+    .object({
+      text: z.string().max(4000),
+      marks: z.array(richMarkSchema).max(40),
+    })
+    .strict(),
+);
+
+export const sectionStyleSchema = z
+  .object({
+    background: z.enum(["paper", "band", "ink", "image", "video"]).optional(),
+    color: hexColor.optional(),
+    image: mediaPath.optional(),
+    video: videoUrl.optional(),
+    overlay: z.number().min(0).max(1).optional(),
+    padding: z.enum(["s", "m", "l"]).optional(),
+    gap: z.enum(["none", "s", "m", "l"]).optional(),
+    minHeight: z.enum(["auto", "quarter", "half", "full"]).optional(),
+    border: z.boolean().optional(),
+    shadow: z.boolean().optional(),
+  })
+  .strict();
+
+const socialLinkSchema = z
+  .object({
+    label: z.string().max(40),
+    href: z.string().max(300),
+  })
+  .strict();
+
+export const flowBlockSchema = z
+  .object({
+    id: blockId,
+    kind: z.enum(["eyebrow", "heading", "paragraph", "button", "image", "link", "list", "quote", "person", "card", "brand-mark", "insights"]),
+    hidden: z.boolean(),
+    editorName: z.string().max(80).optional(),
+    text: richTextSchema.optional(),
+    detail: richTextSchema.optional(),
+    href: z.string().max(300).optional(),
+    src: mediaPath.optional(),
+    alt: z.string().max(200).optional(),
+    locked: z.boolean().optional(),
+    pin: z.boolean().optional(),
+    zIndex: z.number().int().min(0).max(200).optional(),
+    fit: z.enum(["fit", "fill"]).optional(),
+    desktop: placementSchema.optional(),
+    tablet: placementSchema.optional(),
+    mobile: placementSchema.optional(),
+  })
+  .strict();
+
+export const siteChromeSchema = z
+  .object({
+    header: z
+      .object({
+        logo: mediaPath,
+        siteName: z.string().max(80),
+        buttonLabel: z.string().max(60),
+        buttonHref: z.string().max(300),
+        sticky: z.boolean(),
+        social: z.array(socialLinkSchema).max(8),
+        hiddenOn: z.array(z.string().max(80)).max(40),
+        phoneCompact: z.boolean(),
+      })
+      .strict(),
+    footer: z
+      .object({
+        copyright: z.string().max(200),
+        note: z.string().max(400),
+        links: z.array(socialLinkSchema).max(16),
+        contact: z.array(z.string().max(160)).max(6),
+        social: z.array(socialLinkSchema).max(8),
+        images: z.array(z.object({ src: mediaPath, alt: z.string().max(200) }).strict()).max(4),
+      })
+      .strict(),
+    announcement: z
+      .object({
+        enabled: z.boolean(),
+        text: z.string().max(200),
+        href: z.string().max(300),
+      })
+      .strict(),
+    profile: z
+      .object({
+        name: z.string().max(120),
+        phone: z.string().max(40),
+        email: z.string().max(120),
+        address: z.string().max(240),
+      })
+      .strict(),
+    theme: z
+      .object({
+        ink: hexColor,
+        plum: hexColor,
+        green: hexColor,
+        paper: hexColor,
+        font: z.enum(["serif", "sans"]),
+        button: z.enum(["filled", "outline"]),
+        spacing: z.enum(["compact", "comfortable", "roomy"]),
+      })
+      .strict(),
+    favicon: mediaPath,
+    cookieText: z.string().max(400),
+    analyticsId: z.string().max(40).regex(/^[A-Za-z0-9-]*$/),
+  })
+  .strict();
+
+export type Placement = z.infer<typeof placementSchema>;
+export type RichTextValue = z.infer<typeof richTextSchema>;
+export type FlowBlock = z.infer<typeof flowBlockSchema>;
+export type SiteChrome = z.infer<typeof siteChromeSchema>;
+export type SectionStyle = z.infer<typeof sectionStyleSchema>;
 
 export const freeformItemSchema = z
   .object({
@@ -184,7 +309,13 @@ export const freeformItemSchema = z
 
 export type FreeformItem = z.infer<typeof freeformItemSchema>;
 
-const sectionBase = { id: blockId, hidden: z.boolean() };
+const sectionChrome = {
+  editorName: z.string().max(80).optional(),
+  layout: z.enum(["stack", "split", "grid", "hero", "band", "cards", "list", "quotes", "insights", "cta", "fluid"]).optional(),
+  style: sectionStyleSchema.optional(),
+  hideOn: z.array(z.enum(["desktop", "tablet", "mobile"])).max(3).optional(),
+};
+const sectionBase = { id: blockId, hidden: z.boolean(), ...sectionChrome };
 
 export const sectionSchema = z.discriminatedUnion("type", [
   z
@@ -213,7 +344,8 @@ export const sectionSchema = z.discriminatedUnion("type", [
     .object({
       ...sectionBase,
       type: z.literal("gallery"),
-      images: z.array(z.object({ src: mediaPath, alt: z.string().max(200) }).strict()).max(12),
+      images: z.array(z.object({ src: mediaPath, alt: z.string().max(200), caption: z.string().max(200).optional() }).strict()).max(24),
+      layoutName: z.enum(["grid", "stack", "slideshow"]).optional(),
     })
     .strict(),
   z.object({ ...sectionBase, type: z.literal("divider") }).strict(),
@@ -264,11 +396,40 @@ export const sectionSchema = z.discriminatedUnion("type", [
       emailLabel: z.string().max(40),
       messageLabel: z.string().max(40),
       buttonLabel: z.string().max(40),
+      thankYou: z.string().max(200).optional(),
+      recipient: z.string().max(120).optional(),
+      fields: z
+        .array(
+          z
+            .object({
+              id: blockId,
+              label: z.string().max(80),
+              kind: z.enum(["text", "email", "textarea"]),
+              required: z.boolean(),
+            })
+            .strict(),
+        )
+        .max(12)
+        .optional(),
     })
     .strict(),
   z.object({ ...sectionBase, type: z.literal("freeform"), name: z.string().max(80), items: z.array(freeformItemSchema).max(40) }).strict(),
   z.object({ ...sectionBase, type: z.literal("embed"), title: z.string().max(120), url: z.string().trim().url().max(300) }).strict(),
   z.object({ ...sectionBase, type: z.literal("designed"), title: z.string().max(200), lead: z.string().max(800) }).strict(),
+  z.object({ ...sectionBase, type: z.literal("flow"), blocks: z.array(flowBlockSchema).max(40) }).strict(),
+  z.object({ ...sectionBase, type: z.literal("audio"), src: z.string().max(300), label: z.string().max(120) }).strict(),
+  z.object({ ...sectionBase, type: z.literal("line") }).strict(),
+  z.object({ ...sectionBase, type: z.literal("map"), address: z.string().max(240) }).strict(),
+  z.object({ ...sectionBase, type: z.literal("search"), label: z.string().max(80) }).strict(),
+  z.object({ ...sectionBase, type: z.literal("newsletter"), heading: z.string().max(160), buttonLabel: z.string().max(40), recipient: z.string().max(120) }).strict(),
+  z
+    .object({
+      ...sectionBase,
+      type: z.literal("social"),
+      links: z.array(z.object({ label: z.string().max(40), href: z.string().max(300) }).strict()).max(8),
+    })
+    .strict(),
+  z.object({ ...sectionBase, type: z.literal("insights-summary"), heading: z.string().max(160) }).strict(),
 ]);
 
 export type Section = z.infer<typeof sectionSchema>;
@@ -300,6 +461,10 @@ export const pageDocumentSchema = z
     seoTitle: z.string().max(70),
     metaDescription: z.string().max(160),
     locked: z.boolean(),
+    navLabel: z.string().max(80).optional(),
+    parentRoute: z.string().max(80).optional(),
+    shareImage: mediaPath.optional(),
+    hideHeader: z.boolean().optional(),
     sections: z.array(sectionSchema).max(80),
   })
   .strict();
@@ -316,7 +481,8 @@ export const sectionTemplateSchema = z
 
 export const siteDraftSchema = z
   .object({
-    version: z.literal(2),
+    version: z.literal(3),
+    chrome: siteChromeSchema,
     pages: z.array(pageDocumentSchema).min(1).max(40),
     sectionTemplates: z.array(sectionTemplateSchema).max(40),
   })

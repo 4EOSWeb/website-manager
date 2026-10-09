@@ -27,20 +27,27 @@ import {
   imageUsage,
   insertSection,
   librarySection,
+  deleteFlowBlock,
+  duplicateFlowBlock,
+  moveFlowBlock,
   moveSection,
   pageByRoute,
+  patchChrome,
   patchItem,
+  pinBlock,
   placeItems,
   renameZone,
   saveSectionTemplate,
   setArchived,
   setImageSource,
+  reorderPages,
+  setBlockHidden,
   setNavVisible,
   setSectionHidden,
   slugify,
   updatePageMeta,
 } from "@/lib/editor-ops";
-import { LIBRARY_BLOCKS, blockFitsInZone, createId } from "@/lib/page-documents";
+import { LIBRARY_BLOCKS, blockFitsInZone, catalogSection, createId } from "@/lib/page-documents";
 
 type MediaItem = {
   src: string;
@@ -87,6 +94,10 @@ export function EditorShell(props: {
   const [media, setMedia] = useState(props.media);
   const [recent, setRecent] = useState<string[]>([]);
   const [panel, setPanel] = useState<"page" | "media" | "history">("page");
+  const [rail, setRail] = useState<"add" | "pages" | "layers" | "design" | "media" | null>("pages");
+  const [propTab, setPropTab] = useState<"content" | "design" | "layout">("content");
+  const [chromeHidden, setChromeHidden] = useState(false);
+  const [pageQuery, setPageQuery] = useState("");
   const [selection, setSelection] = useState<Selection>(emptySelection);
   const [library, setLibrary] = useState<LibraryState>(null);
   const [status, setStatus] = useState("Saved");
@@ -186,7 +197,10 @@ export function EditorShell(props: {
       const body = (await response.json()) as { message?: string };
       setStatus(response.ok ? "Saved" : "Not saved");
       if (!response.ok && body.message) setNotice(body.message);
-      if (response.ok && shouldReload) setVersion((value) => value + 1);
+      if (response.ok && shouldReload) {
+        setVersion((value) => value + 1);
+        void fetch(`/api/sites/${props.websiteId}/revisions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(site) });
+      }
       reloadAfter.current = false;
     }, 500);
     return () => window.clearTimeout(timer);
@@ -248,6 +262,14 @@ export function EditorShell(props: {
 
   function runAction(action: string, sectionId: string, itemId: string, overlay: boolean, itemIdsFromCanvas: string[] = []) {
     if (action === "drag" || !sectionId) return;
+    const flow = page?.sections.find((item) => item.id === sectionId);
+    if (itemId && flow?.type === "flow") {
+      if (action === "duplicate") commit(duplicateFlowBlock(site, path, sectionId, itemId), true);
+      else if (action === "delete") commit(deleteFlowBlock(site, path, sectionId, itemId), true);
+      else if (action === "hide" || action === "show") commit(setBlockHidden(site, path, sectionId, itemId, action === "hide"), true);
+      else if (action === "pin") commit(pinBlock(site, path, sectionId, itemId, true), true);
+      return;
+    }
     if (itemId && action === "duplicate") commit(duplicateItem(site, path, sectionId, itemId, overlay), true);
     else if (itemId && action === "delete") commit(deleteItem(site, path, sectionId, itemId, overlay), true);
     else if (itemId && (action === "hide" || action === "show")) commit(patchItem(site, path, sectionId, itemId, { hidden: action === "hide" }, overlay), true);
@@ -458,13 +480,37 @@ export function EditorShell(props: {
         setPanel("page");
       }
       if (data.type === "4eos-text") {
+        const marks = Array.isArray(data.marks) ? data.marks.flatMap((mark) => {
+          if (!mark || typeof mark !== "object") return [];
+          const item = mark as { start?: number; end?: number; kind?: string; href?: string; color?: string };
+          if (item.kind !== "bold" && item.kind !== "italic" && item.kind !== "link" && item.kind !== "color") return [];
+          const kind = item.kind as "bold" | "italic" | "link" | "color";
+          return [{ start: Number(item.start), end: Number(item.end), kind, href: item.href, color: item.color }];
+        }) : undefined;
         commitText(
-          applyText(site, path, String(data.sectionId ?? ""), String(data.field ?? "text"), String(data.value ?? ""), String(data.itemId ?? "") || undefined),
+          applyText(site, path, String(data.sectionId ?? ""), String(data.field ?? "text"), String(data.value ?? ""), String(data.itemId ?? "") || undefined, marks),
           `${data.sectionId}:${data.itemId}:${data.field}`,
         );
       }
+      if (data.type === "4eos-nav" && typeof data.route === "string") {
+        commit(updatePageMeta(site, data.route, { navLabel: String(data.value ?? "") }), false);
+      }
+      if (data.type === "4eos-reorder-block") {
+        commit(moveFlowBlock(site, path, String(data.sectionId ?? ""), Number(data.from), Number(data.to)), true);
+      }
       if (data.type === "4eos-insert") setLibrary({ index: Number(data.index ?? 0) });
       if (data.type === "4eos-move") commit(moveSection(site, path, Number(data.from), Number(data.to)), true);
+      if (data.type === "4eos-chrome") {
+        const field = String(data.field ?? "");
+        const value = String(data.value ?? "");
+        const chrome = structuredClone(site.chrome);
+        if (field === "buttonLabel") chrome.header.buttonLabel = value;
+        if (field === "note") chrome.footer.note = value;
+        if (field === "copyright") chrome.footer.copyright = value;
+        if (field === "cookie") chrome.cookieText = value;
+        if (field === "announcement") chrome.announcement.text = value;
+        commit(patchChrome(site, chrome), false);
+      }
       if (data.type === "4eos-action") {
         const canvasIds = Array.isArray(data.itemIds) ? data.itemIds.map((item) => String(item)).filter(Boolean) : [];
         runAction(String(data.action ?? ""), String(data.sectionId ?? ""), String(data.itemId ?? ""), Boolean(data.overlay), canvasIds);
@@ -534,6 +580,14 @@ export function EditorShell(props: {
           <p className="truncate font-medium">{page?.title ?? activePost?.title ?? path}</p>
         </div>
         <div className="ml-auto flex items-center gap-1">
+          {selection.sectionId && !selection.locked ? (
+            <>
+              <button className="icon-button" type="button" onClick={() => runAction("duplicate", selection.sectionId, selection.itemId, selection.overlay, selection.itemIds)}>Duplicate</button>
+              <button className="icon-button" type="button" onClick={() => runAction("delete", selection.sectionId, selection.itemId, selection.overlay, selection.itemIds)}>Delete</button>
+              <button className="icon-button" type="button" onClick={() => runAction(selection.itemId ? "hide" : "hide", selection.sectionId, selection.itemId, selection.overlay, selection.itemIds)}>Hide</button>
+              <button className="icon-button" type="button" onClick={() => setPropTab("design")}>Design</button>
+            </>
+          ) : null}
           <button className="icon-button" type="button" aria-label="Undo" disabled={past.length === 0} onClick={undo}><Undo2 aria-hidden="true" size={16} /></button>
           <button className="icon-button" type="button" aria-label="Redo" disabled={future.length === 0} onClick={redo}><Redo2 aria-hidden="true" size={16} /></button>
           {viewports.map((item) => (
@@ -541,6 +595,8 @@ export function EditorShell(props: {
               <item.icon aria-hidden="true" size={16} />
             </button>
           ))}
+          <button className="icon-button" type="button" onClick={() => setChromeHidden((value) => !value)}>{chromeHidden ? "Show panels" : "Hide panels"}</button>
+          <a className="icon-button" href={previewSrc} target="_blank" rel="noreferrer">Preview</a>
           <span className="px-2 text-sm text-[var(--muted)]">{status}</span>
           {progress !== null ? <span className="px-2 text-sm">Uploading {progress}%</span> : null}
           {props.canPublish ? (
@@ -559,42 +615,129 @@ export function EditorShell(props: {
           </details>
         </div>
       </header>
-      <div className="grid min-h-0 grid-cols-[16rem_1fr_20rem]">
-        <aside className="overflow-auto border-r border-[var(--line)] bg-white p-3">
-          <div className="flex items-center justify-between">
-            <p className="px-2 text-xs tracking-wide text-[var(--muted)] uppercase">Pages</p>
-            {props.canEdit ? <button className="px-2 text-sm" type="button" onClick={() => { setRouteTouched(false); setPageForm({ title: "", route: "", template: "landing", navVisible: true, seoTitle: "", metaDescription: "" }); setAddingPage(true); }}>Add page</button> : null}
-          </div>
-          <ul className="mt-2">
-            {site.pages.filter((item) => !item.archived).map((item) => (
-              <li key={item.route}>
-                <button className={path === item.route ? "nav-button is-active" : "nav-button"} type="button" onClick={() => openPage(item.route)}>
-                  {item.title}{item.locked ? " · Managed" : ""}
-                </button>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-6 px-2 text-xs tracking-wide text-[var(--muted)] uppercase">Archived</p>
-          <ul>
-            {site.pages.filter((item) => item.archived).map((item) => (
-              <li key={item.route}>
-                <button className="nav-button" type="button" onClick={() => openPage(item.route)}>{item.title}</button>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-6 px-2 text-xs tracking-wide text-[var(--muted)] uppercase">Library</p>
-          <button className="nav-button" type="button" onClick={() => setLibrary({ index: null })}>Add element</button>
-          <button className={panel === "media" ? "nav-button is-active" : "nav-button"} type="button" onClick={() => setPanel("media")}>Media</button>
-          <button className="nav-button" type="button" onClick={() => void createInsight()}>New Insights post</button>
-          {posts.map((post) => (
-            <button key={post.slug} className={path === `/insights/${post.slug}` ? "nav-button is-active" : "nav-button"} type="button" onClick={() => openPage(`/insights/${post.slug}`)}>{post.title}</button>
+      <div className={`grid min-h-0 ${chromeHidden ? "grid-cols-[3.5rem_1fr]" : "grid-cols-[auto_1fr_20rem]"}`}>
+        <div className="flex min-h-0">
+        <nav className="flex w-14 shrink-0 flex-col items-center gap-1 bg-[#2f1d31] py-2 text-white" aria-label="Editor">
+          {([
+            ["add", "Add"],
+            ["pages", "Pages"],
+            ["layers", "Layers"],
+            ["design", "Design"],
+            ["media", "Media"],
+          ] as const).map(([id, label]) => (
+            <button key={id} type="button" className={`min-h-11 w-12 text-[10px] ${rail === id ? "bg-white/20" : ""}`} onClick={() => setRail((current) => (current === id ? null : id))}>{label}</button>
           ))}
-          <button className={panel === "history" ? "nav-button is-active" : "nav-button"} type="button" onClick={() => setPanel("history")}>Publish history</button>
-        </aside>
+        </nav>
+        {rail && !chromeHidden ? <aside className="w-64 overflow-auto border-r border-[var(--line)] bg-white p-3">
+          {rail === "pages" ? (
+            <>
+              <div className="flex items-center justify-between">
+                <p className="px-2 text-xs tracking-wide text-[var(--muted)] uppercase">Main navigation</p>
+                {props.canEdit ? <button className="px-2 text-sm" type="button" onClick={() => { setRouteTouched(false); setPageForm({ title: "", route: "", template: "landing", navVisible: true, seoTitle: "", metaDescription: "" }); setAddingPage(true); }}>Add page</button> : null}
+              </div>
+              <input className="field mt-2" placeholder="Search pages" value={pageQuery} onChange={(event) => setPageQuery(event.target.value)} />
+              <ul className="mt-2">
+                {site.pages.filter((item) => !item.archived && item.navVisible && `${item.title} ${item.route}`.toLowerCase().includes(pageQuery.toLowerCase())).map((item, index) => (
+                  <li key={item.route} draggable={item.route !== "/"} onDragStart={(event) => event.dataTransfer.setData("text/plain", String(index))} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); commit(reorderPages(site, Number(event.dataTransfer.getData("text/plain")), index), true); }}>
+                    <button className={path === item.route ? "nav-button is-active" : "nav-button"} type="button" onClick={() => openPage(item.route)}>
+                      {item.route === "/" ? "Home · " : ""}{item.navLabel || item.title}{item.locked ? " · Managed" : ""}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-6 px-2 text-xs tracking-wide text-[var(--muted)] uppercase">Not in the menu</p>
+              <ul>
+                {site.pages.filter((item) => !item.archived && !item.navVisible).map((item) => (
+                  <li key={item.route}><button className="nav-button" type="button" onClick={() => openPage(item.route)}>{item.title}</button></li>
+                ))}
+              </ul>
+              <p className="mt-6 px-2 text-xs tracking-wide text-[var(--muted)] uppercase">Archived</p>
+              <ul>
+                {site.pages.filter((item) => item.archived).map((item) => (
+                  <li key={item.route}><button className="nav-button" type="button" onClick={() => openPage(item.route)}>{item.title}</button></li>
+                ))}
+              </ul>
+              <button className="nav-button" type="button" onClick={() => void createInsight()}>New Insights post</button>
+              {posts.map((post) => (
+                <button key={post.slug} className={path === `/insights/${post.slug}` ? "nav-button is-active" : "nav-button"} type="button" onClick={() => openPage(`/insights/${post.slug}`)}>{post.title}</button>
+              ))}
+              <button className="nav-button" type="button" onClick={() => setPanel("history")}>Publish history</button>
+            </>
+          ) : null}
+          {rail === "add" ? (
+            <div className="grid gap-2">
+              <p className="px-2 text-xs tracking-wide text-[var(--muted)] uppercase">Sections</p>
+              {(["hero", "split", "cards", "list", "stack"] as const).map((layout) => (
+                <button key={layout} className="nav-button" type="button" onClick={() => page && commit(insertSection(site, path, page.sections.length, catalogSection(layout)), true)}>{layout === "hero" ? "Hero" : layout === "split" ? "Text beside an image" : layout === "cards" ? "Features" : layout === "list" ? "List" : "Blank"}</button>
+              ))}
+              <p className="mt-4 px-2 text-xs tracking-wide text-[var(--muted)] uppercase">Blocks</p>
+              {LIBRARY_BLOCKS.filter((item) => item.type !== "embed" || props.canEmbed).map((item) => (
+                <button key={item.type} className="nav-button" type="button" onClick={() => chooseLibrary(item.type)}>{item.label}</button>
+              ))}
+            </div>
+          ) : null}
+          {rail === "layers" ? (
+            <div>
+              <p className="px-2 text-xs tracking-wide text-[var(--muted)] uppercase">This page</p>
+              <button className="nav-button" type="button" onClick={() => setSelection(emptySelection)}>Header</button>
+              {(page?.sections ?? []).map((item, index) => (
+                <div key={item.id}>
+                  <button className={selection.sectionId === item.id && !selection.itemId ? "nav-button is-active" : "nav-button"} type="button" draggable onDragStart={(event) => event.dataTransfer.setData("text/plain", String(index))} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); commit(moveSection(site, path, Number(event.dataTransfer.getData("text/plain")), index), true); }} onClick={() => setSelection({ sectionId: item.id, itemId: "", itemIds: [], overlay: false, locked: false })}>
+                    {item.editorName || item.type}
+                  </button>
+                  {item.type === "flow" ? item.blocks.map((block) => (
+                    <button key={block.id} className={selection.itemId === block.id ? "nav-button is-active pl-6" : "nav-button pl-6"} type="button" onClick={() => setSelection({ sectionId: item.id, itemId: block.id, itemIds: [block.id], overlay: false, locked: Boolean(block.locked) })}>{block.editorName || block.kind}</button>
+                  )) : null}
+                </div>
+              ))}
+              <button className="nav-button" type="button">Footer</button>
+              {viewport === "mobile" ? <p className="mt-4 px-2 text-xs text-[var(--muted)]">Hidden on this phone</p> : null}
+            </div>
+          ) : null}
+          {rail === "design" ? (
+            <div className="grid gap-3 text-sm">
+              <p className="font-medium">Site styles</p>
+              <label>Button style
+                <select className="field" value={site.chrome.theme.button} onChange={(event) => commit(patchChrome(site, { ...site.chrome, theme: { ...site.chrome.theme, button: event.target.value as "filled" | "outline" } }), true)}>
+                  <option value="filled">Filled</option>
+                  <option value="outline">Outline</option>
+                </select>
+              </label>
+              <label>Type
+                <select className="field" value={site.chrome.theme.font} onChange={(event) => commit(patchChrome(site, { ...site.chrome, theme: { ...site.chrome.theme, font: event.target.value as "serif" | "sans" } }), true)}>
+                  <option value="serif">Serif headings</option>
+                  <option value="sans">Sans headings</option>
+                </select>
+              </label>
+              <label>Spacing
+                <select className="field" value={site.chrome.theme.spacing} onChange={(event) => commit(patchChrome(site, { ...site.chrome, theme: { ...site.chrome.theme, spacing: event.target.value as "compact" | "comfortable" | "roomy" } }), true)}>
+                  <option value="compact">Compact</option>
+                  <option value="comfortable">Comfortable</option>
+                  <option value="roomy">Roomy</option>
+                </select>
+              </label>
+              <label>Business name<input className="field" value={site.chrome.profile.name} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, name: event.target.value } }), false)} /></label>
+              <label>Phone<input className="field" value={site.chrome.profile.phone} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, phone: event.target.value } }), false)} /></label>
+              <label>Email<input className="field" value={site.chrome.profile.email} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, email: event.target.value } }), false)} /></label>
+              <label>Address<textarea className="field" value={site.chrome.profile.address} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, address: event.target.value } }), false)} /></label>
+              <label>Cookie notice<textarea className="field" value={site.chrome.cookieText} onChange={(event) => commit(patchChrome(site, { ...site.chrome, cookieText: event.target.value }), false)} /></label>
+              <label>Analytics id for review<input className="field" value={site.chrome.analyticsId} onChange={(event) => commit(patchChrome(site, { ...site.chrome, analyticsId: event.target.value.replace(/[^A-Za-z0-9-]/g, "") }), false)} /></label>
+            </div>
+          ) : null}
+          {rail === "media" ? (
+            <MediaPanel media={usedHere} recent={recent} canEdit={props.canEdit} progress={progress} onUpload={(file) => void upload(file, "").catch((error: Error) => setNotice(error.message))} onUse={chooseImage} onDelete={(filename) => void removeMedia(filename)} />
+          ) : null}
+        </aside> : null}
+        </div>
         <div className="min-w-0 overflow-auto bg-[#e7e2da] p-4">
           <iframe id="site-preview" title={`${props.websiteName} preview`} sandbox="allow-scripts allow-forms" src={previewSrc} className="mx-auto h-full min-h-[40rem] border border-[var(--line)] bg-white" style={{ width }} />
         </div>
-        <aside className="overflow-auto border-l border-[var(--line)] bg-white p-4">
+        {!chromeHidden ? <aside className="overflow-auto border-l border-[var(--line)] bg-white p-4">
+          <div className="mb-4 flex gap-2 text-sm">
+            {(["content", "design", "layout"] as const).map((tab) => (
+              <button key={tab} type="button" className={propTab === tab ? "border-b-2 border-[var(--ink)]" : ""} onClick={() => setPropTab(tab)}>{tab[0]?.toUpperCase()}{tab.slice(1)}</button>
+            ))}
+          </div>
           {notice ? <p className="mb-4 border border-[var(--line)] bg-[var(--paper)] p-3 text-sm leading-relaxed">{notice}</p> : null}
           {selection.locked ? <p className="text-sm leading-relaxed">{PROVIDER_LOCK_MESSAGE}</p> : null}
           {panel === "history" ? <History publications={publications} onConfirm={() => void confirmIdentity()} /> : null}
@@ -663,7 +806,7 @@ export function EditorShell(props: {
               }}
             />
           ) : null}
-        </aside>
+        </aside> : null}
       </div>
       {library ? (
         <div className="fixed inset-0 z-40 grid place-items-center bg-black/30 p-6">
@@ -721,7 +864,7 @@ export function EditorShell(props: {
               </select>
             </label>
             <label className="text-sm"><input type="checkbox" checked={pageForm.navVisible} onChange={(event) => setPageForm({ ...pageForm, navVisible: event.target.checked })} /> Show in navigation</label>
-            <label className="text-sm">Search title<input className="field" value={pageForm.seoTitle} onChange={(event) => setPageForm({ ...pageForm, seoTitle: event.target.value })} /></label>
+            <label className="text-sm">Title in search results<input className="field" value={pageForm.seoTitle} onChange={(event) => setPageForm({ ...pageForm, seoTitle: event.target.value })} /></label>
             <label className="text-sm">Search description<textarea className="field" value={pageForm.metaDescription} onChange={(event) => setPageForm({ ...pageForm, metaDescription: event.target.value })} /></label>
             <div className="flex gap-2">
               <button className="bg-[var(--ink)] px-3 py-2 text-sm text-white" type="submit">Create page</button>
@@ -839,7 +982,7 @@ function Settings(props: {
   const href = props.section?.type === "button" ? props.section.href : props.section?.type === "preset" ? props.section.buttonHref ?? "" : props.section?.type === "cta" ? props.section.href : "";
   return (
     <div className="grid gap-4 text-sm">
-      <p className="leading-relaxed text-[var(--muted)]">Click something to select it. Double-click words to change them on the page.</p>
+      {!props.selection.sectionId ? <p className="leading-relaxed text-[var(--muted)]">Click something to edit it.</p> : null}
       {props.templateFor ? (
         <form className="grid gap-2" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); props.onTemplate(String(data.get("name") ?? "")); }}>
           <label>Template name<input className="field" name="name" placeholder="Testimonial layout" /></label>
@@ -849,7 +992,7 @@ function Settings(props: {
       {props.page && props.page.route !== "/" ? (
         <div className="grid gap-2 border border-[var(--line)] p-3">
           <p className="font-medium">{props.page.archived ? "Archived" : "This page"}</p>
-          <label>Search title<input className="field" disabled={disabled} value={props.page.seoTitle} onChange={(event) => props.onPage({ seoTitle: event.target.value })} /></label>
+          <label>Title in search results<input className="field" disabled={disabled} value={props.page.seoTitle} onChange={(event) => props.onPage({ seoTitle: event.target.value })} /></label>
           <label>Search description<textarea className="field" disabled={disabled} value={props.page.metaDescription} onChange={(event) => props.onPage({ metaDescription: event.target.value })} /></label>
           <label><input type="checkbox" disabled={disabled || props.page.locked} checked={props.page.navVisible} onChange={(event) => props.onNav(event.target.checked)} /> Show in navigation</label>
           {props.page.route !== "/" && !props.page.locked ? (
@@ -861,7 +1004,7 @@ function Settings(props: {
         </div>
       ) : null}
       {props.page?.route === "/" ? (
-        <label>Search title<input className="field" disabled={disabled} value={props.page.seoTitle} onChange={(event) => props.onPage({ seoTitle: event.target.value })} /></label>
+        <label>Title in search results<input className="field" disabled={disabled} value={props.page.seoTitle} onChange={(event) => props.onPage({ seoTitle: event.target.value })} /></label>
       ) : null}
       {props.section?.type === "freeform" ? (
         <label>Zone name<input className="field" disabled={disabled} value={props.section.name} onChange={(event) => props.onZoneName(event.target.value)} /></label>
@@ -869,7 +1012,7 @@ function Settings(props: {
       {props.section?.type === "preset" && props.selection.overlay ? (
         <label>Zone name<input className="field" disabled={disabled} value={props.section.overlayName ?? "Hero callouts"} onChange={(event) => props.onZoneName(event.target.value)} /></label>
       ) : null}
-      {props.selection.itemId ? (
+      {props.selection.itemId && (props.section?.type === "freeform" || props.section?.type === "preset" || props.section?.type === "flow" && props.section.layout === "fluid") ? (
         <div className="flex flex-wrap gap-1">
           {(["left", "center", "right", "top", "middle"] as const).map((mode) => (
             <button key={mode} type="button" className="border border-[var(--line)] px-2 py-1" disabled={disabled} onClick={() => props.onAlign(mode)}>{mode}</button>
@@ -877,18 +1020,13 @@ function Settings(props: {
           <p className="w-full text-[var(--muted)]">Aligns this item inside the zone on {props.viewport}.</p>
         </div>
       ) : null}
-      {href ? <label>Link destination<input className="field" disabled={disabled} value={href} onChange={(event) => props.onHref(event.target.value)} /></label> : null}
+      {href ? <label>Where this goes<input className="field" disabled={disabled} value={href} onChange={(event) => props.onHref(event.target.value)} /></label> : null}
       {props.section?.type === "video" ? <label>Video link<input className="field" disabled={disabled} value={props.section.url} placeholder="https://www.youtube.com/watch?v=" onChange={(event) => props.onVideo(event.target.value)} /></label> : null}
-      {(props.section?.type === "image" || props.selection.itemId || hero) ? (
+      {props.section?.type === "image" || (props.section?.type === "flow" && props.section.blocks.find((block) => block.id === props.selection.itemId)?.kind === "image") ? (
         <div className="grid gap-2">
-          <label>Alt text<input className="field" disabled={disabled} value={alt} onChange={(event) => props.onAlt(event.target.value)} /></label>
+          <label>Description for people who cannot see the image<input className="field" disabled={disabled} value={alt} onChange={(event) => props.onAlt(event.target.value)} /></label>
           <button type="button" disabled={disabled} onClick={props.onReplace}>Replace image</button>
-        </div>
-      ) : null}
-      {hero ? (
-        <div className="grid gap-2">
-          <label>Placement<select className="field" disabled={disabled} value={hero.placement} onChange={(event) => props.onHero({ placement: event.target.value as typeof hero.placement })}><option value="with-copy">With the introduction</option><option value="beside-mark">Beside the logo</option></select></label>
-          <label>Focal point<select className="field" disabled={disabled} value={hero.focal} onChange={(event) => props.onHero({ focal: event.target.value as typeof hero.focal })}><option value="center">Center</option><option value="top">Top</option><option value="bottom">Bottom</option><option value="left">Left</option><option value="right">Right</option></select></label>
+          <label>Which part of the image stays in view<select className="field" disabled={disabled} defaultValue="center"><option value="center">Center</option><option value="top">Top</option><option value="bottom">Bottom</option></select></label>
         </div>
       ) : null}
       {props.post ? (

@@ -8,6 +8,7 @@ import { assertAllowedPath, commitAllowedChanges, openPullRequest } from "../src
 import { rewritePreviewBody } from "../src/lib/preview-proxy.ts";
 import { sniffImage } from "../src/lib/images.ts";
 import { COPPER_TEST_IMAGE, defaultHomeDraft, placementSchema } from "../src/lib/content-schema.ts";
+import { sanitizeMarks } from "../src/lib/rich-text.ts";
 
 const exec = promisify(execFile);
 
@@ -40,6 +41,8 @@ assert(!placementSchema.safeParse({ x: 10, y: 40, w: 300, h: 180 }).success, "pi
 assert(!placementSchema.safeParse({ x: 0.1, y: 0.2, w: 0.3, h: 0.4, width: 400 }).success, "pixel fields are rejected");
 assert(COPPER_TEST_IMAGE === "/media/ee77ec25b974e4a0.png", "the leftover test image is identified");
 assert(defaultHomeDraft.heroImage.src === "", "a new homepage starts without an image");
+assert(sanitizeMarks("Hello", [{ start: 0, end: 5, kind: "script" as "bold" }]).length === 0, "a rich-text mark outside the allowlist is dropped");
+assert(sanitizeMarks("Hello", [{ start: 0, end: 5, kind: "bold" }]).length === 1, "bold formatting is kept");
 
 const rewritten = rewritePreviewBody('<a href="/about">About</a>', "/preview/web_quantum_age", "text/html", {
   accessToken: "abc.def",

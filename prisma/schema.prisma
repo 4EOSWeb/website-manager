@@ -77,6 +77,7 @@ model User {
   sessions             EditorSession[]
   publishRequests      PublishingRequest[] @relation("PublishRequester")
   reviewedRequests     PublishingRequest[] @relation("PublishReviewer")
+  revisions            EditorRevision[]
 
   @@map("users")
 }
@@ -102,6 +103,7 @@ model Website {
   media                      MediaAsset[]
   auditEvents                AuditEvent[]
   publishRequests            PublishingRequest[]
+  revisions                  EditorRevision[]
 
   @@unique([githubOwner, githubRepository])
   @@map("websites")
@@ -223,6 +225,19 @@ model PublishingRequest {
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
   @@map("publishing_requests")
+}
+
+model EditorRevision {
+  id        String   @id
+  websiteId String   @map("website_id")
+  website   Website  @relation(fields: [websiteId], references: [id])
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  snapshot  Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([websiteId, createdAt])
+  @@map("editor_revisions")
 }
 
 model EditorSession {

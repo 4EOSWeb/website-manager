@@ -12,10 +12,10 @@ import { extraNav } from "@/lib/editor-nav";
 import { isActivePath } from "@/components/site/nav-links";
 import { cn } from "@/lib/utils";
 
-export function MobileNav() {
+export function MobileNav({ items }: { items?: { label: string; href: string }[] }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const items = [...primaryNav, { label: "Contact", href: "/contact" }, ...extraNav()];
+  const links = items ?? [...primaryNav, { label: "Contact", href: "/contact" }, ...extraNav()];
   const lenis = useLenis();
 
   useEffect(() => {
@@ -39,13 +39,15 @@ export function MobileNav() {
         <SheetDescription className="sr-only">Site navigation and contact details</SheetDescription>
         <nav aria-label="Mobile" className="flex-1 overflow-y-auto px-6 py-4">
           <ul>
-            {items.map((item) => {
+            {links.map((item) => {
               const active = isActivePath(pathname, item.href);
               return (
                 <li key={item.href} className="border-b border-stone">
                   <SheetClose asChild>
                     <Link
                       href={item.href}
+                      data-nav-route={item.href}
+                      data-field="navLabel"
                       aria-current={active ? "page" : undefined}
                       className={cn("flex min-h-14 items-center justify-between py-3 font-serif text-2xl text-ink", active && "text-plum")}
                     >

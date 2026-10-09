@@ -272,14 +272,80 @@ function renderSection(section: EditorSection) {
     );
   }
   if (section.type === "form") {
+    const fields = section.fields?.length
+      ? section.fields
+      : [
+          { id: "name", label: section.nameLabel || "Name", kind: "text", required: true },
+          { id: "email", label: section.emailLabel || "Email", kind: "email", required: true },
+          { id: "message", label: section.messageLabel || "Message", kind: "textarea", required: false },
+        ];
     return (
-      <form className="container-page grid max-w-xl gap-4 py-8">
-        <label className="grid gap-1 text-sm"><span data-field="nameLabel">{section.nameLabel}</span><input className="border border-stone px-3 py-2" name="name" /></label>
-        <label className="grid gap-1 text-sm"><span data-field="emailLabel">{section.emailLabel}</span><input className="border border-stone px-3 py-2" name="email" type="email" /></label>
-        <label className="grid gap-1 text-sm"><span data-field="messageLabel">{section.messageLabel}</span><textarea className="border border-stone px-3 py-2" name="message" /></label>
+      <form className="container-page grid max-w-xl gap-4 py-8" data-section-id={section.id}>
+        {fields.map((field, index) => (
+          <label key={field.id} className="grid gap-1 text-sm">
+            <span data-field={`fields.${index}.label`}>{field.label}</span>
+            {field.kind === "textarea" ? <textarea className="border border-stone px-3 py-2" name={field.id} required={field.required} /> : <input className="border border-stone px-3 py-2" name={field.id} type={field.kind} required={field.required} />}
+          </label>
+        ))}
         <button className="min-h-11 bg-plum px-4 font-semibold text-white" type="button" data-field="buttonLabel">{section.buttonLabel}</button>
-        <p className="text-sm text-muted-foreground">This form does not send messages.</p>
+        <p className="text-sm text-muted-foreground" data-field="thankYou">{section.thankYou || "This form does not send email until mail is connected. Your note is kept for review."}</p>
       </form>
+    );
+  }
+  if (section.type === "newsletter") {
+    return (
+      <form className="container-page grid max-w-xl gap-4 py-8" data-section-id={section.id}>
+        <h2 className="text-h2" data-field="heading">{section.heading}</h2>
+        <label className="grid gap-1 text-sm">Email<input className="border border-stone px-3 py-2" type="email" name="email" /></label>
+        <button className="min-h-11 bg-plum px-4 font-semibold text-white" type="button" data-field="buttonLabel">{section.buttonLabel}</button>
+        <p className="text-sm text-muted-foreground">This signup does not send email until mail is connected. Addresses are kept for review.</p>
+      </form>
+    );
+  }
+  if (section.type === "map") {
+    const query = encodeURIComponent(section.address || "");
+    return (
+      <div className="container-page py-8" data-section-id={section.id}>
+        <p className="mb-3" data-field="address">{section.address || (previewMode ? "Add an address" : "")}</p>
+        {section.address ? <iframe title="Map" className="h-72 w-full border border-stone" src={`https://maps.google.com/maps?q=${query}&output=embed`} /> : null}
+      </div>
+    );
+  }
+  if (section.type === "search") {
+    return (
+      <form className="container-page py-8" action="/search" data-section-id={section.id}>
+        <label className="grid gap-2 text-sm">
+          <span data-field="label">{section.label || "Search this site"}</span>
+          <input className="border border-stone px-3 py-2" name="q" placeholder="Search pages and Insights" />
+        </label>
+      </form>
+    );
+  }
+  if (section.type === "social") {
+    return (
+      <ul className="container-page flex flex-wrap gap-4 py-6" data-section-id={section.id}>
+        {(section.links ?? []).map((link, index) => (
+          <li key={`${link.href}-${index}`}><a href={link.href} data-field={`links.${index}.label`}>{link.label}</a></li>
+        ))}
+      </ul>
+    );
+  }
+  if (section.type === "line") {
+    return <hr className="container-page my-8 border-stone" data-section-id={section.id} />;
+  }
+  if (section.type === "audio") {
+    return (
+      <div className="container-page py-6" data-section-id={section.id}>
+        <p data-field="label">{section.label}</p>
+        {section.src ? <audio controls src={section.src} className="mt-2 w-full" /> : null}
+      </div>
+    );
+  }
+  if (section.type === "insights-summary") {
+    return (
+      <div data-section-id={section.id}>
+        <h2 className="text-h2" data-field="heading">{section.heading}</h2>
+      </div>
     );
   }
   if (section.type === "freeform") {

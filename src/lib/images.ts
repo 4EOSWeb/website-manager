@@ -1,3 +1,14 @@
+export function sniffAudio(bytes: Buffer): "mp3" | "wav" | "m4a" | null {
+  if (bytes.length > 12 && bytes.subarray(0, 4).toString("ascii") === "RIFF" && bytes.subarray(8, 12).toString("ascii") === "WAVE") return "wav";
+  if (bytes.length > 3 && bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33) return "mp3";
+  if (bytes.length > 2 && bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0) return "mp3";
+  if (bytes.length > 12 && bytes.subarray(4, 8).toString("ascii") === "ftyp") {
+    const brand = bytes.subarray(8, 12).toString("ascii");
+    if (brand === "M4A " || brand === "mp42" || brand === "isom") return "m4a";
+  }
+  return null;
+}
+
 export function sniffImage(bytes: Buffer): "png" | "jpg" | "webp" | null {
   if (bytes.length > 8 && bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return "png";
   if (bytes.length > 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "jpg";

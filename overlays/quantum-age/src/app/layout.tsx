@@ -7,6 +7,7 @@ import { EditorPreviewScript } from "@/components/site/editor-preview-script";
 import { EditorPreviewProvider } from "@/components/site/editor-preview-flag";
 import { EditorRegions } from "@/components/site/editor-regions";
 import { site } from "@/content/site";
+import { readSite } from "@/lib/editor-site";
 import "lenis/dist/lenis.css";
 import "./globals.css";
 
@@ -51,9 +52,12 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const theme = readSite().chrome?.theme;
+  const spacing = theme?.spacing === "compact" ? "is-compact" : theme?.spacing === "roomy" ? "is-roomy" : "";
   return (
-    <html lang="en" className={`${figtree.variable} ${sourceSerif.variable}`}>
-      <body className="flex min-h-dvh flex-col">
+    <html lang="en" className={`${figtree.variable} ${sourceSerif.variable} ${theme?.font === "sans" ? "font-sans" : ""}`}>
+      <body className={`flex min-h-dvh flex-col ${spacing}`}>
+        {theme ? <style>{`:root{--ink:${theme.ink};--plum:${theme.plum};--paper:${theme.paper};--green:${theme.green};--background:${theme.paper};}`}</style> : null}
         {process.env.EDITOR_PREVIEW === "1" ? null : <style>{`[data-hidden="true"]{display:none !important}`}</style>}
         <EditorPreviewScript />
         <EditorPreviewProvider enabled={process.env.EDITOR_PREVIEW === "1"}>
