@@ -9,6 +9,7 @@ import { lockingSchema } from "./locking";
 import { sourceSchema } from "./source";
 import { bindingsSchema } from "./bindings";
 import { layoutSchema } from "./layout";
+import { canvasBoxSchema } from "./canvas-box";
 
 type NodeShape = {
   id: string;
@@ -22,6 +23,7 @@ type NodeShape = {
   locked: z.infer<typeof lockingSchema>;
   metadata: Record<string, unknown>;
   layout?: z.infer<typeof layoutSchema>;
+  box?: z.infer<typeof canvasBoxSchema>;
   bindings?: z.infer<typeof bindingsSchema>;
   source?: z.infer<typeof sourceSchema>;
 };
@@ -47,6 +49,7 @@ export const nodeSchema: z.ZodType<NodeShape> = z.lazy(() =>
     locked: lockingSchema,
     metadata: z.record(z.string(), z.unknown()),
     layout: layoutSchema.optional(),
+    box: canvasBoxSchema.optional(),
     bindings: bindingsSchema.optional(),
     source: sourceSchema.optional(),
   }).refine((node) => treeDepth(node) <= 12, "A page cannot nest more than 12 levels."),
