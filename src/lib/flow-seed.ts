@@ -81,9 +81,9 @@ export function homeSections(): Section[] {
     ]),
     flow("who", "split", "Who we are", [
       block("blk_who_eye", "eyebrow", "Who we are"),
-      block("blk_who_h", "heading", "An agile, responsive ally — an extension of your team"),
+      block("blk_who_h", "heading", "An agile, responsive ally that works as an extension of your team"),
       block("blk_who_p", "paragraph", "Quantum Age Collaborative mobilizes leading experts to help healthcare organizations focused on growth achieve their goals."),
-      block("blk_who_c", "paragraph", "Decades of health/senior care insight and marketing expertise make Quantum Age an agile and responsive ally – an extension of your team, assuring rightsized support for faster results."),
+      block("blk_who_c", "paragraph", "Decades of health and senior care insight, plus marketing expertise, mean you get support sized to what you need, so results come faster."),
       block("blk_who_link", "link", "More about Quantum Age", { href: "/about" }),
       block("blk_ben_1", "card", "Access leading experts", { detail: rich("Get access to the very best experts in healthcare without fixed costs") }),
       block("blk_ben_2", "card", "Faster results", { detail: rich("See results faster thanks to decades of experience") }),
@@ -95,8 +95,8 @@ export function homeSections(): Section[] {
       block("blk_sol_b", "paragraph", "Comprehensive marketing solutions for healthcare organizations, combined around what you need now."),
       block("blk_sol_link", "link", "All solutions and capabilities", { href: "/solutions" }),
       block("blk_sol_1", "card", "Strategize & Launch", { href: "/solutions#strategize", detail: rich("Convert ideas to actions and execute faster. Generate revenue sooner.") }),
-      block("blk_sol_2", "card", "Build Awareness", { href: "/solutions#awareness", detail: rich("Go from risky and unknown to renown and famous.") }),
-      block("blk_sol_3", "card", "Be a Thought Leader", { href: "/solutions#thought-leadership", detail: rich("Become a respected resource and earn trust—and/or business—for life.") }),
+      block("blk_sol_2", "card", "Build Awareness", { href: "/solutions#awareness", detail: rich("Go from risky and unknown to renowned.") }),
+      block("blk_sol_3", "card", "Be a Thought Leader", { href: "/solutions#thought-leadership", detail: rich("Become a respected resource and earn trust (and business) for life.") }),
       block("blk_sol_4", "card", "Perform", { href: "/solutions#perform", detail: rich("Challenge, optimize, and energize your operations.") }),
       block("blk_sol_5", "card", "Network", { href: "/solutions#network", detail: rich("Find the right people, gather them, energize them, and motivate action.") }),
       block("blk_sol_6", "card", "Generate Business", { href: "/solutions#generate", detail: rich("Target the right buyers, right messages, right campaigns, at the right time.") }),
@@ -134,7 +134,7 @@ export function homeSections(): Section[] {
     ]),
     flow("cta", "cta", "Call to action", [
       block("blk_cta_h", "heading", "Ready to accelerate your growth?"),
-      block("blk_cta_b", "paragraph", "Let's collaborate to elevate your strategy and achieve measurable results."),
+      block("blk_cta_b", "paragraph", "Let’s collaborate to elevate your strategy and achieve measurable results."),
       block("blk_cta_btn", "button", "Start a conversation", { href: "/contact" }),
     ]),
   ];
@@ -156,7 +156,7 @@ export function marketingSections(route: string): Section[] | null {
         block("about_who_eye", "eyebrow", "Who we are"),
         block("about_who_h", "heading", "Leading experts, mobilized around your goals"),
         block("about_who_p", "paragraph", "Quantum Age Collaborative mobilizes leading experts to help healthcare organizations focused on growth achieve their goals."),
-        block("about_who_p2", "paragraph", "We bring deep expertise in healthcare and aging services—understanding the channels, challenges, and changes that make this sector unique."),
+        block("about_who_p2", "paragraph", "We bring deep expertise in healthcare and aging services, including the channels, challenges, and changes that make this sector unique."),
       ]),
     ];
   }
@@ -172,7 +172,7 @@ export function marketingSections(route: string): Section[] | null {
     return [
       flow("solutions_hero", "hero", "Solutions hero", [
         block("solutions_h", "heading", "Comprehensive marketing solutions, tailored to your goals"),
-        block("solutions_lead", "paragraph", "Six solution areas for healthcare and senior care organizations. Flexible solutions that meet you where you are, from launching something new to getting more from what you already have."),
+        block("solutions_lead", "paragraph", "Six solution areas for healthcare and senior care organizations. Each one starts from where you are, whether you’re launching something new or getting more from what you already have."),
       ]),
       homeSections().find((section) => section.id === "solutions") ?? flow("solutions_list", "list", "Solutions", []),
     ];
@@ -205,7 +205,7 @@ export function marketingSections(route: string): Section[] | null {
       flow("insights_featured", "insights", "Featured", [block("insights_sum", "insights", "Featured", { href: "/insights" })]),
       flow("insights_cta", "cta", "Insights close", [
         block("insights_cta_h", "heading", "Want to talk through an idea from the archive?"),
-        block("insights_cta_b", "paragraph", "Ready to accelerate your growth in the longevity economy? We're here to help."),
+        block("insights_cta_b", "paragraph", "Ready to accelerate your growth in the longevity economy? We’re here to help."),
         block("insights_cta_btn", "button", "Start a conversation", { href: "/contact" }),
       ]),
     ];
@@ -213,8 +213,8 @@ export function marketingSections(route: string): Section[] | null {
   if (route === "/contact") {
     return [
       flow("contact_hero", "hero", "Contact hero", [
-        block("contact_h", "heading", "Let's collaborate"),
-        block("contact_lead", "paragraph", "Helping you thrive in the longevity economy like never before. Ready to accelerate your growth? We're here to help."),
+        block("contact_h", "heading", "Let’s collaborate"),
+        block("contact_lead", "paragraph", "We help organizations thrive in the longevity economy. Ready to accelerate your growth? We’re here to help."),
       ]),
       flow("contact_details", "stack", "Contact details", [
         block("contact_phone", "link", "440.638.6990", { href: "tel:+14406386990" }),
