@@ -318,3 +318,17 @@ The two constants were listed under Routes. This section records the user-facing
 - Destination adapter file: `adapters/quantum-age/page-rules.ts`
 - Migration risk: Low if the sentence stays.
 - Test required: The pages Playwright spec for a built-in address.
+
+## Seed
+
+`src/lib/flow-seed.ts` is Quantum Age content. It is not platform content. Drafts must not be overwritten by a new seed. The migrator reads drafts. It does not re-seed them.
+
+### src/lib/flow-seed.ts
+
+- Current file: `src/lib/flow-seed.ts`
+- Current behavior: `defaultChrome` sets site name “Quantum Age” and email `askQA@quantum-age.com`. The file also seeds the phone `440.638.6990`, the Cleveland address, copyright, and the home, about, approach, solutions, team, references, insights, and contact page flows, including section ids such as `blk_who_p` and `page_insights`.
+- Why it is site-specific: Every string and route is this company’s website.
+- Generic replacement: None in the platform. The adapter owns the seed.
+- Destination adapter file: `adapters/quantum-age/seed.ts`
+- Migration risk: Calling the seed against `workspace_drafts` would replace saved edits. That must not happen.
+- Test required: After the move, `updated_at` on existing drafts is unchanged by the commit that relocates the file. A unit test finds the site name in the adapter file and not in `src/platform`.
