@@ -1,0 +1,8 @@
+parent: cursor/editor-chrome-rebuild-eb8a
+not-parent: main
+merge-base-with-origin-main: efcf6074d322d000c727d26a39083db21cb50d94
+ahead-of-origin-main: 24
+chrome-commit-076530d: 076530d Add unit and browser tests for the editor
+chrome-commit-227873f: 227873f Record the sprint QA results
+076530d-on-origin-main: no
+227873f-on-origin-main: no
