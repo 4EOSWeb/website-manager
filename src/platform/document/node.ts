@@ -6,6 +6,7 @@ import { stylesSchema } from "./styles";
 import { responsiveSchema } from "./responsive";
 import { visibilitySchema } from "./visibility";
 import { lockingSchema } from "./locking";
+import { sourceSchema } from "./source";
 
 export const nodeSchema = z.object({
   id: z.string().refine((value) => isPlatformId(value) && (value.startsWith("node_") || value.startsWith("grp_")), "Use a node id."),
@@ -20,7 +21,7 @@ export const nodeSchema = z.object({
   metadata: z.record(z.string(), z.unknown()),
   layout: z.unknown().optional(),
   bindings: z.unknown().optional(),
-  source: z.unknown().optional(),
+  source: sourceSchema.optional(),
 });
 
 export type NodeDocument = z.infer<typeof nodeSchema>;
