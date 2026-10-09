@@ -160,3 +160,47 @@ The generic replacement is adapter article capabilities. The hub must not branch
 - Test required: `/insights` and one article slug still return 200 on the public build.
 
 Also named in the hub, and covered again by later audit sections: `src/lib/publish.ts` and `src/lib/publish-git.ts` allow `src/app/insights/page.tsx` and `src/app/insights/[slug]/page.tsx`. `src/components/editor/dialogs.tsx` offers template `insights-landing`. `src/components/editor/inspector/index.tsx` labels a mode “Insights list”. `src/lib/page-documents.ts` builds an insights-summary section and an insights-landing template. `src/app/api/sites/[websiteId]/blog/route.ts` returns “Insights draft saved.”
+
+## Hero
+
+The platform node for a hero is a registered component. It is not `preset: "hero"` and it is not a `heroImage` field.
+
+### src/lib/content-schema.ts
+
+- Current file: `src/lib/content-schema.ts`, `heroImageSchema` at line 11 and the preset section at line 358
+- Current behavior: A hero image has `placement` `with-copy` or `beside-mark`. Home defaults include `heroImage`. Preset sections may carry `heroImage`.
+- Why it is site-specific: Placement beside a brand mark is this site’s hero, not a generic image.
+- Generic replacement: An image node plus a registered hero component whose props live on the adapter.
+- Destination adapter file: `adapters/quantum-age/components/hero.ts`
+- Migration risk: Home hero content must survive document conversion, including placement and alt text.
+- Test required: `tests/unit/qa-component-hero.test.ts` feeds current hero fields. The home preview still shows the hero.
+
+### src/lib/page-documents.ts and src/lib/publish.ts
+
+- Current file: `src/lib/page-documents.ts` `heroFields` at line 234, called from `src/lib/publish.ts` line 62
+- Current behavior: Publish sync writes `src/content/pages/home.json` from hero fields.
+- Why it is site-specific: The public home page reads a Quantum Age-shaped JSON file.
+- Generic replacement: The Quantum Age serializer writes `home.json`. The platform serializer does not know hero fields.
+- Destination adapter file: `adapters/quantum-age/serialize.ts`
+- Migration risk: Stopping the write would blank the public hero. The serializer must keep the current keys.
+- Test required: `tests/unit/qa-serialize.test.ts`
+
+### src/components/editor-shell.tsx and src/lib/editor-ops.ts
+
+- Current file: `src/components/editor-shell.tsx` line 331 and `src/lib/editor-ops.ts` line 355
+- Current behavior: Selecting or replacing an image on a preset reads and writes `heroImage`.
+- Why it is site-specific: The editor special-cases one component’s image field.
+- Generic replacement: A generic image prop on the registered hero.
+- Destination adapter file: `adapters/quantum-age/components/hero.ts`
+- Migration risk: Image replace on the home hero must still change only that image.
+- Test required: The media Playwright spec, after the hero is a registered node.
+
+### overlays/quantum-age/src/components/site/hero-content-image.tsx
+
+- Current file: `overlays/quantum-age/src/components/site/hero-content-image.tsx`
+- Current behavior: Renders the home hero image. The hub lists this file in `ADAPTER_FILES`.
+- Why it is site-specific: It is a Quantum Age page component.
+- Generic replacement: The site keeps the renderer. The adapter names it. `src/platform` does not import it.
+- Destination adapter file: `adapters/quantum-age/components/hero.ts`
+- Migration risk: Public hero layout. Do not restyle this file during the architecture move.
+- Test required: Home preview still matches the baseline screenshot.
