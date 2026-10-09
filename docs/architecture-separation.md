@@ -394,3 +394,19 @@ Classification of every entry:
 - Destination adapter file: `adapters/quantum-age/publish-allowlist.ts`
 - Migration risk: Dropping a path means a review commit will not include that file. The Quantum Age allowlist must start as this list.
 - Test required: `tests/unit/publish-allowlist.test.ts`. Do not call `submitForPublish` during this audit.
+
+## Editor shell
+
+The shell keeps the iframe and the `postMessage` bridge. Site branches inside it move to node parent, layout mode, and adapter article routes.
+
+### src/components/editor-shell.tsx
+
+- Current file: `src/components/editor-shell.tsx`
+- Current behavior: Line 113 matches an Insights slug. Lines 328–329, 405–408, 630, and 656 treat `type === "freeform"` and preset `overlay` as the only places items can be placed freely. Line 539 opens `/insights/${post.slug}`. Selection state carries an `overlay` flag.
+- Why it is site-specific: Insights is one collection. Freeform and preset overlay are the current document’s special cases, not layout modes on every container.
+- Generic replacement: Article routes from the adapter. Canvas layout mode on any compatible container. Selection is a list of node ids.
+- Destination adapter file: `adapters/quantum-age/articles.ts` for the article route. Canvas behavior moves to `src/platform/canvas/`, not into the adapter.
+- Migration risk: Removing the Insights literal before the adapter pattern is wired will hide articles. Removing freeform handling before canvas placement works will stop freeform drags.
+- Test required: Home selection, undo, save, and device switch still work after this audit because this step does not edit the shell. Later Playwright covers flow reorder and canvas place.
+
+This section does not propose removing the iframe.
