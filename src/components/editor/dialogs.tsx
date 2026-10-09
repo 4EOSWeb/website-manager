@@ -49,7 +49,7 @@ export function AddPageDialog(props: { site: SiteDraft; onCreate: (form: PageFor
     >
       <form className="ed-form" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
         <Field label="Page name">
-          <TextInput autoFocus value={form.title} maxLength={80} placeholder="Our services" onChange={(title) => { setError(""); setForm({ ...form, title, route: routeTouched ? form.route : title ? `/${slugify(title)}` : "" }); }} />
+          <TextInput value={form.title} maxLength={80} placeholder="Our services" onChange={(title) => { setError(""); setForm({ ...form, title, route: routeTouched ? form.route : title ? `/${slugify(title)}` : "" }); }} />
         </Field>
         <Field label="Web address" hint={taken ? "That address is already used." : "Lowercase words joined by dashes."}>
           <TextInput value={route} placeholder="/our-services" onChange={(value) => { setError(""); setRouteTouched(true); setForm({ ...form, route: value }); }} />
@@ -243,7 +243,7 @@ export function TemplateDialog(props: { onSave: (name: string) => void; onClose:
     >
       <form className="ed-form" onSubmit={(event) => { event.preventDefault(); if (name.trim()) props.onSave(name); }}>
         <Field label="Template name">
-          <TextInput autoFocus value={name} maxLength={80} placeholder="Client quote" onChange={setName} />
+          <TextInput value={name} maxLength={80} placeholder="Client quote" onChange={setName} />
         </Field>
       </form>
     </Dialog>
@@ -361,7 +361,7 @@ export function InsertDialog(props: {
 }) {
   return (
     <Dialog title="Add a section here" wide onClose={props.onClose}>
-      <LibraryBrowser canEmbed={props.canEmbed} recent={props.recent} recommended={props.recommended} templates={props.templates} onChoose={props.onChoose} onTemplate={props.onTemplate} autoFocus />
+      <LibraryBrowser canEmbed={props.canEmbed} recent={props.recent} recommended={props.recommended} templates={props.templates} onChoose={props.onChoose} onTemplate={props.onTemplate} />
     </Dialog>
   );
 }

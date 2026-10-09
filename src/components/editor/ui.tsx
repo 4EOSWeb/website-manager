@@ -178,17 +178,13 @@ export function Dialog(props: { title: string; onClose: () => void; children: Re
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const closeRef = useRef(props.onClose);
-  const opener = useRef<HTMLElement | null>(null);
-  if (opener.current === null && typeof document !== "undefined") {
-    const active = document.activeElement;
-    if (active instanceof HTMLElement && !active.closest(".ed-dialog")) opener.current = active;
-  }
   useEffect(() => {
     closeRef.current = props.onClose;
   });
   useEffect(() => {
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const node = ref.current;
-    const first = node?.querySelector<HTMLElement>("[autofocus], input, select, textarea, button:not([data-close])") ?? node?.querySelector<HTMLElement>("[data-close]") ?? node;
+    const first = node?.querySelector<HTMLElement>("input, select, textarea, button:not([data-close])") ?? node?.querySelector<HTMLElement>("[data-close]") ?? node;
     first?.focus();
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -211,7 +207,7 @@ export function Dialog(props: { title: string; onClose: () => void; children: Re
     node?.addEventListener("keydown", onKey);
     return () => {
       node?.removeEventListener("keydown", onKey);
-      if (opener.current?.isConnected) opener.current.focus();
+      if (previous?.isConnected && !node?.contains(previous)) previous.focus();
     };
   }, []);
   return (
