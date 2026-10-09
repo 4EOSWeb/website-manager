@@ -27,3 +27,5 @@ export { assertSameSite, type SiteContext } from "./context";
 export { loadAdapter, type AdapterLoader } from "./adapter-loader";
 
 export { validateAdapterIdentity, type AdapterIdentity } from "./adapter-validate";
+
+export { discoverAdapters } from "./discover-adapters";
