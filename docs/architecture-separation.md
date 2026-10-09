@@ -574,3 +574,22 @@ Templates are adapter data. The platform schema must not contain `insights-landi
 - Destination adapter file: `adapters/quantum-age/templates.ts`
 - Migration risk: Creating a page with that template must still produce a usable page for Quantum Age.
 - Test required: Create-page unit test for the adapter template, later. Do not create a page in this audit.
+
+## Drafts
+
+Read on 9 Oct 2026 from `workspace_drafts`. No draft was written. No full JSON is copied here.
+
+| id | website_id | shape | notes |
+| --- | --- | --- | --- |
+| `draft_0ddb6f7c7f7a` | `web_quantum_age` | version 3 site draft | Keys `chrome`, `pages`, `sectionTemplates`, `version`. 10 pages. |
+| `draft_de7f110716c9` | `web_quantum_age` | older home object | Keys `heroImage`, `positioning`, `primaryButton`, `tagline`. No `version`. |
+
+Routes on the version 3 draft: `/`, `/about`, `/approach`, `/contact`, `/insights`, `/privacy`, `/references`, `/solutions`, `/team`, `/terms`.
+
+- Current file: Postgres `workspace_drafts.draft_data`, parsed by `src/lib/content-schema.ts`
+- Current behavior: The editor loads the version 3 document. The older row is the home-shaped document from the first slice.
+- Why it is site-specific: Both rows belong to `web_quantum_age`. The version 3 shape is the current editor document, not yet the visual document.
+- Generic replacement: `visual_document` version 1, with the version 3 JSON kept until step 19.25.
+- Destination adapter file: `adapters/quantum-age/migrate.ts` for the conversion. The column stays generic.
+- Migration risk: Overwriting `draft_data` before backups exist would lose edits. The older row must not be treated as a version 3 site.
+- Test required: `tests/unit/migrate-qa-draft.test.ts` on a copy, not on this database. `updated_at` was not changed by this read. Opening the editor earlier in the audit did move the timestamp; the payload still matched the e2e snapshot.
