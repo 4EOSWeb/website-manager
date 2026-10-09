@@ -1,79 +1,63 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { X } from "lucide-react";
 import { signOutUser } from "@/app/signin/actions";
-import { Eye, EyeOff, Files, Home, ImageIcon, ListTree, Monitor, Palette, PanelLeft, Plus, Redo2, Search, Settings2, Smartphone, Tablet, Undo2 } from "lucide-react";
+import { defaultBlogDraft, type BlogDraft, type FreeformItem, type Section, type SiteDraft } from "@/lib/content-schema";
+import type { RichMark } from "@/lib/rich-text";
 import {
-  PROVIDER_LOCK_MESSAGE,
-  SITE_AUTHORS,
-  type BlogDraft,
-  type FreeformItem,
-  type PageDocument,
-  type Section,
-  type SiteDraft,
-} from "@/lib/content-schema";
-import { defaultBlogDraft } from "@/lib/content-schema";
-import {
+  addFlowBlock,
   addZoneItem,
-  alignItems,
   applyText,
+  changeLines,
   createPage,
+  deleteFlowBlock,
   deleteItem,
   deleteSection,
+  duplicateFlowBlock,
   duplicateItem,
   duplicatePage,
   duplicateSection,
   groupItems,
   imageUsage,
   insertSection,
-  librarySection,
-  deleteFlowBlock,
-  duplicateFlowBlock,
-  moveFlowBlock,
-  moveSection,
+  insertSectionCopy,
+  moveFlowBlockById,
+  moveSectionById,
   pageByRoute,
   patchChrome,
   patchItem,
-  pinBlock,
   placeItems,
-  renameZone,
   saveSectionTemplate,
-  setArchived,
-  setEditorName,
-  setHideOn,
-  setImageSource,
-  setSectionLayout,
-  setSectionStyle,
-  reorderPages,
   setBlockHidden,
-  setNavVisible,
+  setImageSource,
   setSectionHidden,
-  slugify,
   updatePageMeta,
 } from "@/lib/editor-ops";
-import { LIBRARY_BLOCKS, blockFitsInZone, catalogSection, createId } from "@/lib/page-documents";
+import { blockFitsInZone, createId } from "@/lib/page-documents";
+import { entryById, recommendedFor, sectionForEntry, type LibraryEntry } from "@/lib/library";
+import { emptySelection, VIEWPORTS, type EditorApi, type MediaItem, type Publication, type RailPanel, type SaveState, type Selection, type Snapshot, type Viewport } from "@/components/editor/types";
+import { StatusBar, ToolRail, TopBar, type Zoom } from "@/components/editor/chrome";
+import { Canvas } from "@/components/editor/canvas";
+import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
+import { LibraryBrowser } from "@/components/editor/library";
+import { Inspector } from "@/components/editor/inspector";
+import { AddPageDialog, CropDialog, ImagePickerDialog, InsertDialog, PublishDialog, ShortcutsDialog, TemplateDialog, type PageForm } from "@/components/editor/dialogs";
 
-type MediaItem = {
-  src: string;
-  alt: string;
-  filename: string;
-  bytes?: number;
-  width?: number | null;
-  height?: number | null;
-  usedBy?: string[];
-};
-type Publication = { status: string; summary: string; reviewUrl: string | null };
-type Selection = { sectionId: string; itemId: string; itemIds: string[]; overlay: boolean; locked: boolean };
-type Snapshot = { site: SiteDraft; posts: BlogDraft[] };
-type LibraryState = { index: number | null } | null;
+type Toast = { id: number; message: string; tone: "info" | "error"; action?: { label: string; run: () => void } };
+type Insert = { beforeId: string };
 
-const viewports = [
-  { id: "mobile", label: "Mobile", width: 390, icon: Smartphone },
-  { id: "tablet", label: "Tablet", width: 768, icon: Tablet },
-  { id: "desktop", label: "Desktop", width: 1280, icon: Monitor },
-] as const;
+const RECENT_KEY = "4eos-editor-recent-library";
+const TIP_KEY = "4eos-editor-tip-dismissed";
+const READY_TIMEOUT = 20000;
 
-const emptySelection: Selection = { sectionId: "", itemId: "", itemIds: [], overlay: false, locked: false };
+function frame() {
+  return document.getElementById("site-preview") as HTMLIFrameElement | null;
+}
+
+function toFrame(message: Record<string, unknown>) {
+  frame()?.contentWindow?.postMessage(message, "*");
+}
 
 export function EditorShell(props: {
   websiteId: string;
@@ -90,69 +74,95 @@ export function EditorShell(props: {
   publications: Publication[];
 }) {
   const [path, setPath] = useState("/");
-  const [viewport, setViewport] = useState<(typeof viewports)[number]["id"]>("desktop");
+  const [viewport, setViewport] = useState<Viewport>("desktop");
+  const [zoom, setZoom] = useState<Zoom>("fit");
+  const [scale, setScale] = useState(1);
   const [site, setSite] = useState(props.initialSite);
+  const [posts, setPosts] = useState(props.initialPosts);
   const [past, setPast] = useState<Snapshot[]>([]);
   const [future, setFuture] = useState<Snapshot[]>([]);
-  const [posts, setPosts] = useState(props.initialPosts);
   const [media, setMedia] = useState(props.media);
-  const [recent, setRecent] = useState<string[]>([]);
-  const [panel, setPanel] = useState<"page" | "media" | "history">("page");
-  const [rail, setRail] = useState<"add" | "pages" | "layers" | "design" | "media" | null>("pages");
-  const [propTab, setPropTab] = useState<"content" | "design" | "layout">("content");
-  const [chromeHidden, setChromeHidden] = useState(false);
-  const [pageQuery, setPageQuery] = useState("");
-  const [addQuery, setAddQuery] = useState("");
-  const [chromeFocus, setChromeFocus] = useState<"header" | "footer" | null>(null);
-  const [renamingId, setRenamingId] = useState("");
+  const [recentImages, setRecentImages] = useState<string[]>([]);
+  const [recentLibrary, setRecentLibrary] = useState<string[]>([]);
+  const [rail, setRail] = useState<RailPanel | null>("pages");
   const [selection, setSelection] = useState<Selection>(emptySelection);
-  const [library, setLibrary] = useState<LibraryState>(null);
-  const [status, setStatus] = useState("Saved");
-  const [notice, setNotice] = useState("");
   const [version, setVersion] = useState(0);
   const [publications, setPublications] = useState(props.publications);
   const [progress, setProgress] = useState<number | null>(null);
+  const [save, setSave] = useState<SaveState>("saved");
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [editing, setEditing] = useState(false);
+  const [frameFailed, setFrameFailed] = useState(false);
+  const [clipboard, setClipboard] = useState<Section | null>(null);
+  const [tipDismissed, setTipDismissed] = useState(true);
   const [picker, setPicker] = useState(false);
-  const [crop, setCrop] = useState<{ filename: string; sectionId: string; itemId: string; overlay: boolean } | null>(null);
+  const [crop, setCrop] = useState<{ filename: string; sectionId: string; itemId: string } | null>(null);
   const [templateFor, setTemplateFor] = useState("");
   const [addingPage, setAddingPage] = useState(false);
-  const [pageForm, setPageForm] = useState({ title: "", route: "", template: "landing" as PageDocument["template"], navVisible: true, seoTitle: "", metaDescription: "" });
-  const [routeTouched, setRouteTouched] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishBusy, setPublishBusy] = useState(false);
+  const [publishMessage, setPublishMessage] = useState("");
+  const [shortcuts, setShortcuts] = useState(false);
+  const [insert, setInsert] = useState<Insert | null>(null);
+
   const skipSite = useRef(true);
+  const skipPost = useRef(true);
   const reloadAfter = useRef(false);
   const textKey = useRef("");
-  const skipPost = useRef(true);
+  const saveSeq = useRef(0);
+  const siteRef = useRef(site);
+  const scrollByPath = useRef<Record<string, number>>({});
+  const readyFor = useRef("");
+  const toastId = useRef(0);
 
   const page = pageByRoute(site, path);
-  const section = page?.sections.find((item) => item.id === selection.sectionId);
-  const selectedBlock = section?.type === "flow" ? section.blocks.find((block) => block.id === selection.itemId) : undefined;
-  const selectedText = selectedBlock?.text && typeof selectedBlock.text === "object" ? selectedBlock.text.text : "";
   const activePost = posts.find((item) => path === `/insights/${item.slug}`);
+  const managedRoute = !page && !activePost;
+  const section = page?.sections.find((item) => item.id === selection.sectionId);
 
-  function remember(filename: string) {
-    setRecent((items) => [filename, ...items.filter((item) => item !== filename)].slice(0, 8));
-  }
+  useEffect(() => {
+    siteRef.current = site;
+  }, [site]);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (Array.isArray(stored)) setRecentLibrary(stored.filter((item): item is string => typeof item === "string").slice(0, 8));
+      setTipDismissed(window.localStorage.getItem(TIP_KEY) === "1");
+    } catch {
+      setTipDismissed(false);
+    }
+  }, []);
+
+  const notify = useCallback((message: string, tone: "info" | "error" = "info", action?: Toast["action"]) => {
+    toastId.current += 1;
+    const id = toastId.current;
+    setToasts((items) => [...items.slice(-2), { id, message, tone, action }]);
+    window.setTimeout(() => setToasts((items) => items.filter((item) => item.id !== id)), tone === "error" ? 9000 : action ? 7000 : 4000);
+  }, []);
 
   function rememberHistory() {
-    setPast((items) => [...items.slice(-40), { site, posts }]);
+    setPast((items) => [...items.slice(-60), { site, posts }]);
     setFuture([]);
   }
 
   function commit(next: SiteDraft, reload: boolean) {
-    if (!props.canEdit) return;
+    if (!props.canEdit || next === site) return;
     textKey.current = "";
     rememberHistory();
     setSite(next);
     if (reload) reloadAfter.current = true;
   }
 
-  function commitText(next: SiteDraft, key: string) {
+  function commitText(next: SiteDraft, key: string, reload = false) {
     if (!props.canEdit) return;
     if (textKey.current !== key) {
       textKey.current = key;
       rememberHistory();
     }
     setSite(next);
+    if (reload) reloadAfter.current = true;
   }
 
   function undo() {
@@ -174,46 +184,56 @@ export function EditorShell(props: {
     setSite(next.site);
     setPosts(next.posts);
     reloadAfter.current = true;
+    textKey.current = "";
   }
 
-  async function persistSite(next: SiteDraft) {
-    setStatus("Saving");
-    const response = await fetch(`/api/sites/${props.websiteId}/draft`, {
-      method: "PUT",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(next),
-    });
-    const body = (await response.json()) as { message?: string };
-    setStatus(response.ok ? "Saved" : "Not saved");
-    if (!response.ok && body.message) setNotice(body.message);
-    return response.ok;
-  }
+  const persistSite = useCallback(
+    async (next: SiteDraft) => {
+      saveSeq.current += 1;
+      const seq = saveSeq.current;
+      setSave("saving");
+      try {
+        const response = await fetch(`/api/sites/${props.websiteId}/draft`, {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(next),
+        });
+        const body = (await response.json().catch(() => ({}))) as { message?: string };
+        if (!response.ok) {
+          setSave("error");
+          notify(body.message ?? "Your last change was not saved. Check your connection and press Retry.", "error");
+          return false;
+        }
+        if (seq === saveSeq.current) setSave("saved");
+        return true;
+      } catch {
+        setSave("error");
+        notify("Your last change was not saved. Check your connection and press Retry.", "error");
+        return false;
+      }
+    },
+    [notify, props.websiteId],
+  );
 
   useEffect(() => {
     if (skipSite.current) {
       skipSite.current = false;
       return;
     }
-    const shouldReload = reloadAfter.current;
+    if (!props.canEdit) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSave("pending");
     const timer = window.setTimeout(async () => {
-      if (!props.canEdit) return;
-      setStatus("Saving");
-      const response = await fetch(`/api/sites/${props.websiteId}/draft`, {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(site),
-      });
-      const body = (await response.json()) as { message?: string };
-      setStatus(response.ok ? "Saved" : "Not saved");
-      if (!response.ok && body.message) setNotice(body.message);
-      if (response.ok && shouldReload) {
+      const shouldReload = reloadAfter.current;
+      const ok = await persistSite(site);
+      if (ok && shouldReload) {
+        reloadAfter.current = false;
         setVersion((value) => value + 1);
-        void fetch(`/api/sites/${props.websiteId}/revisions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(site) });
+        void fetch(`/api/sites/${props.websiteId}/revisions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(site) }).catch(() => undefined);
       }
-      reloadAfter.current = false;
     }, 500);
     return () => window.clearTimeout(timer);
-  }, [site, props.canEdit, props.websiteId]);
+  }, [site, props.canEdit, props.websiteId, persistSite]);
 
   useEffect(() => {
     if (skipPost.current) {
@@ -221,38 +241,54 @@ export function EditorShell(props: {
       return;
     }
     if (!activePost || !props.canEdit) return;
-    const shouldReload = reloadAfter.current;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSave("pending");
     const timer = window.setTimeout(async () => {
-      setStatus("Saving");
-      const response = await fetch(`/api/sites/${props.websiteId}/blog`, {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(activePost),
-      });
-      const body = (await response.json()) as { message?: string };
-      setStatus(response.ok ? "Saved" : "Not saved");
-      if (!response.ok && body.message) setNotice(body.message);
-      if (response.ok && shouldReload) {
-        reloadAfter.current = false;
-        setVersion((value) => value + 1);
+      const shouldReload = reloadAfter.current;
+      setSave("saving");
+      try {
+        const response = await fetch(`/api/sites/${props.websiteId}/blog`, {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(activePost),
+        });
+        const body = (await response.json().catch(() => ({}))) as { message?: string };
+        if (!response.ok) {
+          setSave("error");
+          notify(body.message ?? "The post was not saved.", "error");
+          return;
+        }
+        setSave("saved");
+        if (shouldReload) {
+          reloadAfter.current = false;
+          setVersion((value) => value + 1);
+        }
+      } catch {
+        setSave("error");
+        notify("The post was not saved. Check your connection and press Retry.", "error");
       }
     }, 700);
     return () => window.clearTimeout(timer);
-  }, [activePost, props.canEdit, props.websiteId]);
+  }, [activePost, props.canEdit, props.websiteId, notify]);
+
+  function retrySave() {
+    void persistSite(siteRef.current).then((ok) => {
+      if (ok && reloadAfter.current) {
+        reloadAfter.current = false;
+        setVersion((value) => value + 1);
+      }
+    });
+  }
 
   useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, [contenteditable=true]")) return;
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
-        event.preventDefault();
-        if (event.shiftKey) redo();
-        else undo();
-      }
+    if (save === "saved") return;
+    function onLeave(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = "";
     }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  });
+    window.addEventListener("beforeunload", onLeave);
+    return () => window.removeEventListener("beforeunload", onLeave);
+  }, [save]);
 
   useEffect(() => {
     let timer = window.setTimeout(() => void signOutUser(), 30 * 60 * 1000);
@@ -269,65 +305,58 @@ export function EditorShell(props: {
     };
   }, []);
 
-  function formatBlock(kind: "bold" | "italic" | "clear") {
-    if (!selectedBlock || section?.type !== "flow") return;
-    const current = selectedBlock.text && typeof selectedBlock.text === "object" ? selectedBlock.text : { text: "", marks: [] };
-    const marks = kind === "clear" || current.text.length === 0 ? [] : [{ start: 0, end: current.text.length, kind }];
-    commit(applyText(site, path, section.id, "text", current.text, selectedBlock.id, marks), false);
+  function selectionFor(sectionId: string, itemId = ""): Selection {
+    const target = page?.sections.find((item) => item.id === sectionId);
+    if (!target) return emptySelection;
+    const block = target.type === "flow" ? target.blocks.find((item) => item.id === itemId) : undefined;
+    const locked = (target.type === "preset" && Boolean(target.providerLocked)) || Boolean(block?.locked);
+    return { ...emptySelection, sectionId, itemId, itemIds: itemId ? [itemId] : [], locked, kind: block?.kind ?? target.type };
   }
 
-  function runAction(action: string, sectionId: string, itemId: string, overlay: boolean, itemIdsFromCanvas: string[] = []) {
-    if (action === "drag" || !sectionId) return;
-    const flow = page?.sections.find((item) => item.id === sectionId);
-    if (itemId && flow?.type === "flow") {
-      if (action === "duplicate") commit(duplicateFlowBlock(site, path, sectionId, itemId), true);
-      else if (action === "delete") commit(deleteFlowBlock(site, path, sectionId, itemId), true);
-      else if (action === "hide" || action === "show") commit(setBlockHidden(site, path, sectionId, itemId, action === "hide"), true);
-      else if (action === "pin") commit(pinBlock(site, path, sectionId, itemId, true), true);
-      return;
-    }
-    if (itemId && action === "duplicate") commit(duplicateItem(site, path, sectionId, itemId, overlay), true);
-    else if (itemId && action === "delete") commit(deleteItem(site, path, sectionId, itemId, overlay), true);
-    else if (itemId && (action === "hide" || action === "show")) commit(patchItem(site, path, sectionId, itemId, { hidden: action === "hide" }, overlay), true);
-    else if (itemId && (action === "lock" || action === "unlock")) commit(patchItem(site, path, sectionId, itemId, { locked: action === "lock" }, overlay), true);
-    else if (itemId && (action === "forward" || action === "back")) {
-      const items = overlay && section?.type === "preset" ? section.overlay ?? [] : section?.type === "freeform" ? section.items : [];
-      const item = items.find((entry) => entry.id === itemId);
-      commit(patchItem(site, path, sectionId, itemId, { zIndex: Math.max(0, (item?.zIndex ?? 1) + (action === "forward" ? 1 : -1)) }, overlay), true);
-    } else if (itemId && action === "group") {
-      const ids = itemIdsFromCanvas.length > 1 ? itemIdsFromCanvas : selection.itemIds.length > 1 ? selection.itemIds : [itemId];
-      commit(groupItems(site, path, sectionId, ids, overlay), true);
-    }
-    else if (action === "duplicate") commit(duplicateSection(site, path, sectionId), true);
-    else if (action === "delete") commit(deleteSection(site, path, sectionId), true);
-    else if (action === "hide" || action === "show") commit(setSectionHidden(site, path, sectionId, action === "hide"), true);
-    else if (action === "up" || action === "down") {
-      const index = page?.sections.findIndex((item) => item.id === sectionId) ?? -1;
-      if (index < 0) return;
-      commit(moveSection(site, path, index, action === "up" ? index - 1 : index + 2), true);
-    } else if (action === "template") setTemplateFor(sectionId);
+  function selectNode(sectionId: string, itemId = "") {
+    setSelection(selectionFor(sectionId, itemId));
+    toFrame({ type: "4eos-select-node", sectionId, itemId });
   }
 
-  function runMenu(action: string, sectionId: string, itemId: string, overlay: boolean) {
-    if (action === "replace") {
-      setSelection({ sectionId, itemId, itemIds: itemId ? [itemId] : [], overlay, locked: false });
-      setPicker(true);
-    } else if (action === "alt") {
-      setSelection({ sectionId, itemId, itemIds: itemId ? [itemId] : [], overlay, locked: false });
-    } else if (action === "crop") {
-      const filename = imageSrc(sectionId, itemId).split("/").pop() ?? "";
-      if (filename) setCrop({ filename, sectionId, itemId, overlay });
-    } else runAction(action === "duplicate" || action === "delete" ? action : action, sectionId, itemId, overlay);
+  function selectChrome(part: "header" | "footer") {
+    setSelection({ ...emptySelection, chrome: part, kind: part });
+    toFrame({ type: "4eos-select-node", chrome: part });
+  }
+
+  function clearSelection() {
+    setSelection(emptySelection);
+    toFrame({ type: "4eos-clear" });
   }
 
   function imageSrc(sectionId: string, itemId: string) {
     const current = page?.sections.find((item) => item.id === sectionId);
     if (!current) return activePost?.featuredImage?.src ?? "";
+    if (itemId && current.type === "flow") return current.blocks.find((item) => item.id === itemId)?.src ?? "";
     if (itemId && current.type === "freeform") return current.items.find((item) => item.id === itemId)?.src ?? "";
     if (itemId && current.type === "preset") return (current.overlay ?? []).find((item) => item.id === itemId)?.src ?? "";
     if (current.type === "image") return current.src;
     if (current.type === "preset" && current.heroImage) return current.heroImage.src;
     return "";
+  }
+
+  function openCrop(sectionId = selection.sectionId, itemId = selection.itemId) {
+    const filename = imageSrc(sectionId, itemId).split("/").pop() ?? "";
+    if (filename) setCrop({ filename, sectionId, itemId });
+    else notify("Add an image first, then you can crop it.");
+  }
+
+  function rememberImage(filename: string) {
+    setRecentImages((items) => [filename, ...items.filter((item) => item !== filename)].slice(0, 8));
+  }
+
+  function rememberLibrary(id: string) {
+    setRecentLibrary((items) => {
+      const next = [id, ...items.filter((item) => item !== id)].slice(0, 8);
+      try {
+        window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
   }
 
   async function upload(file: File, alt: string) {
@@ -340,13 +369,19 @@ export function EditorShell(props: {
       };
       xhr.onload = () => {
         setProgress(null);
-        const parsed = JSON.parse(xhr.responseText) as MediaItem & { message?: string };
+        let parsed: MediaItem & { message?: string };
+        try {
+          parsed = JSON.parse(xhr.responseText) as MediaItem & { message?: string };
+        } catch {
+          reject(new Error("The image could not be added."));
+          return;
+        }
         if (xhr.status >= 400) reject(new Error(parsed.message || "The image could not be added."));
         else resolve(parsed);
       };
       xhr.onerror = () => {
         setProgress(null);
-        reject(new Error("The image could not be added."));
+        reject(new Error("The image could not be added. Check your connection and try again."));
       };
       const form = new FormData();
       form.set("file", file);
@@ -354,18 +389,22 @@ export function EditorShell(props: {
       xhr.send(form);
     });
     setMedia((items) => [body, ...items.filter((item) => item.filename !== body.filename)]);
-    remember(body.filename);
+    rememberImage(body.filename);
     return body;
+  }
+
+  function uploadOnly(file: File) {
+    void upload(file, "")
+      .then((saved) => notify(`${saved.filename} is in your library.`))
+      .catch((error: Error) => notify(error.message, "error"));
   }
 
   async function placeDropped(dataUrl: string, name: string, sectionId: string, itemId: string, overlay: boolean) {
     try {
-      const file = fileFromDataUrl(dataUrl, name);
-      const saved = await upload(file, "");
-      if (activePost && path.startsWith("/insights/") && !sectionId) {
+      const saved = await upload(fileFromDataUrl(dataUrl, name), "");
+      if (activePost && !sectionId) {
         setPosts((items) => items.map((item) => (item.slug === activePost.slug ? { ...item, featuredImage: { src: saved.src, alt: saved.alt } } : item)));
         reloadAfter.current = true;
-        setVersion((value) => value + 1);
         return;
       }
       if (!sectionId) return;
@@ -379,23 +418,43 @@ export function EditorShell(props: {
         return;
       }
       commit(setImageSource(site, path, sectionId, saved.src, saved.alt, itemId || undefined), true);
+      notify("Image replaced. Add a description in the panel on the right.");
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "The image could not be added.");
+      notify(error instanceof Error ? error.message : "The image could not be added.", "error");
     }
   }
 
   function chooseImage(item: MediaItem) {
-    remember(item.filename);
-    if (activePost && picker && path.startsWith("/insights/")) {
+    rememberImage(item.filename);
+    setPicker(false);
+    if (activePost && !selection.sectionId) {
+      rememberHistory();
       setPosts((items) => items.map((post) => (post.slug === activePost.slug ? { ...post, featuredImage: { src: item.src, alt: item.alt } } : post)));
-      setPicker(false);
       reloadAfter.current = true;
-      setVersion((value) => value + 1);
       return;
     }
-    if (!selection.sectionId) return;
+    if (!selection.sectionId) {
+      notify("Select an image on the page first.");
+      return;
+    }
     commit(setImageSource(site, path, selection.sectionId, item.src, item.alt, selection.itemId || undefined), true);
-    setPicker(false);
+  }
+
+  async function removeMedia(item: MediaItem) {
+    try {
+      const response = await fetch(`/api/sites/${props.websiteId}/media`, {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ filename: item.filename }),
+      });
+      const body = (await response.json().catch(() => ({}))) as { message?: string };
+      if (response.ok) {
+        setMedia((items) => items.filter((entry) => entry.filename !== item.filename));
+        notify("Image deleted.");
+      } else notify(body.message ?? "The image could not be deleted.", "error");
+    } catch {
+      notify("The image could not be deleted. Check your connection.", "error");
+    }
   }
 
   function updateBlog(field: string, index: unknown, value: string) {
@@ -432,9 +491,7 @@ export function EditorShell(props: {
               const cellIndex = Number(cellText);
               return {
                 ...block,
-                rows: block.rows.map((row, currentRow) =>
-                  currentRow === rowIndex ? row.map((cell, currentCell) => (currentCell === cellIndex ? value : cell)) : row,
-                ),
+                rows: block.rows.map((row, currentRow) => (currentRow === rowIndex ? row.map((cell, currentCell) => (currentCell === cellIndex ? value : cell)) : row)),
               };
             }
             return block;
@@ -444,635 +501,633 @@ export function EditorShell(props: {
     );
   }
 
+  function updatePost(next: BlogDraft) {
+    if (!props.canEdit) return;
+    const key = `post:${next.slug}`;
+    if (textKey.current !== key) {
+      textKey.current = key;
+      rememberHistory();
+    }
+    setPosts((items) => items.map((item) => (item.slug === next.slug ? next : item)));
+  }
+
   function addBlogBlock(block: BlogDraft["blocks"][number]) {
-    if (!activePost) return;
+    if (!activePost || !props.canEdit) return;
     rememberHistory();
+    textKey.current = "";
     reloadAfter.current = true;
     setPosts((items) => items.map((post) => (post.slug === activePost.slug ? { ...post, blocks: [...post.blocks, block] } : post)));
   }
 
   async function createInsight() {
     const post = { ...defaultBlogDraft, slug: `note-${createId("n").slice(-4)}`, title: "New insight" };
-    setStatus("Saving");
-    const response = await fetch(`/api/sites/${props.websiteId}/blog`, {
-      method: "PUT",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(post),
-    });
-    const body = (await response.json()) as { message?: string };
-    if (!response.ok) {
-      setStatus("Not saved");
-      setNotice(body.message ?? "The post could not be created.");
+    setSave("saving");
+    try {
+      const response = await fetch(`/api/sites/${props.websiteId}/blog`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(post),
+      });
+      const body = (await response.json().catch(() => ({}))) as { message?: string };
+      if (!response.ok) {
+        setSave("error");
+        notify(body.message ?? "The post could not be created.", "error");
+        return;
+      }
+    } catch {
+      setSave("error");
+      notify("The post could not be created. Check your connection.", "error");
       return;
     }
     rememberHistory();
     skipPost.current = true;
     setPosts((items) => [post, ...items]);
-    setStatus("Saved");
+    setSave("saved");
     openPage(`/insights/${post.slug}`);
   }
 
-  useEffect(() => {
-    function onMessage(event: MessageEvent) {
-      const frame = document.getElementById("site-preview") as HTMLIFrameElement | null;
-      if (!frame || event.source !== frame.contentWindow || !event.data || typeof event.data !== "object") return;
-      const data = event.data as Record<string, unknown>;
-      if (data.type === "4eos-navigate" && typeof data.path === "string") {
-        const next = data.path.split("#")[0] || "/";
-        setPath(next.startsWith("/preview/") ? "/" : next);
-        setPanel("page");
-        setSelection(emptySelection);
-      }
-      if (data.type === "4eos-select") {
-        const itemId = String(data.itemId ?? "");
-        const itemIds = Array.isArray(data.itemIds) ? data.itemIds.map((item) => String(item)).filter(Boolean) : itemId ? [itemId] : [];
-        setChromeFocus(null);
-        setSelection({
-          sectionId: String(data.sectionId ?? ""),
-          itemId,
-          itemIds,
-          overlay: Boolean(data.overlay),
-          locked: Boolean(data.locked),
-        });
-        setPanel("page");
-        setPropTab("content");
-      }
-      if (data.type === "4eos-text") {
-        const marks = Array.isArray(data.marks) ? data.marks.flatMap((mark) => {
-          if (!mark || typeof mark !== "object") return [];
-          const item = mark as { start?: number; end?: number; kind?: string; href?: string; color?: string };
-          if (item.kind !== "bold" && item.kind !== "italic" && item.kind !== "link" && item.kind !== "color") return [];
-          const kind = item.kind as "bold" | "italic" | "link" | "color";
-          return [{ start: Number(item.start), end: Number(item.end), kind, href: item.href, color: item.color }];
-        }) : undefined;
-        commitText(
-          applyText(site, path, String(data.sectionId ?? ""), String(data.field ?? "text"), String(data.value ?? ""), String(data.itemId ?? "") || undefined, marks),
-          `${data.sectionId}:${data.itemId}:${data.field}`,
-        );
-      }
-      if (data.type === "4eos-nav" && typeof data.route === "string") {
-        commit(updatePageMeta(site, data.route, { navLabel: String(data.value ?? "") }), false);
-      }
-      if (data.type === "4eos-reorder-block") {
-        commit(moveFlowBlock(site, path, String(data.sectionId ?? ""), Number(data.from), Number(data.to)), true);
-      }
-      if (data.type === "4eos-insert") setLibrary({ index: Number(data.index ?? 0) });
-      if (data.type === "4eos-move") commit(moveSection(site, path, Number(data.from), Number(data.to)), true);
-      if (data.type === "4eos-chrome") {
-        const field = String(data.field ?? "");
-        const value = String(data.value ?? "");
-        const chrome = structuredClone(site.chrome);
-        if (field === "buttonLabel") chrome.header.buttonLabel = value;
-        if (field === "note") chrome.footer.note = value;
-        if (field === "copyright") chrome.footer.copyright = value;
-        if (field === "cookie") chrome.cookieText = value;
-        if (field === "announcement") chrome.announcement.text = value;
-        commit(patchChrome(site, chrome), false);
-      }
-      if (data.type === "4eos-action") {
-        const canvasIds = Array.isArray(data.itemIds) ? data.itemIds.map((item) => String(item)).filter(Boolean) : [];
-        runAction(String(data.action ?? ""), String(data.sectionId ?? ""), String(data.itemId ?? ""), Boolean(data.overlay), canvasIds);
-      }
-      if (data.type === "4eos-place" && Array.isArray(data.items)) {
-        const viewportName = data.viewport === "mobile" || data.viewport === "tablet" || data.viewport === "desktop" ? data.viewport : "desktop";
-        commit(
-          placeItems(
-            site,
-            path,
-            String(data.sectionId ?? ""),
-            viewportName,
-            (data.items as { id: string; placement: { x: number; y: number; w: number; h: number } }[]).filter((item) => item && item.placement),
-            Boolean(data.overlay),
-          ),
-          false,
-        );
-      }
-      if (data.type === "4eos-drop" && typeof data.dataUrl === "string") {
-        void placeDropped(String(data.dataUrl), String(data.name ?? "image.png"), String(data.sectionId ?? ""), String(data.itemId ?? ""), Boolean(data.overlay));
-      }
-      if (data.type === "4eos-menu") runMenu(String(data.action ?? ""), String(data.sectionId ?? ""), String(data.itemId ?? ""), Boolean(data.overlay));
-      if (data.type === "4eos-blog") updateBlog(String(data.field ?? ""), data.index, String(data.value ?? ""));
-      if (data.type === "4eos-key" && data.key === "z") {
-        if (data.shift) redo();
-        else undo();
-      }
-    }
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
-  });
+  async function createPageFrom(form: PageForm) {
+    const result = createPage(site, form);
+    if (result.error) return result.error;
+    const created = result.site.pages[result.site.pages.length - 1];
+    const ok = await persistSite(result.site);
+    if (!ok || !created) return "The page could not be saved. Try again.";
+    rememberHistory();
+    skipSite.current = true;
+    setSite(result.site);
+    setAddingPage(false);
+    openPage(created.route);
+    notify(`${created.title} is ready. Click any text on it to start editing.`);
+    return undefined;
+  }
 
-  function chooseLibrary(type: (typeof LIBRARY_BLOCKS)[number]["type"]) {
-    const block = librarySection(type, props.canEmbed);
-    const kind = blockFitsInZone(type);
-    const intoZone = library?.index == null && kind && section && (section.type === "freeform" || (selection.overlay && section.type === "preset"));
-    if (intoZone && kind) {
-      commit(addZoneItem(site, path, section.id, kind as FreeformItem["kind"], selection.overlay || section.type === "preset"), true);
-    } else if (block) {
-      const index = library?.index ?? page?.sections.length ?? 0;
-      commit(insertSection(site, path, index, block), true);
+  function duplicateCurrentPage() {
+    if (!page) return;
+    const result = duplicatePage(site, page.route);
+    if (result.error || !result.route) {
+      notify(result.error ?? "This page cannot be duplicated.", "error");
+      return;
     }
-    setLibrary(null);
+    const route = result.route;
+    void persistSite(result.site).then((ok) => {
+      if (!ok) return;
+      rememberHistory();
+      skipSite.current = true;
+      setSite(result.site);
+      openPage(route);
+      notify("Page duplicated. It is hidden from the menu until you turn it on.");
+    });
+  }
+
+  function runAction(action: string, sectionId: string, itemId: string, overlay: boolean, itemIds: string[] = []) {
+    if (!sectionId || !page) return;
+    const target = page.sections.find((item) => item.id === sectionId);
+    if (!target) return;
+    const removed = () => {
+      setSelection(emptySelection);
+      notify(itemId ? "Item deleted." : "Section deleted.", "info", { label: "Undo", run: () => undoRef.current() });
+    };
+    if (action === "copy") {
+      if (!itemId) {
+        setClipboard(structuredClone(target));
+        notify("Section copied. Use Paste in any section's menu.");
+      }
+      return;
+    }
+    if (action === "paste") {
+      if (!clipboard) return;
+      commit(insertSectionCopy(site, path, sectionId, clipboard), true);
+      notify("Section pasted below.");
+      return;
+    }
+    if (action === "template") {
+      setTemplateFor(sectionId);
+      return;
+    }
+    if (itemId && target.type === "flow") {
+      if (action === "duplicate") commit(duplicateFlowBlock(site, path, sectionId, itemId), true);
+      else if (action === "delete") {
+        commit(deleteFlowBlock(site, path, sectionId, itemId), true);
+        removed();
+      } else if (action === "hide" || action === "show") commit(setBlockHidden(site, path, sectionId, itemId, action === "hide"), true);
+      return;
+    }
+    if (itemId) {
+      if (action === "duplicate") commit(duplicateItem(site, path, sectionId, itemId, overlay), true);
+      else if (action === "delete") {
+        commit(deleteItem(site, path, sectionId, itemId, overlay), true);
+        removed();
+      } else if (action === "hide" || action === "show") commit(patchItem(site, path, sectionId, itemId, { hidden: action === "hide" }, overlay), true);
+      else if (action === "lock" || action === "unlock") commit(patchItem(site, path, sectionId, itemId, { locked: action === "lock" }, overlay), true);
+      else if (action === "forward" || action === "back") {
+        const items: FreeformItem[] = overlay && target.type === "preset" ? target.overlay ?? [] : target.type === "freeform" ? target.items : [];
+        const item = items.find((entry) => entry.id === itemId);
+        commit(patchItem(site, path, sectionId, itemId, { zIndex: Math.max(0, (item?.zIndex ?? 1) + (action === "forward" ? 1 : -1)) }, overlay), true);
+      } else if (action === "group") commit(groupItems(site, path, sectionId, itemIds.length > 1 ? itemIds : [itemId], overlay), true);
+      return;
+    }
+    if (action === "duplicate") commit(duplicateSection(site, path, sectionId), true);
+    else if (action === "delete") {
+      commit(deleteSection(site, path, sectionId), true);
+      removed();
+    } else if (action === "hide" || action === "show") commit(setSectionHidden(site, path, sectionId, action === "hide"), true);
+  }
+
+  function insertEntry(entry: LibraryEntry, at?: Insert) {
+    if (!page || !props.canEdit) {
+      notify(managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
+      return;
+    }
+    rememberLibrary(entry.id);
+    const [group, type] = entry.id.split(":");
+    if (!at && entry.block && section?.type === "flow" && !selection.locked) {
+      commit(addFlowBlock(site, path, section.id, entry.block, selection.itemId || undefined), true);
+      notify(`${entry.label} added to this section.`);
+      return;
+    }
+    const zoneKind = blockFitsInZone(entry.block ?? type ?? "");
+    if (!at && zoneKind && section && (section.type === "freeform" || (selection.overlay && section.type === "preset"))) {
+      commit(addZoneItem(site, path, section.id, zoneKind as FreeformItem["kind"], section.type === "preset"), true);
+      notify(`${entry.label} added to the zone.`);
+      return;
+    }
+    const created = sectionForEntry(entry, props.canEmbed);
+    if (!created) {
+      notify("That item cannot be added here.", "error");
+      return;
+    }
+    const index = at ? (at.beforeId ? page.sections.findIndex((item) => item.id === at.beforeId) : page.sections.length) : section ? page.sections.findIndex((item) => item.id === section.id) + 1 : page.sections.length;
+    commit(insertSection(site, path, index < 0 ? page.sections.length : index, created), true);
+    setSelection(selectionFor(created.id));
+    notify(group === "block" ? `${entry.label} added in a new section.` : `${entry.label} added.`);
+  }
+
+  function insertTemplate(id: string, at?: Insert) {
+    const template = site.sectionTemplates.find((item) => item.id === id);
+    if (!template || !page) return;
+    const copy = structuredClone(template.section);
+    copy.id = createId("sec");
+    const index = at?.beforeId ? page.sections.findIndex((item) => item.id === at.beforeId) : section && !at ? page.sections.findIndex((item) => item.id === section.id) + 1 : page.sections.length;
+    commit(insertSection(site, path, index < 0 ? page.sections.length : index, copy), true);
+    notify(`${template.name} added.`);
+  }
+
+  function sitePath(pathname: string) {
+    const prefix = `/preview/${props.websiteId}`;
+    const clean = pathname.split("#")[0]?.split("?")[0] ?? "/";
+    const route = clean.startsWith(prefix) ? clean.slice(prefix.length) : clean;
+    return route.replace(/\/$/, "") || "/";
   }
 
   function openPage(route: string) {
     setPath(route);
-    setPanel("page");
     setSelection(emptySelection);
     setVersion((value) => value + 1);
-    document.getElementById("site-preview")?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  const width = viewports.find((item) => item.id === viewport)?.width ?? 1280;
+  const undoRef = useRef(undo);
+  const handlerRef = useRef<(event: MessageEvent) => void>(() => undefined);
+
+  function postConfig(route: string) {
+    toFrame({ type: "4eos-config", scale, clipboard: Boolean(clipboard), scrollY: scrollByPath.current[route] ?? 0, selection: { sectionId: selection.sectionId, itemId: selection.itemId } });
+  }
+
+  function onMessage(event: MessageEvent) {
+    const node = frame();
+    if (!node || event.source !== node.contentWindow || !event.data || typeof event.data !== "object") return;
+    const data = event.data as Record<string, unknown>;
+    const text = (key: string) => String(data[key] ?? "");
+    switch (data.type) {
+      case "4eos-ready": {
+        readyFor.current = node.src;
+        setFrameFailed(false);
+        postConfig(sitePath(text("path")));
+        break;
+      }
+      case "4eos-scroll":
+        scrollByPath.current[sitePath(text("path"))] = Number(data.y) || 0;
+        break;
+      case "4eos-navigate": {
+        const next = sitePath(text("path"));
+        if (next !== path) {
+          setPath(next);
+          setSelection(emptySelection);
+        }
+        break;
+      }
+      case "4eos-select": {
+        const itemId = text("itemId");
+        const itemIds = Array.isArray(data.itemIds) ? data.itemIds.map((item) => String(item)).filter(Boolean) : itemId ? [itemId] : [];
+        const chrome = data.chrome === "header" || data.chrome === "footer" ? data.chrome : "";
+        setSelection({ sectionId: text("sectionId"), itemId, itemIds, overlay: Boolean(data.overlay), locked: Boolean(data.locked), chrome, navRoute: text("navRoute"), kind: text("kind") });
+        break;
+      }
+      case "4eos-editing":
+        setEditing(Boolean(data.active));
+        break;
+      case "4eos-text": {
+        const marks = Array.isArray(data.marks)
+          ? data.marks.flatMap((mark): RichMark[] => {
+              if (!mark || typeof mark !== "object") return [];
+              const item = mark as { start?: number; end?: number; kind?: string; href?: string; color?: string };
+              if (item.kind !== "bold" && item.kind !== "italic" && item.kind !== "underline" && item.kind !== "link" && item.kind !== "color") return [];
+              return [{ start: Number(item.start), end: Number(item.end), kind: item.kind, href: item.href, color: item.color }];
+            })
+          : undefined;
+        commitText(applyText(site, path, text("sectionId"), text("field") || "text", text("value"), text("itemId") || undefined, marks), `${text("sectionId")}:${text("itemId")}:${text("field")}`);
+        break;
+      }
+      case "4eos-nav":
+        if (typeof data.route === "string") commitText(updatePageMeta(site, data.route, { navLabel: text("value") }), `nav:${data.route}`);
+        break;
+      case "4eos-chrome": {
+        const field = text("field");
+        const value = text("value");
+        const chrome = structuredClone(site.chrome);
+        if (field === "buttonLabel") chrome.header.buttonLabel = value;
+        else if (field === "siteName") chrome.header.siteName = value;
+        else if (field === "note") chrome.footer.note = value;
+        else if (field === "copyright") chrome.footer.copyright = value;
+        else if (field === "cookie") chrome.cookieText = value;
+        else if (field === "announcement") chrome.announcement.text = value;
+        else return;
+        commitText(patchChrome(site, chrome), `chrome:${field}`);
+        break;
+      }
+      case "4eos-move":
+        commit(moveSectionById(site, path, text("sectionId"), text("beforeId")), true);
+        break;
+      case "4eos-reorder-block":
+        commit(moveFlowBlockById(site, path, text("sectionId"), text("itemId"), text("targetId"), Boolean(data.after)), true);
+        break;
+      case "4eos-insert":
+        if (!props.canEdit) return;
+        setInsert({ beforeId: text("beforeId") });
+        break;
+      case "4eos-insert-type": {
+        const entry = entryById(text("libraryType"));
+        if (entry) insertEntry(entry, { beforeId: text("beforeId") });
+        break;
+      }
+      case "4eos-action": {
+        const ids = Array.isArray(data.itemIds) ? data.itemIds.map((item) => String(item)).filter(Boolean) : [];
+        runAction(text("action"), text("sectionId"), text("itemId"), Boolean(data.overlay), ids);
+        break;
+      }
+      case "4eos-menu": {
+        const sectionId = text("sectionId");
+        const itemId = text("itemId");
+        const action = text("action");
+        setSelection((current) => (current.sectionId === sectionId && current.itemId === itemId ? current : { ...selectionFor(sectionId, itemId), overlay: Boolean(data.overlay) }));
+        if (action === "replace") setPicker(true);
+        else if (action === "crop") openCrop(sectionId, itemId);
+        else if (action === "alt") notify("Write the image description in the panel on the right.");
+        break;
+      }
+      case "4eos-place": {
+        if (!Array.isArray(data.items)) return;
+        const name = data.viewport === "mobile" || data.viewport === "tablet" ? data.viewport : "desktop";
+        const items = (data.items as { id: string; placement: { x: number; y: number; w: number; h: number } }[]).filter((item) => item && item.placement);
+        commit(placeItems(site, path, text("sectionId"), name, items, Boolean(data.overlay)), false);
+        break;
+      }
+      case "4eos-drop":
+        if (typeof data.dataUrl === "string") void placeDropped(data.dataUrl, text("name") || "image.png", text("sectionId"), text("itemId"), Boolean(data.overlay));
+        break;
+      case "4eos-drop-error":
+        notify(`${text("name") || "That file"} is not an image this site can use. Use PNG, JPEG, WebP, or SVG.`, "error");
+        break;
+      case "4eos-blog":
+        updateBlog(text("field"), data.index, text("value"));
+        break;
+      case "4eos-key":
+        if (data.key === "z") {
+          if (data.shift) redo();
+          else undo();
+        }
+        break;
+    }
+  }
+
+  useEffect(() => {
+    undoRef.current = undo;
+    handlerRef.current = onMessage;
+  });
+
+  useEffect(() => {
+    const listener = (event: MessageEvent) => handlerRef.current(event);
+    window.addEventListener("message", listener);
+    return () => window.removeEventListener("message", listener);
+  }, []);
+
+  useEffect(() => {
+    toFrame({ type: "4eos-config", scale, clipboard: Boolean(clipboard) });
+  }, [scale, clipboard]);
+
   const previewSrc = useMemo(() => {
     const route = path === "/" ? "" : path;
     return `/preview/${props.websiteId}${route}?v=${version}&t=${encodeURIComponent(props.previewAccess)}`;
   }, [path, props.previewAccess, props.websiteId, version]);
 
-  const usedHere = media.map((item) => ({ ...item, usedBy: item.usedBy ?? imageUsage(site, posts, item.filename) }));
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const node = frame();
+      if (node && readyFor.current !== node.src) setFrameFailed(true);
+    }, READY_TIMEOUT);
+    return () => window.clearTimeout(timer);
+  }, [previewSrc]);
 
-  const addItems = LIBRARY_BLOCKS.filter((item) => (item.type !== "embed" || props.canEmbed) && item.label.toLowerCase().includes(addQuery.toLowerCase()));
-  const sectionCatalog = [
-    ["hero", "Hero"],
-    ["split", "Text beside an image"],
-    ["cards", "Features"],
-    ["list", "Questions and answers"],
-    ["stack", "Blank section"],
-  ] as const;
-  const visibleCatalog = sectionCatalog.filter((item) => item[1].toLowerCase().includes(addQuery.toLowerCase()));
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const typing = Boolean(target?.closest("input, textarea, select, [contenteditable=true]"));
+      const mod = event.metaKey || event.ctrlKey;
+      if (mod && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        if (save === "error") retrySave();
+        else notify("Changes save automatically.");
+        return;
+      }
+      if (typing) return;
+      if (mod && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        if (event.shiftKey) redo();
+        else undo();
+      } else if (mod && event.key.toLowerCase() === "y") {
+        event.preventDefault();
+        redo();
+      } else if (event.key === "?" && !document.querySelector(".ed-dialog")) {
+        event.preventDefault();
+        setShortcuts(true);
+      } else if (event.key === "Escape" && !document.querySelector(".ed-dialog") && (selection.sectionId || selection.chrome)) {
+        clearSelection();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  const api: EditorApi = {
+    websiteId: props.websiteId,
+    site,
+    path,
+    page,
+    canEdit: props.canEdit,
+    viewport,
+    selection,
+    commit,
+    commitText,
+    notify,
+    selectNode,
+    openPicker: () => setPicker(true),
+    openCrop: () => openCrop(),
+  };
+
+  const width = VIEWPORTS.find((item) => item.id === viewport)?.width ?? 1280;
+  const mediaWithUse = media.map((item) => ({ ...item, usedBy: imageUsage(site, posts, item.filename) }));
+  const recommended = recommendedFor(page?.sections ?? []);
+  const templates = site.sectionTemplates.map((item) => ({ id: item.id, name: item.name }));
+  const canPlaceImage = Boolean(selection.sectionId && (selection.kind === "image" || imageSrc(selection.sectionId, selection.itemId)));
+  const pageTitle = page?.title ?? activePost?.title ?? (path === "/" ? "Home" : path);
+  const statusMessage = !props.canEdit
+    ? "You can look around, but this account cannot change the site."
+    : managedRoute
+      ? "This page is managed for you. Pick a page on the left to edit."
+      : selection.locked
+        ? "This part is managed for you."
+        : selection.itemId || selection.navRoute || selection.chrome
+          ? "Double-click text to type. Drag the handle to move. Right-click for more."
+          : selection.sectionId
+            ? "Drag the handle to move this section, or use the menu for more."
+            : "Click anything on the page to select it.";
+
+  function dismissTip() {
+    setTipDismissed(true);
+    try {
+      window.localStorage.setItem(TIP_KEY, "1");
+    } catch {}
+  }
+
+  async function confirmIdentity() {
+    try {
+      const response = await fetch(`/api/sites/${props.websiteId}/step-up`, { method: "POST" });
+      const body = (await response.json().catch(() => ({}))) as { message?: string };
+      notify(body.message ?? (response.ok ? "Confirmed." : "That did not work. Try again."), response.ok ? "info" : "error");
+      if (publishing) setPublishMessage(body.message ?? "");
+    } catch {
+      notify("That did not work. Check your connection.", "error");
+    }
+  }
+
+  async function publish() {
+    if (save !== "saved") {
+      setPublishMessage("Wait for your changes to finish saving, then send them.");
+      return;
+    }
+    setPublishBusy(true);
+    try {
+      const response = await fetch(`/api/sites/${props.websiteId}/publish`, { method: "POST" });
+      const body = (await response.json().catch(() => ({}))) as { message?: string; status?: string; reviewUrl?: string | null };
+      setPublishMessage(body.message ?? "The changes could not be sent.");
+      if (response.ok && body.status) setPublications((items) => [{ status: body.status!, summary: body.message ?? "", reviewUrl: body.reviewUrl ?? null }, ...items]);
+    } catch {
+      setPublishMessage("The changes could not be sent. Check your connection and try again.");
+    } finally {
+      setPublishBusy(false);
+    }
+  }
 
   return (
-    <div className="studio grid h-dvh grid-rows-[auto_1fr_auto]">
-      <header className="studio-titlebar">
-        <button className="studio-icon" type="button" title={chromeHidden ? "Show panels" : "Hide panels"} onClick={() => setChromeHidden((value) => !value)}><PanelLeft size={16} /></button>
-        <span className="truncate text-[var(--studio-muted)]">{props.websiteName}</span>
-        <strong className="truncate">{page?.title ?? activePost?.title ?? "Page"}</strong>
-        <div className="ml-auto flex items-center gap-1">
-          {selection.sectionId && !selection.locked ? (
-            <>
-              <button className="studio-icon" type="button" title="Duplicate" onClick={() => runAction("duplicate", selection.sectionId, selection.itemId, selection.overlay, selection.itemIds)}>Duplicate</button>
-              <button className="studio-icon" type="button" title="Delete" onClick={() => runAction("delete", selection.sectionId, selection.itemId, selection.overlay, selection.itemIds)}>Delete</button>
-              <button className="studio-icon" type="button" title="Hide" onClick={() => runAction("hide", selection.sectionId, selection.itemId, selection.overlay, selection.itemIds)}>Hide</button>
-              <button className="studio-icon" type="button" title="Design" onClick={() => setPropTab("design")}>Design</button>
-            </>
-          ) : null}
-          <button className="studio-icon" type="button" aria-label="Undo" disabled={past.length === 0} onClick={undo}><Undo2 aria-hidden="true" size={16} /></button>
-          <button className="studio-icon" type="button" aria-label="Redo" disabled={future.length === 0} onClick={redo}><Redo2 aria-hidden="true" size={16} /></button>
-          {viewports.map((item) => (
-            <button key={item.id} className={viewport === item.id ? "studio-icon is-active" : "studio-icon"} type="button" aria-label={item.label} aria-pressed={viewport === item.id} onClick={() => setViewport(item.id)}>
-              <item.icon aria-hidden="true" size={16} />
-            </button>
-          ))}
-          <a className="studio-icon" href={`${previewSrc}&clean=1`} target="_blank" rel="noreferrer">Preview</a>
-          {props.canPublish ? (
-            <button className="studio-primary" type="button" onClick={() => void publish()}>Submit for publish</button>
-          ) : (
-            <span className="px-2 text-[var(--studio-muted)]">{props.canEdit ? "Drafts only" : "View only"}</span>
-          )}
-          <details className="relative">
-            <summary className="cursor-pointer list-none px-2">{props.userName}</summary>
-            <div className="absolute right-0 z-20 mt-2 w-56 border border-[var(--studio-border)] bg-[var(--studio-sidebar)] p-3 text-sm">
-              <p>{props.role}</p>
-              <form action={signOutUser} className="mt-2"><button type="submit">Sign out</button></form>
-            </div>
-          </details>
-        </div>
-      </header>
-      <div className={`grid min-h-0 ${chromeHidden ? "grid-cols-[48px_1fr]" : "grid-cols-[auto_1fr_320px]"}`}>
-        <div className="flex min-h-0">
-        <nav className="studio-activity" aria-label="Editor">
-          {([
-            ["add", "Add", Plus],
-            ["pages", "Pages", Files],
-            ["layers", "Layers", ListTree],
-            ["design", "Design", Palette],
-            ["media", "Media", ImageIcon],
-          ] as const).map(([id, label, Icon]) => (
-            <button key={id} type="button" className={rail === id ? "is-active" : ""} title={label} aria-label={label} aria-pressed={rail === id} onClick={() => setRail((current) => (current === id ? null : id))}><Icon size={22} /></button>
-          ))}
-        </nav>
-        {rail && !chromeHidden ? <aside className="studio-side">
-          {rail === "pages" ? (
-            <>
-              <div className="studio-side-title">
-                <span>Explorer</span>
-                {props.canEdit ? <button type="button" title="Add page" onClick={() => { setRouteTouched(false); setPageForm({ title: "", route: "", template: "landing", navVisible: true, seoTitle: "", metaDescription: "" }); setAddingPage(true); }}><Plus size={16} /></button> : null}
-              </div>
-              <label className="studio-search"><Search size={14} /><input placeholder="Search pages" value={pageQuery} onChange={(event) => setPageQuery(event.target.value)} /></label>
-              <p className="studio-group">Main navigation</p>
-              <ul>
-                {site.pages.filter((item) => !item.archived && item.navVisible && `${item.title} ${item.route}`.toLowerCase().includes(pageQuery.toLowerCase())).map((item) => (
-                  <li key={item.route} className="flex items-center" draggable={item.route !== "/"} onDragStart={(event) => event.dataTransfer.setData("text/plain", String(site.pages.findIndex((page) => page.route === item.route)))} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); commit(reorderPages(site, Number(event.dataTransfer.getData("text/plain")), site.pages.findIndex((page) => page.route === item.route)), true); }}>
-                    <button className={path === item.route ? "nav-button is-active" : "nav-button"} type="button" onClick={() => { setChromeFocus(null); openPage(item.route); }}>
-                      {item.route === "/" ? <Home size={14} /> : null}{item.navLabel || item.title}{item.locked ? " · Managed" : ""}
-                    </button>
-                    <button className="studio-icon" type="button" title="Page settings" onClick={() => { setChromeFocus(null); openPage(item.route); setPropTab("content"); }}><Settings2 size={14} /></button>
-                  </li>
-                ))}
-              </ul>
-              <p className="studio-group">Not in the menu</p>
-              <ul>
-                {site.pages.filter((item) => !item.archived && !item.navVisible).map((item) => (
-                  <li key={item.route}><button className="nav-button" type="button" onClick={() => openPage(item.route)}>{item.title}</button></li>
-                ))}
-              </ul>
-              <p className="studio-group">Archived</p>
-              <ul>
-                {site.pages.filter((item) => item.archived).map((item) => (
-                  <li key={item.route}><button className="nav-button" type="button" onClick={() => openPage(item.route)}>{item.title}</button></li>
-                ))}
-              </ul>
-              <button className="nav-button" type="button" onClick={() => void createInsight()}>New Insights post</button>
-              {posts.map((post) => (
-                <button key={post.slug} className={path === `/insights/${post.slug}` ? "nav-button is-active" : "nav-button"} type="button" onClick={() => openPage(`/insights/${post.slug}`)}>{post.title}</button>
-              ))}
-              <button className="nav-button" type="button" onClick={() => setPanel("history")}>Publish history</button>
-            </>
-          ) : null}
-          {rail === "add" ? (
-            <div>
-              <p className="studio-side-title">Add</p>
-              <label className="studio-search"><Search size={14} /><input placeholder="Search sections and blocks" value={addQuery} onChange={(event) => setAddQuery(event.target.value)} /></label>
-              <p className="studio-group">Sections</p>
-              {visibleCatalog.map(([layout, label]) => (
-                <button key={layout} className="nav-button" type="button" onClick={() => page && commit(insertSection(site, path, page.sections.length, catalogSection(layout)), true)}>{label}</button>
-              ))}
-              <p className="studio-group">Blocks</p>
-              {addItems.map((item) => (
-                <button key={item.type} className="nav-button" type="button" onClick={() => chooseLibrary(item.type)}>{item.label}</button>
-              ))}
-              {visibleCatalog.length === 0 && addItems.length === 0 ? <p className="studio-empty">Nothing matches that search.</p> : null}
-            </div>
-          ) : null}
-          {rail === "layers" ? (
-            <div>
-              <p className="studio-side-title">Layers</p>
-              <button className={chromeFocus === "header" ? "nav-button is-active" : "nav-button"} type="button" onClick={() => { setSelection(emptySelection); setChromeFocus("header"); setPropTab("content"); }}>Header</button>
-              {(page?.sections ?? []).map((item, index) => (
-                <div key={item.id}>
-                  <div className="flex items-center">
-                    {renamingId === item.id ? (
-                      <input className="field" autoFocus defaultValue={item.editorName || item.type} onBlur={(event) => { setRenamingId(""); commit(setEditorName(site, path, item.id, event.target.value), false); }} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }} />
-                    ) : (
-                      <button className={selection.sectionId === item.id && !selection.itemId ? "nav-button is-active" : "nav-button"} type="button" draggable onDragStart={(event) => event.dataTransfer.setData("text/plain", String(index))} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); commit(moveSection(site, path, Number(event.dataTransfer.getData("text/plain")), index), true); }} onClick={() => { setChromeFocus(null); setSelection({ sectionId: item.id, itemId: "", itemIds: [], overlay: false, locked: false }); }} onDoubleClick={() => setRenamingId(item.id)}>
-                        {item.editorName || item.type}{item.hidden ? " · Hidden" : ""}
-                      </button>
-                    )}
-                    <button className="studio-icon" type="button" title={item.hidden ? "Show" : "Hide"} onClick={() => commit(setSectionHidden(site, path, item.id, !item.hidden), true)}>{item.hidden ? <EyeOff size={14} /> : <Eye size={14} />}</button>
-                  </div>
-                  {item.type === "flow" ? item.blocks.map((block) => (
-                    <div key={block.id} className="flex items-center">
-                      {renamingId === block.id ? (
-                        <input className="field" autoFocus defaultValue={block.editorName || block.kind} onBlur={(event) => { setRenamingId(""); commit(setEditorName(site, path, item.id, event.target.value, block.id), false); }} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }} />
-                      ) : (
-                        <button className={selection.itemId === block.id ? "nav-button is-active pl-6" : "nav-button pl-6"} type="button" onClick={() => { setChromeFocus(null); setSelection({ sectionId: item.id, itemId: block.id, itemIds: [block.id], overlay: false, locked: Boolean(block.locked) }); setPropTab("content"); }} onDoubleClick={() => setRenamingId(block.id)}>{block.editorName || block.kind}{block.hidden ? " · Hidden" : ""}</button>
-                      )}
-                      <button className="studio-icon" type="button" title={block.hidden ? "Show" : "Hide"} onClick={() => commit(setBlockHidden(site, path, item.id, block.id, !block.hidden), true)}>{block.hidden ? <EyeOff size={14} /> : <Eye size={14} />}</button>
-                    </div>
-                  )) : null}
+    <div className="ed-root">
+      <TopBar
+        websiteName={props.websiteName}
+        pageTitle={pageTitle}
+        onPages={() => setRail("pages")}
+        viewport={viewport}
+        onViewport={setViewport}
+        zoom={zoom}
+        scale={scale}
+        onZoom={setZoom}
+        canUndo={past.length > 0}
+        canRedo={future.length > 0}
+        onUndo={undo}
+        onRedo={redo}
+        save={save}
+        onRetry={retrySave}
+        previewHref={`${previewSrc}&clean=1`}
+        canEdit={props.canEdit}
+        canPublish={props.canPublish}
+        onPublish={() => {
+          setPublishMessage("");
+          setPublishing(true);
+        }}
+        userName={props.userName}
+        role={props.role}
+        onConfirm={() => void confirmIdentity()}
+        onShortcuts={() => setShortcuts(true)}
+      />
+      <div className={rail ? "ed-body" : "ed-body is-rail-closed"}>
+        <ToolRail active={rail} onChange={setRail} />
+        {rail ? (
+          <aside className="ed-side" aria-label="Panel">
+            {rail === "add" ? (
+              <div className="ed-panel">
+                <div className="ed-panel-head">
+                  <h2>Add</h2>
                 </div>
-              ))}
-              <button className={chromeFocus === "footer" ? "nav-button is-active" : "nav-button"} type="button" onClick={() => { setSelection(emptySelection); setChromeFocus("footer"); setPropTab("content"); }}>Footer</button>
-              {viewport === "mobile" ? (
-                <div>
-                  <p className="studio-group">Hidden on this phone</p>
-                  {(page?.sections ?? []).filter((item) => item.hideOn?.includes("mobile") || item.hidden).map((item) => (
-                    <button key={item.id} className="nav-button" type="button" onClick={() => commit(setHideOn(site, path, item.id, "mobile", false), true)}>Show {item.editorName || item.type}</button>
-                  ))}
-                  {(page?.sections ?? []).every((item) => !item.hideOn?.includes("mobile") && !item.hidden) ? <p className="studio-empty">Nothing is hidden on this phone.</p> : null}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-          {rail === "design" ? (
-            <div className="grid gap-1 text-sm">
-              <p className="studio-side-title">Site styles</p>
-              {(["ink", "plum", "green", "paper"] as const).map((token) => (
-                <label key={token} className="studio-row"><span>{token === "ink" ? "Text" : token === "plum" ? "Accent" : token === "green" ? "Highlight" : "Page"}</span>
-                  <input type="color" value={site.chrome.theme[token]} onChange={(event) => commit(patchChrome(site, { ...site.chrome, theme: { ...site.chrome.theme, [token]: event.target.value } }), true)} />
-                </label>
-              ))}
-              <label className="studio-row"><span>Buttons</span>
-                <select className="field" value={site.chrome.theme.button} onChange={(event) => commit(patchChrome(site, { ...site.chrome, theme: { ...site.chrome.theme, button: event.target.value as "filled" | "outline" } }), true)}>
-                  <option value="filled">Filled</option>
-                  <option value="outline">Outline</option>
-                </select>
-              </label>
-              <label className="studio-row"><span>Headings</span>
-                <select className="field" value={site.chrome.theme.font} onChange={(event) => commit(patchChrome(site, { ...site.chrome, theme: { ...site.chrome.theme, font: event.target.value as "serif" | "sans" } }), true)}>
-                  <option value="serif">Serif headings</option>
-                  <option value="sans">Sans headings</option>
-                </select>
-              </label>
-              <label className="studio-row"><span>Spacing</span>
-                <select className="field" value={site.chrome.theme.spacing} onChange={(event) => commit(patchChrome(site, { ...site.chrome, theme: { ...site.chrome.theme, spacing: event.target.value as "compact" | "comfortable" | "roomy" } }), true)}>
-                  <option value="compact">Compact</option>
-                  <option value="comfortable">Comfortable</option>
-                  <option value="roomy">Roomy</option>
-                </select>
-              </label>
-              <label className="studio-row"><span>Business name</span><input value={site.chrome.profile.name} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, name: event.target.value } }), true)} /></label>
-              <label className="studio-row"><span>Phone</span><input value={site.chrome.profile.phone} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, phone: event.target.value } }), true)} /></label>
-              <label className="studio-row"><span>Email</span><input value={site.chrome.profile.email} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, email: event.target.value } }), true)} /></label>
-              <label className="studio-row"><span>Address</span><input value={site.chrome.profile.address} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, address: event.target.value } }), true)} /></label>
-              <label className="studio-row"><span>Cookie notice</span><input value={site.chrome.cookieText} onChange={(event) => commit(patchChrome(site, { ...site.chrome, cookieText: event.target.value }), true)} /></label>
-              <label className="studio-row"><span>Analytics id</span><input value={site.chrome.analyticsId} onChange={(event) => commit(patchChrome(site, { ...site.chrome, analyticsId: event.target.value.replace(/[^A-Za-z0-9-]/g, "") }), false)} /></label>
-            </div>
-          ) : null}
-          {rail === "media" ? (
-            <MediaPanel media={usedHere} recent={recent} canEdit={props.canEdit} progress={progress} onUpload={(file) => void upload(file, "").catch((error: Error) => setNotice(error.message))} onUse={chooseImage} onDelete={(filename) => void removeMedia(filename)} />
-          ) : null}
-        </aside> : null}
-        </div>
-        <div className="studio-canvas">
-          <iframe id="site-preview" title={`${props.websiteName} preview`} sandbox="allow-scripts allow-forms" src={previewSrc} style={{ width }} />
-        </div>
-        {!chromeHidden ? <aside className="studio-props">
-          <div className="studio-tabs">
-            {(["content", "design", "layout"] as const).map((tab) => (
-              <button key={tab} type="button" className={propTab === tab ? "is-active" : ""} onClick={() => setPropTab(tab)}>{tab === "content" ? "Content" : tab === "design" ? "Design" : "Layout"}</button>
-            ))}
-          </div>
-          {notice ? <p className="m-3 border border-[var(--studio-border)] p-3 text-sm leading-relaxed">{notice}</p> : null}
-          {selection.locked ? <p className="studio-empty">{PROVIDER_LOCK_MESSAGE}</p> : null}
-          {panel === "history" ? <History publications={publications} onConfirm={() => void confirmIdentity()} /> : null}
-          {propTab === "content" && chromeFocus === "header" ? (
-            <div>
-              <label className="studio-row"><span>Site name</span><input value={site.chrome.header.siteName} onChange={(event) => commit(patchChrome(site, { ...site.chrome, header: { ...site.chrome.header, siteName: event.target.value } }), true)} /></label>
-              <label className="studio-row"><span>Button label</span><input value={site.chrome.header.buttonLabel} onChange={(event) => commit(patchChrome(site, { ...site.chrome, header: { ...site.chrome.header, buttonLabel: event.target.value } }), true)} /></label>
-              <label className="studio-row"><span>Where this goes</span><input value={site.chrome.header.buttonHref} onChange={(event) => commit(patchChrome(site, { ...site.chrome, header: { ...site.chrome.header, buttonHref: event.target.value } }), true)} /></label>
-              <label className="studio-row"><span>Sticks while scrolling</span><input type="checkbox" checked={site.chrome.header.sticky} onChange={(event) => commit(patchChrome(site, { ...site.chrome, header: { ...site.chrome.header, sticky: event.target.checked } }), true)} /></label>
-              <label className="studio-row"><span>Announcement</span><input value={site.chrome.announcement.text} onChange={(event) => commit(patchChrome(site, { ...site.chrome, announcement: { ...site.chrome.announcement, enabled: event.target.value.length > 0, text: event.target.value } }), true)} /></label>
-            </div>
-          ) : null}
-          {propTab === "content" && chromeFocus === "footer" ? (
-            <div>
-              <label className="studio-row"><span>Note</span><input value={site.chrome.footer.note} onChange={(event) => commit(patchChrome(site, { ...site.chrome, footer: { ...site.chrome.footer, note: event.target.value } }), true)} /></label>
-              <label className="studio-row"><span>Copyright</span><input value={site.chrome.footer.copyright} onChange={(event) => commit(patchChrome(site, { ...site.chrome, footer: { ...site.chrome.footer, copyright: event.target.value } }), true)} /></label>
-            </div>
-          ) : null}
-          {propTab === "content" && selectedBlock && ["eyebrow", "heading", "paragraph", "button", "link", "card", "quote", "person"].includes(selectedBlock.kind) ? (
-            <div>
-              <label className="studio-row"><span>Words</span><input value={selectedText} onChange={(event) => section && commit(applyText(site, path, section.id, "text", event.target.value, selectedBlock.id), false)} /></label>
-              <div className="flex gap-2 p-2">
-                <button type="button" onClick={() => formatBlock("bold")}>Bold</button>
-                <button type="button" onClick={() => formatBlock("italic")}>Italic</button>
-                <button type="button" onClick={() => formatBlock("clear")}>Clear formatting</button>
+                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommended} templates={templates} onChoose={(entry) => insertEntry(entry)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>
-              {selectedBlock.kind === "button" || selectedBlock.kind === "link" ? (
-                <label className="studio-row"><span>Where this goes</span><input value={selectedBlock.href ?? ""} onChange={(event) => section && commit(applyText(site, path, section.id, "href", event.target.value, selectedBlock.id), false)} /></label>
-              ) : null}
+            ) : null}
+            {rail === "pages" ? (
+              <PagesPanel
+                site={site}
+                posts={posts}
+                path={path}
+                canEdit={props.canEdit}
+                onOpen={openPage}
+                onAddPage={() => setAddingPage(true)}
+                onNewPost={() => void createInsight()}
+                onSettings={(route) => {
+                  if (route !== path) openPage(route);
+                  else clearSelection();
+                }}
+                commit={commit}
+              />
+            ) : null}
+            {rail === "layers" ? <LayersPanel api={api} chromeFocus={selection.chrome} onSelect={selectNode} onChrome={selectChrome} /> : null}
+            {rail === "design" ? <DesignPanel site={site} canEdit={props.canEdit} commit={commit} commitText={commitText} /> : null}
+            {rail === "media" ? (
+              <MediaPanel
+                websiteId={props.websiteId}
+                media={mediaWithUse}
+                recent={recentImages}
+                canEdit={props.canEdit}
+                progress={progress}
+                canPlace={canPlaceImage}
+                onUpload={uploadOnly}
+                onUse={chooseImage}
+                onDelete={(item) => void removeMedia(item)}
+              />
+            ) : null}
+          </aside>
+        ) : null}
+        <main className="ed-stage" aria-label="Page canvas">
+          {!tipDismissed && props.canEdit ? (
+            <div className="ed-tip" role="note">
+              <p>
+                <strong>Getting started:</strong> click anything to select it, double-click text to type, and use <em>Add section</em> between sections to add more.
+              </p>
+              <button type="button" className="ed-icon is-small" aria-label="Dismiss tip" onClick={dismissTip}>
+                <X size={14} aria-hidden="true" />
+              </button>
             </div>
           ) : null}
-          {propTab === "design" && section ? (
-            <div>
-              <label className="studio-row"><span>Background</span>
-                <select value={section.style?.background ?? "paper"} onChange={(event) => commit(setSectionStyle(site, path, section.id, { background: event.target.value as "paper" | "band" | "ink" }), true)}>
-                  <option value="paper">Page color</option>
-                  <option value="band">Soft band</option>
-                  <option value="ink">Dark</option>
-                </select>
-              </label>
-              <label className="studio-row"><span>Padding</span>
-                <select value={section.style?.padding ?? "m"} onChange={(event) => commit(setSectionStyle(site, path, section.id, { padding: event.target.value as "s" | "m" | "l" }), true)}>
-                  <option value="s">Tight</option>
-                  <option value="m">Comfortable</option>
-                  <option value="l">Roomy</option>
-                </select>
-              </label>
-              <label className="studio-row"><span>Height</span>
-                <select value={section.style?.minHeight ?? "auto"} onChange={(event) => commit(setSectionStyle(site, path, section.id, { minHeight: event.target.value as "auto" | "quarter" | "half" | "full" }), true)}>
-                  <option value="auto">As tall as the content</option>
-                  <option value="quarter">Quarter screen</option>
-                  <option value="half">Half screen</option>
-                  <option value="full">Full screen</option>
-                </select>
-              </label>
-            </div>
-          ) : null}
-          {propTab === "design" && !section && !chromeFocus ? <p className="studio-empty">Site colors, type, and spacing are in Design on the left. Select a section to change its background and spacing.</p> : null}
-          {propTab === "layout" && section ? (
-            <div>
-              <label className="studio-row"><span>Arrangement</span>
-                <select value={section.layout ?? "stack"} onChange={(event) => commit(setSectionLayout(site, path, section.id, event.target.value as NonNullable<Section["layout"]>), true)}>
-                  <option value="stack">Stacked</option>
-                  <option value="split">Side by side</option>
-                  <option value="cards">Cards</option>
-                  <option value="list">List</option>
-                  <option value="hero">Hero</option>
-                  <option value="band">Band</option>
-                  <option value="fluid">Free position</option>
-                </select>
-              </label>
-              {(["desktop", "tablet", "mobile"] as const).map((device) => (
-                <label key={device} className="studio-row"><span>Hide on {device === "mobile" ? "phone" : device}</span>
-                  <input type="checkbox" checked={section.hideOn?.includes(device) ?? false} onChange={(event) => commit(setHideOn(site, path, section.id, device, event.target.checked), true)} />
-                </label>
-              ))}
-              {selectedBlock ? (
-                <label className="studio-row"><span>Pin while scrolling</span>
-                  <input type="checkbox" checked={Boolean(selectedBlock.pin)} onChange={(event) => commit(pinBlock(site, path, section.id, selectedBlock.id, event.target.checked), true)} />
-                </label>
-              ) : null}
-            </div>
-          ) : null}
-          {propTab === "layout" && !section ? <p className="studio-empty">Select a section to change how it is arranged.</p> : null}
-          {!selection.sectionId && !chromeFocus && propTab === "content" && panel !== "history" ? <p className="studio-empty">Click something to edit it. Page settings are below.</p> : null}
-          {propTab === "content" && panel === "page" && !selection.locked && !chromeFocus ? (
-            <Settings
-              page={page}
-              section={section}
-              selection={selection}
-              post={activePost}
-              canEdit={props.canEdit}
-              viewport={viewport}
-              onPage={(patch) => page && commit(updatePageMeta(site, page.route, patch), false)}
-              onNav={(visible) => page && commit(setNavVisible(site, page.route, visible), true)}
-              onArchive={(archived) => page && commit(setArchived(site, page.route, archived), true)}
-              onDuplicate={() => {
-                if (!page) return;
-                const result = duplicatePage(site, page.route);
-                if (result.error) setNotice(result.error);
-                else if (result.route) void persistSite(result.site).then((ok) => {
-                  if (!ok || !result.route) return;
-                  rememberHistory();
-                  skipSite.current = true;
-                  setSite(result.site);
-                  openPage(result.route);
-                });
-              }}
-              onZoneName={(name) => selection.sectionId && commit(renameZone(site, path, selection.sectionId, name), false)}
-              onAlign={(mode) => {
-                const ids = selection.itemIds.length > 0 ? selection.itemIds : selection.itemId ? [selection.itemId] : [];
-                if (selection.sectionId && ids.length) commit(alignItems(site, path, selection.sectionId, ids, viewport, mode, selection.overlay), true);
-              }}
-              onAlt={(alt) => {
-                if (!selection.sectionId) return;
-                if (selection.itemId && section?.type === "flow") commit(applyText(site, path, selection.sectionId, "alt", alt, selection.itemId), false);
-                else if (selection.itemId) commit(patchItem(site, path, selection.sectionId, selection.itemId, { alt }, selection.overlay), false);
-                else if (section?.type === "preset" && section.heroImage) commit(applySectionHero(site, path, section.id, { ...section.heroImage, alt }), false);
-                else commit(applyText(site, path, selection.sectionId, "alt", alt), false);
-              }}
-              onHref={(href) => selection.sectionId && commit(applyText(site, path, selection.sectionId, section?.type === "button" ? "href" : section?.type === "preset" ? "buttonHref" : "href", href, selection.itemId || undefined), false)}
-              onVideo={(url) => selection.sectionId && commit(applyText(site, path, selection.sectionId, "url", url), false)}
-              onHero={(patch) => {
-                if (!section || section.type !== "preset" || !section.heroImage) return;
-                commit(applySectionHero(site, path, section.id, { ...section.heroImage, ...patch }), true);
-              }}
-              onReplace={() => setPicker(true)}
-              focal={selectedBlock?.focal || "center"}
-              onFocal={(focal) => selection.sectionId && selection.itemId && commit(applyText(site, path, selection.sectionId, "focal", focal, selection.itemId), true)}
-              onPost={(next) => {
-                rememberHistory();
-                textKey.current = "";
-                setPosts((items) => items.map((item) => (item.slug === next.slug ? next : item)));
-              }}
-              onBlogBlock={addBlogBlock}
-              templateFor={templateFor}
-              onTemplate={(name) => {
-                commit(saveSectionTemplate(site, path, templateFor, name), false);
-                setTemplateFor("");
-              }}
-            />
-          ) : null}
-        </aside> : null}
+          <Canvas
+            src={previewSrc}
+            width={width}
+            zoom={zoom}
+            title={`${props.websiteName} preview`}
+            onScale={setScale}
+            failed={frameFailed}
+            onRetry={() => {
+              setFrameFailed(false);
+              setVersion((value) => value + 1);
+            }}
+          />
+        </main>
+        <Inspector
+          api={api}
+          post={activePost}
+          onPost={updatePost}
+          onPostBlock={addBlogBlock}
+          onDuplicatePage={duplicateCurrentPage}
+          onOpenPage={openPage}
+          onClear={clearSelection}
+          managedRoute={managedRoute}
+        />
       </div>
-      <footer className="studio-status">
-        <span>{status}{progress !== null ? ` · Uploading ${progress}%` : ""}</span>
-        <span>{viewport === "mobile" ? "Phone" : viewport === "tablet" ? "Tablet" : "Desktop"}</span>
-        <span className="ml-auto">{props.role}</span>
-      </footer>
-      {library ? (
-        <div className="fixed inset-0 z-40 grid place-items-center bg-black/30 p-6">
-          <div className="max-h-[80vh] w-full max-w-3xl overflow-auto bg-white p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="font-serif text-2xl">Add element</h2>
-              <button type="button" onClick={() => setLibrary(null)}>Close</button>
-            </div>
-            <div className="mt-4 grid gap-2 sm:grid-cols-3">
-              {LIBRARY_BLOCKS.filter((item) => item.type !== "embed" || props.canEmbed).map((item) => (
-                <button key={item.type} className="border border-[var(--line)] px-3 py-4 text-left" type="button" onClick={() => chooseLibrary(item.type)}>{item.label}</button>
-              ))}
-            </div>
-            {site.sectionTemplates.length > 0 ? <p className="mt-6 text-sm text-[var(--muted)]">Saved templates</p> : null}
-            <div className="mt-2 grid gap-2">
-              {site.sectionTemplates.map((item) => (
-                <button key={item.id} className="border border-[var(--line)] px-3 py-3 text-left" type="button" onClick={() => {
-                  const copy = structuredClone(item.section);
-                  copy.id = createId("sec");
-                  commit(insertSection(site, path, library.index ?? page?.sections.length ?? 0, copy), true);
-                  setLibrary(null);
-                }}>{item.name}</button>
-              ))}
-            </div>
+      <StatusBar message={statusMessage} viewport={viewport} scale={scale} role={props.role} editing={editing} onShortcuts={() => setShortcuts(true)} />
+      <div className="ed-toasts" aria-live="polite">
+        {toasts.map((toast) => (
+          <div key={toast.id} className={toast.tone === "error" ? "ed-toast is-error" : "ed-toast"} role={toast.tone === "error" ? "alert" : "status"}>
+            <span>{toast.message}</span>
+            {toast.action ? (
+              <button
+                type="button"
+                className="ed-link"
+                onClick={() => {
+                  toast.action?.run();
+                  setToasts((items) => items.filter((item) => item.id !== toast.id));
+                }}
+              >
+                {toast.action.label}
+              </button>
+            ) : null}
+            <button type="button" className="ed-icon is-small" aria-label="Dismiss" onClick={() => setToasts((items) => items.filter((item) => item.id !== toast.id))}>
+              <X size={13} aria-hidden="true" />
+            </button>
           </div>
-        </div>
+        ))}
+      </div>
+      {insert ? (
+        <InsertDialog
+          canEmbed={props.canEmbed}
+          recent={recentLibrary}
+          recommended={recommended}
+          templates={templates}
+          onChoose={(entry) => {
+            insertEntry(entry, insert);
+            setInsert(null);
+          }}
+          onTemplate={(id) => {
+            insertTemplate(id, insert);
+            setInsert(null);
+          }}
+          onClose={() => setInsert(null)}
+        />
       ) : null}
-      {addingPage ? (
-        <div className="fixed inset-0 z-40 grid place-items-center bg-black/30 p-6">
-          <form className="grid w-full max-w-lg gap-3 bg-white p-6" onSubmit={(event) => { void (async () => {
-            event.preventDefault();
-            const result = createPage(site, pageForm.route ? pageForm : { ...pageForm, route: `/${slugify(pageForm.title)}` });
-            if (result.error) setNotice(result.error);
-            else {
-              const created = result.site.pages[result.site.pages.length - 1];
-              const ok = await persistSite(result.site);
-              if (!ok || !created) return;
-              rememberHistory();
-              skipSite.current = true;
-              setSite(result.site);
-              setAddingPage(false);
-              openPage(created.route);
-            }
-          })(); }}>
-            <h2 className="font-serif text-2xl">Add page</h2>
-            <label className="text-sm">Page name<input className="field" value={pageForm.title} onChange={(event) => setPageForm({ ...pageForm, title: event.target.value, route: routeTouched ? pageForm.route : `/${slugify(event.target.value)}` })} /></label>
-            <label className="text-sm">Web address<input className="field" value={pageForm.route} onChange={(event) => { setRouteTouched(true); setPageForm({ ...pageForm, route: event.target.value }); }} /></label>
-            <label className="text-sm">Starting layout
-              <select className="field" value={pageForm.template} onChange={(event) => setPageForm({ ...pageForm, template: event.target.value as PageDocument["template"] })}>
-                <option value="blank">Blank page</option>
-                <option value="landing">Landing page</option>
-                <option value="service">Service page</option>
-                <option value="resource">Resource page</option>
-                <option value="insights-landing">Insights landing page</option>
-              </select>
-            </label>
-            <label className="text-sm"><input type="checkbox" checked={pageForm.navVisible} onChange={(event) => setPageForm({ ...pageForm, navVisible: event.target.checked })} /> Show in navigation</label>
-            <label className="text-sm">Title in search results<input className="field" value={pageForm.seoTitle} onChange={(event) => setPageForm({ ...pageForm, seoTitle: event.target.value })} /></label>
-            <label className="text-sm">Search description<textarea className="field" value={pageForm.metaDescription} onChange={(event) => setPageForm({ ...pageForm, metaDescription: event.target.value })} /></label>
-            <div className="flex gap-2">
-              <button className="bg-[var(--ink)] px-3 py-2 text-sm text-white" type="submit">Create page</button>
-              <button type="button" onClick={() => setAddingPage(false)}>Cancel</button>
-            </div>
-          </form>
-        </div>
-      ) : null}
-      {picker ? (
-        <div className="fixed inset-0 z-40 grid place-items-center bg-black/30 p-6">
-          <div className="max-h-[80vh] w-full max-w-3xl overflow-auto bg-white p-6">
-            <div className="flex items-center justify-between"><h2 className="font-serif text-2xl">Choose an image</h2><button type="button" onClick={() => setPicker(false)}>Close</button></div>
-            <div className="mt-4 grid grid-cols-3 gap-3">
-              {usedHere.map((item) => (
-                <button key={item.filename} type="button" className="border border-[var(--line)] p-2 text-left" onClick={() => chooseImage(item)}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/api/sites/${props.websiteId}/media?name=${encodeURIComponent(item.filename)}`} alt={item.alt} className="h-24 w-full object-cover" />
-                  <span className="mt-1 block text-xs">{item.alt || "Image"}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {addingPage ? <AddPageDialog site={site} onCreate={createPageFrom} onClose={() => setAddingPage(false)} /> : null}
+      {picker ? <ImagePickerDialog websiteId={props.websiteId} media={mediaWithUse} progress={progress} onChoose={chooseImage} onUpload={uploadOnly} onClose={() => setPicker(false)} /> : null}
       {crop ? (
         <CropDialog
           src={`/api/sites/${props.websiteId}/media?name=${encodeURIComponent(crop.filename)}`}
           onClose={() => setCrop(null)}
           onSave={async (file) => {
-            const saved = await upload(file, "");
-            commit(setImageSource(site, path, crop.sectionId, saved.src, saved.alt, crop.itemId || undefined), true);
-            setCrop(null);
+            try {
+              const saved = await upload(file, "");
+              commit(setImageSource(site, path, crop.sectionId, saved.src, saved.alt, crop.itemId || undefined), true);
+              setCrop(null);
+              notify("Cropped copy saved. The original is still in Media.");
+            } catch (error) {
+              notify(error instanceof Error ? error.message : "The crop could not be saved.", "error");
+            }
           }}
         />
       ) : null}
+      {templateFor ? (
+        <TemplateDialog
+          onClose={() => setTemplateFor("")}
+          onSave={(name) => {
+            commit(saveSectionTemplate(site, path, templateFor, name), false);
+            setTemplateFor("");
+            notify(`Saved “${name.trim()}”. Find it under Add, then Saved.`);
+          }}
+        />
+      ) : null}
+      {publishing ? (
+        <PublishDialog
+          changes={changeLines(site, posts)}
+          publications={publications}
+          busy={publishBusy}
+          message={publishMessage}
+          onSend={() => void publish()}
+          onConfirm={() => void confirmIdentity()}
+          onClose={() => setPublishing(false)}
+        />
+      ) : null}
+      {shortcuts ? <ShortcutsDialog onClose={() => setShortcuts(false)} /> : null}
     </div>
   );
-
-  async function confirmIdentity() {
-    const response = await fetch(`/api/sites/${props.websiteId}/step-up`, { method: "POST" });
-    const body = (await response.json()) as { message?: string };
-    setNotice(body.message ?? "");
-  }
-
-  async function publish() {
-    const response = await fetch(`/api/sites/${props.websiteId}/publish`, { method: "POST" });
-    const body = (await response.json()) as { message?: string; status?: string; reviewUrl?: string | null };
-    setNotice(body.message ?? "The changes could not be sent.");
-    if (response.ok && body.status) {
-      setPublications((items) => [{ status: body.status!, summary: body.message ?? "", reviewUrl: body.reviewUrl ?? null }, ...items]);
-      setPanel("history");
-    }
-  }
-
-  async function removeMedia(filename: string) {
-    const response = await fetch(`/api/sites/${props.websiteId}/media`, {
-      method: "DELETE",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ filename }),
-    });
-    const body = (await response.json()) as { message?: string };
-    setNotice(body.message ?? "");
-    if (response.ok) setMedia((items) => items.filter((item) => item.filename !== filename));
-  }
-}
-
-function applySectionHero(site: SiteDraft, route: string, sectionId: string, heroImage: Extract<Section, { type: "preset" }>["heroImage"]) {
-  return {
-    ...site,
-    pages: site.pages.map((page) =>
-      page.route === route
-        ? { ...page, sections: page.sections.map((section) => (section.id === sectionId && section.type === "preset" ? { ...section, heroImage } : section)) }
-        : page,
-    ),
-  };
 }
 
 function fileFromDataUrl(dataUrl: string, name: string) {
@@ -1082,211 +1137,4 @@ function fileFromDataUrl(dataUrl: string, name: string) {
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
   return new File([bytes], name, { type: mime });
-}
-
-function Settings(props: {
-  page?: PageDocument;
-  section?: Section;
-  selection: Selection;
-  post?: BlogDraft;
-  canEdit: boolean;
-  viewport: "desktop" | "tablet" | "mobile";
-  onPage: (patch: Partial<Pick<PageDocument, "title" | "seoTitle" | "metaDescription">>) => void;
-  onNav: (visible: boolean) => void;
-  onArchive: (archived: boolean) => void;
-  onDuplicate: () => void;
-  onZoneName: (name: string) => void;
-  onAlign: (mode: "left" | "center" | "right" | "top" | "middle") => void;
-  onAlt: (alt: string) => void;
-  onHref: (href: string) => void;
-  onVideo: (url: string) => void;
-  onHero: (patch: Partial<NonNullable<Extract<Section, { type: "preset" }>["heroImage"]>>) => void;
-  onReplace: () => void;
-  onFocal: (focal: "center" | "top" | "bottom" | "left" | "right") => void;
-  focal: string;
-  onPost: (post: BlogDraft) => void;
-  onBlogBlock: (block: BlogDraft["blocks"][number]) => void;
-  templateFor: string;
-  onTemplate: (name: string) => void;
-}) {
-  const disabled = !props.canEdit;
-  const hero = props.section?.type === "preset" ? props.section.heroImage : undefined;
-  const alt = props.selection.itemId
-    ? (props.section?.type === "freeform" ? props.section.items : props.section?.type === "preset" ? props.section.overlay ?? [] : []).find((item) => item.id === props.selection.itemId)?.alt ?? ""
-    : props.section?.type === "image" ? props.section.alt : hero?.alt ?? "";
-  const href = props.section?.type === "button" ? props.section.href : props.section?.type === "preset" ? props.section.buttonHref ?? "" : props.section?.type === "cta" ? props.section.href : "";
-  return (
-    <div className="grid gap-4 text-sm">
-      {!props.selection.sectionId ? <p className="leading-relaxed text-[var(--muted)]">Click something to edit it.</p> : null}
-      {props.templateFor ? (
-        <form className="grid gap-2" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); props.onTemplate(String(data.get("name") ?? "")); }}>
-          <label>Template name<input className="field" name="name" placeholder="Testimonial layout" /></label>
-          <button className="bg-[var(--ink)] px-3 py-2 text-white" type="submit">Save template</button>
-        </form>
-      ) : null}
-      {props.page && !props.selection.sectionId && props.page.route !== "/" ? (
-        <div className="grid gap-2 border border-[var(--line)] p-3">
-          <p className="font-medium">{props.page.archived ? "Archived" : "This page"}</p>
-          <label>Title in search results<input className="field" disabled={disabled} value={props.page.seoTitle} onChange={(event) => props.onPage({ seoTitle: event.target.value })} /></label>
-          <label>Search description<textarea className="field" disabled={disabled} value={props.page.metaDescription} onChange={(event) => props.onPage({ metaDescription: event.target.value })} /></label>
-          <label><input type="checkbox" disabled={disabled || props.page.locked} checked={props.page.navVisible} onChange={(event) => props.onNav(event.target.checked)} /> Show in navigation</label>
-          {props.page.route !== "/" && !props.page.locked ? (
-            <div className="flex gap-2">
-              <button type="button" disabled={disabled} onClick={props.onDuplicate}>Duplicate</button>
-              <button type="button" disabled={disabled} onClick={() => props.onArchive(!props.page?.archived)}>{props.page.archived ? "Restore" : "Archive"}</button>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-      {props.page?.route === "/" && !props.selection.sectionId ? (
-        <label>Title in search results<input className="field" disabled={disabled} value={props.page.seoTitle} onChange={(event) => props.onPage({ seoTitle: event.target.value })} /></label>
-      ) : null}
-      {props.section?.type === "freeform" ? (
-        <label>Zone name<input className="field" disabled={disabled} value={props.section.name} onChange={(event) => props.onZoneName(event.target.value)} /></label>
-      ) : null}
-      {props.section?.type === "preset" && props.selection.overlay ? (
-        <label>Zone name<input className="field" disabled={disabled} value={props.section.overlayName ?? "Hero callouts"} onChange={(event) => props.onZoneName(event.target.value)} /></label>
-      ) : null}
-      {props.selection.itemId && (props.section?.type === "freeform" || props.section?.type === "preset" || props.section?.type === "flow" && props.section.layout === "fluid") ? (
-        <div className="flex flex-wrap gap-1">
-          {(["left", "center", "right", "top", "middle"] as const).map((mode) => (
-            <button key={mode} type="button" className="border border-[var(--line)] px-2 py-1" disabled={disabled} onClick={() => props.onAlign(mode)}>{mode}</button>
-          ))}
-          <p className="w-full text-[var(--muted)]">Aligns this item inside the zone on {props.viewport}.</p>
-        </div>
-      ) : null}
-      {href ? <label>Where this goes<input className="field" disabled={disabled} value={href} onChange={(event) => props.onHref(event.target.value)} /></label> : null}
-      {props.section?.type === "video" ? <label>Video link<input className="field" disabled={disabled} value={props.section.url} placeholder="https://www.youtube.com/watch?v=" onChange={(event) => props.onVideo(event.target.value)} /></label> : null}
-      {props.section?.type === "image" || (props.section?.type === "flow" && props.section.blocks.find((block) => block.id === props.selection.itemId)?.kind === "image") ? (
-        <div className="grid gap-2">
-          <label>Description for people who cannot see the image<input className="field" disabled={disabled} value={alt} onChange={(event) => props.onAlt(event.target.value)} /></label>
-          <button type="button" disabled={disabled} onClick={props.onReplace}>Replace image</button>
-          <label className="studio-row"><span>Which part of the image stays in view</span><select className="field" disabled={disabled} value={props.focal || "center"} onChange={(event) => props.onFocal(event.target.value as "center" | "top" | "bottom" | "left" | "right")}><option value="center">Center</option><option value="top">Top</option><option value="bottom">Bottom</option><option value="left">Left</option><option value="right">Right</option></select></label>
-        </div>
-      ) : null}
-      {props.post ? (
-        <div className="grid gap-2 border border-[var(--line)] p-3">
-          <p className="font-medium">Insights draft</p>
-          <label>Author
-            <input className="field" list="authors" disabled={disabled} value={props.post.authorDisplayName} onChange={(event) => props.onPost({ ...props.post!, authorDisplayName: event.target.value })} />
-            <datalist id="authors">{SITE_AUTHORS.map((name) => <option key={name} value={name} />)}</datalist>
-          </label>
-          <label>Search title<input className="field" disabled={disabled} value={props.post.seoTitle} onChange={(event) => props.onPost({ ...props.post!, seoTitle: event.target.value })} /></label>
-          <label>Search description<textarea className="field" disabled={disabled} value={props.post.metaDescription} onChange={(event) => props.onPost({ ...props.post!, metaDescription: event.target.value })} /></label>
-          <label>Requested publish time
-            <input className="field" type="datetime-local" disabled={disabled} value={props.post.publishAt ?? ""} onChange={(event) => props.onPost({ ...props.post!, publishAt: event.target.value })} />
-          </label>
-          <p className="text-[var(--muted)]">This time is saved with the draft and shown in the review. The live website changes only after someone merges that review.</p>
-          <div className="flex flex-wrap gap-1">
-            <button type="button" disabled={disabled} onClick={() => props.onBlogBlock({ type: "paragraph", text: "" })}>Paragraph</button>
-            <button type="button" disabled={disabled} onClick={() => props.onBlogBlock({ type: "heading", level: 2, text: "Heading" })}>Heading</button>
-            <button type="button" disabled={disabled} onClick={() => props.onBlogBlock({ type: "quote", text: "" })}>Pull quote</button>
-            <button type="button" disabled={disabled} onClick={() => props.onBlogBlock({ type: "list", ordered: false, items: ["First point"] })}>List</button>
-            <button type="button" disabled={disabled} onClick={() => props.onBlogBlock({ type: "table", headers: ["Column", "Detail"], rows: [["", ""]] })}>Table</button>
-            <button type="button" disabled={disabled} onClick={() => props.onBlogBlock({ type: "image", src: "", alt: "" })}>Image</button>
-            <button type="button" disabled={disabled} onClick={() => props.onBlogBlock({ type: "link", href: "/contact", label: "Related page" })}>Link</button>
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function MediaPanel(props: {
-  media: MediaItem[];
-  recent: string[];
-  canEdit: boolean;
-  progress: number | null;
-  onUpload: (file: File) => void;
-  onUse: (item: MediaItem) => void;
-  onDelete: (filename: string) => void;
-}) {
-  const recentUploads = props.media.slice(0, 8);
-  const recentUsed = props.recent.map((filename) => props.media.find((item) => item.filename === filename)).filter((item): item is MediaItem => Boolean(item));
-  return (
-    <div className="grid gap-4 text-sm">
-      {props.canEdit ? <label>Upload<input className="field" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={(event) => { const file = event.target.files?.[0]; if (file) props.onUpload(file); }} /></label> : null}
-      {props.progress !== null ? <p>Uploading {props.progress}%</p> : null}
-      {recentUsed.length === 0 && recentUploads.length === 0 ? <p className="studio-empty">No pictures yet. Upload a PNG, JPEG, WebP, or SVG.</p> : null}
-      <ImageGroup title="Recently used" items={recentUsed} onUse={props.onUse} onDelete={props.onDelete} />
-      <ImageGroup title="Recently uploaded" items={recentUploads} onUse={props.onUse} onDelete={props.onDelete} />
-    </div>
-  );
-}
-
-function ImageGroup(props: { title: string; items: MediaItem[]; onUse: (item: MediaItem) => void; onDelete: (filename: string) => void }) {
-  if (props.items.length === 0) return null;
-  return (
-    <div>
-      <p className="font-medium">{props.title}</p>
-      <ul className="mt-2 grid gap-2">
-        {props.items.map((item) => (
-          <li key={item.filename} className="border border-[var(--line)] p-2">
-            <button type="button" className="text-left" onClick={() => props.onUse(item)}>{item.alt || "Image"}</button>
-            <p className="text-[var(--muted)]">{item.width && item.height ? `${item.width}×${item.height}` : "Image"}{item.bytes ? ` · ${Math.ceil(item.bytes / 1024)} KB` : ""}</p>
-            <p className="text-[var(--muted)]">{item.usedBy && item.usedBy.length > 0 ? `Used on ${item.usedBy.join(", ")}` : "Not used on a page"}</p>
-            <button type="button" onClick={() => props.onDelete(item.filename)}>Delete</button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function History(props: { publications: Publication[]; onConfirm: () => void }) {
-  return (
-    <div className="grid gap-3 text-sm">
-      <p className="leading-relaxed">Submitting sends a review copy. It does not change the live website.</p>
-      <button className="border border-[var(--ink)] px-3 py-2" type="button" onClick={props.onConfirm}>Confirm it’s you</button>
-      <ul className="grid gap-3">
-        {props.publications.length === 0 ? <li className="text-[var(--muted)]">No reviews yet.</li> : null}
-        {props.publications.map((item, index) => (
-          <li key={`${item.status}-${index}`} className="border border-[var(--line)] p-3">
-            <p className="font-medium">{item.status.replaceAll("_", " ").toLowerCase()}</p>
-            <p className="mt-2 whitespace-pre-wrap leading-relaxed">{item.summary}</p>
-            {item.reviewUrl ? <a className="mt-2 inline-block underline" href={item.reviewUrl}>Open the review</a> : null}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function CropDialog(props: { src: string; onClose: () => void; onSave: (file: File) => Promise<void> }) {
-  const imageRef = useRef<HTMLImageElement>(null);
-  const [box, setBox] = useState({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
-  const drag = useRef<{ x: number; y: number; box: { x: number; y: number; w: number; h: number } } | null>(null);
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-6">
-      <div className="w-full max-w-3xl bg-white p-4">
-        <div className="relative" onPointerDown={(event) => { drag.current = { x: event.clientX, y: event.clientY, box }; }} onPointerMove={(event) => {
-          if (!drag.current || !imageRef.current) return;
-          const rect = imageRef.current.getBoundingClientRect();
-          const next = { ...drag.current.box, x: drag.current.box.x + (event.clientX - drag.current.x) / rect.width, y: drag.current.box.y + (event.clientY - drag.current.y) / rect.height };
-          setBox(next);
-        }} onPointerUp={() => { drag.current = null; }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img ref={imageRef} src={props.src} alt="" className="max-h-[60vh] w-full object-contain" />
-          <div className="pointer-events-none absolute border-2 border-white" style={{ left: `${box.x * 100}%`, top: `${box.y * 100}%`, width: `${box.w * 100}%`, height: `${box.h * 100}%` }} />
-        </div>
-        <p className="mt-2 text-sm">Drag the photo to move the crop. The original stays in the library.</p>
-        <div className="mt-3 flex gap-2">
-          <button className="bg-[var(--ink)] px-3 py-2 text-sm text-white" type="button" onClick={() => {
-            const image = imageRef.current;
-            if (!image) return;
-            const canvas = document.createElement("canvas");
-            const width = Math.max(1, Math.round(image.naturalWidth * box.w));
-            const height = Math.max(1, Math.round(image.naturalHeight * box.h));
-            canvas.width = width;
-            canvas.height = height;
-            canvas.getContext("2d")?.drawImage(image, image.naturalWidth * box.x, image.naturalHeight * box.y, width, height, 0, 0, width, height);
-            canvas.toBlob((blob) => {
-              if (blob) void props.onSave(new File([blob], "crop.png", { type: "image/png" }));
-            }, "image/png");
-          }}>Save crop</button>
-          <button type="button" onClick={props.onClose}>Cancel</button>
-        </div>
-      </div>
-    </div>
-  );
 }

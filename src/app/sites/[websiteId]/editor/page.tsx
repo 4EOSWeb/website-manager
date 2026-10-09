@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { EditorShell } from "@/components/editor-shell";
+import "@/components/editor/editor.css";
 import { AuthzError, authorize } from "@/lib/authorize";
 import { blogDraftSchema } from "@/lib/content-schema";
 import { imageSize, mediaRoot } from "@/lib/media";

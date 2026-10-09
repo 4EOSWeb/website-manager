@@ -1467,6 +1467,19 @@ export function canvasScript(origin: string) {
       }
       if (data.type === "4eos-clear") { if (editing) finishEdit(); clearSelected(true); }
       if (data.type === "4eos-edit" && selected) runAct("edit");
+      if (data.type === "4eos-select-node") {
+        if (editing) finishEdit();
+        var target = null;
+        if (data.chrome) target = document.querySelector('[data-chrome="' + data.chrome + '"]');
+        else if (data.sectionId) {
+          var owner = document.querySelector('[data-section-id="' + data.sectionId + '"]');
+          target = owner && data.itemId ? owner.querySelector('[data-item-id="' + data.itemId + '"]') : owner;
+        }
+        if (!target) { clearSelected(true); return; }
+        select(target, false, true);
+        var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        target.scrollIntoView({ block: "center", behavior: still ? "auto" : "smooth" });
+      }
     });
 
     function boot() {
