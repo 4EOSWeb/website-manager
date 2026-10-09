@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { BookmarkPlus, Clipboard, CopyPlus, Heading, ImageIcon, List, MousePointerClick, Pilcrow, Trash2 } from "lucide-react";
 import type { FlowBlock, Section } from "@/lib/content-schema";
-import { addFlowBlock, applyText, setEditorName, setHideOn, setSectionHidden, setSectionLayout, setSectionStyle } from "@/lib/editor-ops";
+import { addFlowBlock, anchorFrom, applyText, setEditorName, setSectionAnchor, setHideOn, setSectionHidden, setSectionLayout, setSectionStyle } from "@/lib/editor-ops";
 import type { EditorApi } from "@/components/editor/types";
 import { Field, Group, Segmented, Select, TextInput, Toggle } from "@/components/editor/ui";
 import { DeviceVisibility, LinkPicker } from "@/components/editor/inspector/shared";
@@ -86,6 +87,7 @@ export function SectionAdvanced({ api, section }: { api: EditorApi; section: Sec
         <Field label="Name in the layers list" hint="Only you see this name.">
           <TextInput value={section.editorName ?? ""} placeholder={sectionName(section)} disabled={disabled} maxLength={80} onChange={(value) => api.commitText(setEditorName(api.site, api.path, section.id, value), `${section.id}:name`)} />
         </Field>
+        <AnchorField key={section.id} api={api} section={section} />
       </Group>
       <Group title="Reuse">
         <div className="ed-row">
@@ -179,5 +181,38 @@ export function SectionLayoutTab({ api, section }: { api: EditorApi; section: Se
         <DeviceVisibility hideOn={section.hideOn} disabled={disabled} onChange={(device, hidden) => api.commit(setHideOn(api.site, api.path, section.id, device, hidden), true)} />
       </Group>
     </>
+  );
+}
+
+function AnchorField({ api, section }: { api: EditorApi; section: Section }) {
+  const [draft, setDraft] = useState(section.anchor ?? "");
+  const [error, setError] = useState("");
+  const commit = () => {
+    const anchor = anchorFrom(draft);
+    const page = api.site.pages.find((item) => item.route === api.path);
+    if (anchor && page?.sections.some((item) => item.id !== section.id && item.anchor === anchor)) {
+      setError(`Another section on this page already uses #${anchor}.`);
+      return;
+    }
+    setError("");
+    setDraft(anchor ?? "");
+    if (anchor !== section.anchor) api.commit(setSectionAnchor(api.site, api.path, section.id, draft), true);
+  };
+  return (
+    <Field label="Anchor" hint={error || (section.anchor ? `Link to this section with ${api.path === "/" ? "" : api.path}#${section.anchor}` : "Lets a link jump straight to this section.")}>
+      <input
+        className={error ? "ed-input is-invalid" : "ed-input"}
+        value={draft}
+        placeholder="our-services"
+        maxLength={40}
+        disabled={!api.canEdit}
+        aria-invalid={error ? true : undefined}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") commit();
+        }}
+      />
+    </Field>
   );
 }

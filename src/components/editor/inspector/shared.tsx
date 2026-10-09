@@ -19,7 +19,7 @@ export const THEME_SWATCHES = THEME_COLORS.map((value) => ({ value, name: COLOR_
 
 export const DEVICE_LABELS = { desktop: "Desktop", tablet: "Tablet", mobile: "Phone" } as const;
 
-export function LinkPicker(props: { site: SiteDraft; value: string; onChange: (href: string) => void; disabled?: boolean; label?: string }) {
+export function LinkPicker(props: { site: SiteDraft; value: string; onChange: (href: string) => void; disabled?: boolean; label?: string; optional?: boolean }) {
   const pages = props.site.pages.filter((page) => !page.archived);
   const matches = pages.some((page) => page.route === props.value);
   const [custom, setCustom] = useState(!matches && props.value !== "");
@@ -31,8 +31,8 @@ export function LinkPicker(props: { site: SiteDraft; value: string; onChange: (h
         <Select
           label={props.label ?? "Link to"}
           disabled={props.disabled}
-          value={custom ? "__custom" : props.value || pages[0]?.route || "/"}
-          options={[...pages.map((page) => ({ value: page.route, label: `${page.title} (${page.route})` })), { value: "__custom", label: "Another address…" }]}
+          value={custom ? "__custom" : props.value || (props.optional ? "" : pages[0]?.route || "/")}
+          options={[...(props.optional ? [{ value: "", label: "No link" }] : []), ...pages.map((page) => ({ value: page.route, label: `${page.title} (${page.route})` })), { value: "__custom", label: "Another address…" }]}
           onChange={(value) => {
             if (value === "__custom") {
               setCustom(true);

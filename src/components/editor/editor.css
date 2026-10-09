@@ -705,6 +705,10 @@
   opacity: 0.55;
 }
 
+.ed-input.is-invalid {
+  border-color: var(--ed-error);
+}
+
 .ed-input.is-inline {
   height: 24px;
   min-height: 24px;

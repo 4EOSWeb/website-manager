@@ -43,6 +43,7 @@ export function moveSection(site: SiteDraft, route: string, from: number, to: nu
 function cloneSection(section: Section): Section {
   const copy = structuredClone(section);
   copy.id = createId("sec");
+  delete copy.anchor;
   if (copy.type === "freeform") {
     copy.items = copy.items.map((item) => ({ ...item, id: createId("item") }));
   }
@@ -77,6 +78,30 @@ export function setEditorName(site: SiteDraft, route: string, sectionId: string,
       return { ...section, blocks: section.blocks.map((block) => (block.id === blockId ? { ...block, editorName: name.slice(0, 80) } : block)) };
     }
     return { ...section, editorName: name.slice(0, 80) };
+  });
+}
+
+/** Turns typed text into a section anchor, or undefined when nothing usable is left. */
+export function anchorFrom(value: string): string | undefined {
+  const anchor = value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^[^a-z]+/, "")
+    .replace(/-+$/, "")
+    .slice(0, 40)
+    .replace(/-+$/, "");
+  return anchor || undefined;
+}
+
+export function setSectionAnchor(site: SiteDraft, route: string, sectionId: string, value: string): SiteDraft {
+  const anchor = anchorFrom(value);
+  const page = site.pages.find((item) => item.route === route);
+  if (anchor && page?.sections.some((section) => section.id !== sectionId && section.anchor === anchor)) return site;
+  return mapSection(site, route, sectionId, (section) => {
+    const next = { ...section };
+    if (anchor) next.anchor = anchor;
+    else delete next.anchor;
+    return next;
   });
 }
 

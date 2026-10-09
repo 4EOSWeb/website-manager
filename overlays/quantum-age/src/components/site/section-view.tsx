@@ -130,7 +130,7 @@ export function SectionView({ section }: { section: EditorSection }) {
   if (section.hidden && !previewMode) return null;
   const body = renderSection(section);
   return (
-    <div data-section-id={section.id} data-section-type={section.type} data-editor-name={previewMode ? section.editorName || undefined : undefined} data-hidden={section.hidden ? "true" : undefined} className={`${hideClass(section)} ${section.hidden ? "opacity-60" : ""}`.trim() || undefined} style={section.style ? styleFor(section) : undefined}>
+    <div id={section.anchor} data-section-id={section.id} data-section-type={section.type} data-editor-name={previewMode ? section.editorName || undefined : undefined} data-hidden={section.hidden ? "true" : undefined} className={`${hideClass(section)} ${section.hidden ? "opacity-60" : ""}`.trim() || undefined} style={section.style ? styleFor(section) : undefined}>
       {section.hidden && previewMode ? <p className="container-page py-2 text-sm text-muted-foreground">Hidden on the public site</p> : null}
       {body}
     </div>

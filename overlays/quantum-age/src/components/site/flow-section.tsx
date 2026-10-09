@@ -149,7 +149,13 @@ function BlockView({ block, fluid }: { block: Block; fluid: boolean }) {
           {block.detail ? <footer className="mt-3 text-sm text-muted-foreground"><RichText value={block.detail} field="detail" /></footer> : null}
         </blockquote>
       ) : null}
-      {block.kind === "image" && block.src ? (
+      {block.kind === "image" && block.src && block.href ? (
+        <Link href={block.href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined} className="block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={block.src} alt={block.alt || ""} className={`${fit} ${imageWidth}`} data-field="alt" style={{ objectPosition: block.focal || "center" }} />
+        </Link>
+      ) : null}
+      {block.kind === "image" && block.src && !block.href ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={block.src} alt={block.alt || ""} className={`${fit} ${imageWidth}`} data-field="alt" style={{ objectPosition: block.focal || "center" }} />
       ) : null}
@@ -226,6 +232,7 @@ export function FlowSection({ section }: { section: EditorSection }) {
   const tone = section.layout === "cta" ? "bg-[#231a25] text-[#f7f5f0]" : section.layout === "band" ? "border-b border-stone bg-[#efebe4]" : "border-b border-stone";
   return (
     <section
+      id={section.anchor}
       data-section-id={section.id}
       data-section-type="flow"
       data-layout={section.layout || "stack"}

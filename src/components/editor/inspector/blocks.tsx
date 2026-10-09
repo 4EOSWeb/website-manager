@@ -208,6 +208,10 @@ export function ImageContent({ api, section, block }: { api: EditorApi; section:
           <TextArea rows={3} value={block.alt ?? ""} disabled={disabled} maxLength={200} onChange={(value) => api.commitText(applyText(api.site, api.path, section.id, "alt", value, block.id), `${block.id}:alt`, true)} />
         </Field>
       </Group>
+      <Group title="Link" defaultOpen={Boolean(block.href)}>
+        <LinkPicker key={block.id} site={api.site} optional label="When clicked, go to" value={block.href ?? ""} disabled={disabled} onChange={(href) => patch(api, section, block, { href: href || undefined })} />
+        {block.href ? <Toggle label="Open in a new tab" checked={block.target === "new"} disabled={disabled} onChange={(value) => patch(api, section, block, { target: value ? "new" : "same" })} /> : null}
+      </Group>
       {block.src ? <FileDetails api={api} filename={filename} /> : null}
     </>
   );

@@ -6,6 +6,7 @@ export type EditorSection = {
   type: string;
   hidden?: boolean;
   editorName?: string;
+  anchor?: string;
   providerLocked?: boolean;
   preset?: string;
   text?: string;

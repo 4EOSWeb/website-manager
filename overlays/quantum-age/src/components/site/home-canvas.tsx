@@ -42,7 +42,7 @@ function Preset({ section }: { section: EditorSection }) {
     const taglineLines = tagline.split(/(?<=\.)\s+/);
     const image = section.heroImage?.src ? section.heroImage : emptyImage;
     return (
-      <section data-section-id={section.id} data-section-type="preset" data-drop="overlay" aria-labelledby="home-title" className={`relative overflow-hidden border-b border-stone${section.hidden ? " opacity-60" : ""}`}>
+      <section id={section.anchor} data-section-id={section.id} data-section-type="preset" data-drop="overlay" aria-labelledby="home-title" className={`relative overflow-hidden border-b border-stone${section.hidden ? " opacity-60" : ""}`}>
         {section.hidden ? <HiddenNote /> : null}
         <div className="container-page grid items-center gap-8 pt-12 pb-14 md:pt-20 md:pb-20 lg:grid-cols-12">
           <div className="lg:col-span-7">
@@ -86,7 +86,7 @@ function Preset({ section }: { section: EditorSection }) {
   }
   if (section.preset === "audience") {
     return (
-      <section data-section-id={section.id} data-section-type="preset" className="border-b border-stone bg-[#efebe4]">
+      <section id={section.anchor} data-section-id={section.id} data-section-type="preset" className="border-b border-stone bg-[#efebe4]">
         <div className="container-page flex flex-col gap-3 py-5 md:flex-row md:items-baseline md:gap-8">
           <h2 className="eyebrow shrink-0 font-sans text-muted-foreground" data-field="heading">{section.heading}</h2>
           <ul className="flex flex-wrap gap-x-6 gap-y-1 text-[0.9375rem] font-medium text-ink">
@@ -98,7 +98,7 @@ function Preset({ section }: { section: EditorSection }) {
   }
   if (section.preset === "who") {
     return (
-      <section data-section-id={section.id} data-section-type="preset" className="section" aria-labelledby="who-heading">
+      <section id={section.anchor} data-section-id={section.id} data-section-type="preset" className="section" aria-labelledby="who-heading">
         <div className="container-page grid gap-10 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <SectionHeading id="who-heading" eyebrow="Who we are" title={section.heading || ""} field="heading" />
@@ -123,7 +123,7 @@ function Preset({ section }: { section: EditorSection }) {
   }
   if (section.preset === "solutions") {
     return (
-      <section data-section-id={section.id} data-section-type="preset" className="section bg-[#efebe4]" aria-labelledby="solutions-heading">
+      <section id={section.anchor} data-section-id={section.id} data-section-type="preset" className="section bg-[#efebe4]" aria-labelledby="solutions-heading">
         <div className="container-page">
           <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
             <SectionHeading id="solutions-heading" eyebrow="What we do" title={section.heading || ""} lead={section.body} field="heading" className="lg:col-span-8" />
@@ -151,14 +151,14 @@ function Preset({ section }: { section: EditorSection }) {
   }
   if (section.preset === "formula") {
     return (
-      <div data-section-id={section.id} data-section-type="preset" data-locked="provider">
+      <div id={section.anchor} data-section-id={section.id} data-section-type="preset" data-locked="provider">
         <FormulaStory eyebrow={formula.title} title={formula.subtitle} parts={formula.parts} result={formula.result} />
       </div>
     );
   }
   if (section.preset === "team") {
     return (
-      <section data-section-id={section.id} data-section-type="preset" className="section" aria-labelledby="people-heading">
+      <section id={section.anchor} data-section-id={section.id} data-section-type="preset" className="section" aria-labelledby="people-heading">
         <div className="container-page">
           <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
             <SectionHeading id="people-heading" eyebrow="The team" title={section.heading || teamIntro.lead} lead={about.experience} field="heading" className="lg:col-span-8" />
@@ -181,7 +181,7 @@ function Preset({ section }: { section: EditorSection }) {
   if (section.preset === "references") {
     const featured = getFeaturedSafe(testimonials);
     return (
-      <section data-section-id={section.id} data-section-type="preset" className="section bg-plum-50" aria-labelledby="clients-heading">
+      <section id={section.anchor} data-section-id={section.id} data-section-type="preset" className="section bg-plum-50" aria-labelledby="clients-heading">
         <div className="container-page">
           <SectionHeading id="clients-heading" eyebrow="References" title={section.heading || "What our clients say"} field="heading" />
           <div className="mt-12 grid gap-12 lg:grid-cols-12">
@@ -201,7 +201,7 @@ function Preset({ section }: { section: EditorSection }) {
     const featured = getFeaturedArticles();
     const archive = getArchiveRange();
     return (
-      <section data-section-id={section.id} data-section-type="preset" className="section" aria-labelledby="insights-heading">
+      <section id={section.anchor} data-section-id={section.id} data-section-type="preset" className="section" aria-labelledby="insights-heading">
         <div className="container-page">
           <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
             <SectionHeading id="insights-heading" eyebrow="Insights" title={section.heading || ""} lead={`${archive.count} articles published since ${archive.first}.`} field="heading" className="lg:col-span-8" />
@@ -220,7 +220,7 @@ function Preset({ section }: { section: EditorSection }) {
   }
   if (section.preset === "cta") {
     return (
-      <div data-section-id={section.id} data-section-type="preset">
+      <div id={section.anchor} data-section-id={section.id} data-section-type="preset">
         <CtaBand title={section.heading} body={section.body} titleField="heading" bodyField="body" />
       </div>
     );

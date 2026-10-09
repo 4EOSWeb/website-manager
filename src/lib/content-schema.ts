@@ -337,6 +337,7 @@ export type FreeformItem = z.infer<typeof freeformItemSchema>;
 
 const sectionChrome = {
   editorName: z.string().max(80).optional(),
+  anchor: z.string().regex(/^[a-z][a-z0-9-]{0,39}$/).optional(),
   layout: z.enum(["stack", "split", "grid", "hero", "band", "cards", "list", "quotes", "insights", "cta", "fluid"]).optional(),
   style: sectionStyleSchema.optional(),
   hideOn: z.array(z.enum(["desktop", "tablet", "mobile"])).max(3).optional(),
