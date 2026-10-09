@@ -204,3 +204,37 @@ The platform node for a hero is a registered component. It is not `preset: "hero
 - Destination adapter file: `adapters/quantum-age/components/hero.ts`
 - Migration risk: Public hero layout. Do not restyle this file during the architecture move.
 - Test required: Home preview still matches the baseline screenshot.
+
+## Logo
+
+The platform only knows an image or a custom component id. It does not know this site’s logo.
+
+### src/lib/content-schema.ts
+
+- Current file: `src/lib/content-schema.ts`, flow kind `brand-mark` at line 227, and `chrome.header` logo plus `favicon`
+- Current behavior: A flow block kind `brand-mark` is a first-class kind. Header chrome stores a logo path.
+- Why it is site-specific: “Brand mark” is this site’s rings graphic, not a generic node type.
+- Generic replacement: An image node or a registered component. Header logo is a prop on the registered header.
+- Destination adapter file: `adapters/quantum-age/components/logo.ts`
+- Migration risk: The locked rings block must stay locked and visible.
+- Test required: `tests/unit/qa-component-logo.test.ts`. Header logo still loads in the preview.
+
+### src/lib/flow-seed.ts
+
+- Current file: `src/lib/flow-seed.ts`, line 73
+- Current behavior: Seeds block `blk_rings` as kind `brand-mark`, named Rings, locked.
+- Why it is site-specific: The rings are this site’s mark.
+- Generic replacement: Seed data on the adapter, with the logo component locked there.
+- Destination adapter file: `adapters/quantum-age/seed.ts` and `adapters/quantum-age/components/logo.ts`
+- Migration risk: Re-seeding would duplicate or unlock the mark. Do not re-seed drafts.
+- Test required: The home preview still shows the rings. A client editor still cannot delete them if that is true today.
+
+### src/components/editor/inspector/index.tsx and src/components/editor/panels.tsx
+
+- Current file: `src/components/editor/inspector/index.tsx` line 24 and `src/components/editor/panels.tsx` line 147
+- Current behavior: The inspector and layers label `brand-mark` as “Logo mark” or “Logo”.
+- Why it is site-specific: The hub translates one site’s block kind into a label.
+- Generic replacement: The registry display name. The platform labels a node by its generic type or the registry name.
+- Destination adapter file: `adapters/quantum-age/components/logo.ts`
+- Migration risk: The label can change from “Logo” to the registry name. The graphic must not change.
+- Test required: Layers shows the registry name for that node and does not hardcode it in `src/platform`.
