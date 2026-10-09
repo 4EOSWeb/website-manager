@@ -55,6 +55,7 @@ const STYLE = `
 .eos-editing{outline:2px solid var(--eos-accent)!important;outline-offset:3px;background:rgba(37,99,235,.06);cursor:text;caret-color:var(--eos-accent);white-space:pre-line}
 .eos-editing:focus{outline:2px solid var(--eos-accent)!important}
 [data-hidden=true]{opacity:.5;outline:1px dashed #8a8f98;outline-offset:-1px}
+[data-hidden=true]::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(135deg,rgba(138,143,152,.18) 0 2px,transparent 2px 9px);z-index:1}
 .eos-drag-source{opacity:.35!important}
 body.eos-dragging,body.eos-dragging *{cursor:grabbing!important;user-select:none!important;-webkit-user-select:none!important}
 .eos-ui{position:fixed;z-index:2147483000;transform-origin:0 0;font:500 12px/1.2 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--eos-ui-text);letter-spacing:0}
@@ -283,6 +284,9 @@ export function canvasScript(origin: string) {
         badge.innerHTML = icon("lock") + "<span>Managed for you</span>";
         badge.title = LOCK;
         node.appendChild(badge);
+      });
+      document.querySelectorAll("[data-hidden=true]").forEach(function (node) {
+        if (window.getComputedStyle(node).position === "static") node.style.position = "relative";
       });
     }
     function gap(beforeId, index, empty) {
