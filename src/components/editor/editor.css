@@ -18,6 +18,9 @@
   --ed-ok: #89d185;
   --ed-warn: #cca700;
   --ed-radius: 4px;
+  --state-duration: 140ms;
+  --state-accent: #0078d4;
+  --state-focus: 0 0 0 1px #1f1f1f, 0 0 0 3px var(--state-accent);
   --ed-focus: var(--state-focus);
   display: grid;
   grid-template-rows: 44px minmax(0, 1fr) 24px;
@@ -1814,6 +1817,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ed-root {
+    --state-duration: 0ms;
+  }
+
   .ed-root *,
   .ed-root *::after,
   .ed-backdrop * {

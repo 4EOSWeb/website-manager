@@ -23,9 +23,12 @@ function needsRegions(page: EditorPage | undefined) {
 }
 
 // Reading request headers in the root layout blocks static prerendering, so the
-// public build only does it when some page actually has regions to wrap.
+// public build only does it when some page actually has regions to wrap. The editor
+// preview runs on a dev server and reads them before streaming, so a missing page
+// still answers 404 instead of a 200 shell.
 export function EditorRegions({ children }: { children: React.ReactNode }) {
-  if (!previewMode && !readSite().pages.some(needsRegions)) return children;
+  if (previewMode) return <Regions>{children}</Regions>;
+  if (!readSite().pages.some(needsRegions)) return children;
   return (
     <Suspense fallback={null}>
       <Regions>{children}</Regions>

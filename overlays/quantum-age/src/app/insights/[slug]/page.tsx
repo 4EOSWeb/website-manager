@@ -18,6 +18,10 @@ import { readStructuredPost, readStructuredPosts } from "@/lib/structured-posts"
 import { StructuredArticle } from "@/components/site/structured-article";
 import { connection } from "next/server";
 
+// Unlisted slugs must render completely before the response starts, or a missing
+// page goes out as a 200 fallback shell before notFound() can set the 404.
+export const ensureStatic = "navigation";
+
 export function generateStaticParams() {
   return [...getAllArticles().map((a) => ({ slug: a.slug })), ...readStructuredPosts().map((post) => ({ slug: post.slug }))];
 }

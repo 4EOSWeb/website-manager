@@ -22,6 +22,10 @@ export function rewritePreviewBody(
     .replaceAll('action="/', `action="${prefix}/`)
     .replaceAll("url(/", `url(${prefix}/`)
     .replaceAll('url("/', `url("${prefix}/`);
+  next = next.replace(/\b(srcset|imagesrcset)="([^"]*)"/gi, (_, name: string, value: string) => {
+    const candidates = value.split(/,\s+/).map((candidate) => (candidate.startsWith("/") && !candidate.startsWith(`${prefix}/`) ? `${prefix}${candidate}` : candidate));
+    return `${name}="${candidates.join(", ")}"`;
+  });
   if (contentType.includes("text/css") && options?.assetPath) {
     next = absolutizeCss(next, options.assetPath);
   }

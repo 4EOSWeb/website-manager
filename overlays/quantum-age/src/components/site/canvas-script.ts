@@ -1337,6 +1337,7 @@ export function canvasScript(origin: string) {
     document.addEventListener("keydown", function (event) {
       var mod = event.metaKey || event.ctrlKey;
       var key = event.key;
+      if (event.target && event.target.closest && event.target.closest(".eos-bar")) return;
       if (menu && menu.contains(event.target)) {
         var entries = Array.prototype.slice.call(menu.querySelectorAll("[role=menuitem]:not([disabled])"));
         var at = entries.indexOf(document.activeElement);

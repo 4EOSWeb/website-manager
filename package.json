@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run lint && npm run build",
     "verify": "node --experimental-strip-types scripts/verify-slice.ts",
-    "test": "node --experimental-strip-types --no-warnings --test tests/unit/*.test.ts",
+    "test": "node --experimental-strip-types --no-warnings --import ./tests/unit/resolve-ts.mjs --test tests/unit/*.test.ts",
     "test:e2e": "playwright test",
     "overlay:sync": "node --experimental-strip-types --no-warnings scripts/sync-overlay.ts",
     "routes": "node --experimental-strip-types --no-warnings scripts/route-inventory.ts --write",

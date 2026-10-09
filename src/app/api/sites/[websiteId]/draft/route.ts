@@ -37,6 +37,13 @@ export async function PUT(request: Request, { params }: Params) {
     });
     for (const page of site.pages) {
       if (page.route === "/") continue;
+      const existing = await prisma.page.findFirst({ where: { id: page.id, websiteId } });
+      if (existing) {
+        if (existing.route !== page.route || existing.title !== page.title) {
+          await prisma.page.update({ where: { id: page.id }, data: { route: page.route, title: page.title } });
+        }
+        continue;
+      }
       await prisma.page.upsert({
         where: { websiteId_route: { websiteId, route: page.route } },
         create: {

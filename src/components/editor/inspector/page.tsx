@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Archive, ArchiveRestore, Copy } from "lucide-react";
 import type { BlogDraft, PageDocument } from "@/lib/content-schema";
 import { SITE_AUTHORS } from "@/lib/content-schema";
@@ -17,9 +18,13 @@ export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: Page
         <Field label="Page name" hint="Shown in the editor and used as the menu label unless you set one below.">
           <TextInput value={page.title} disabled={disabled} maxLength={80} onChange={(value) => api.commitText(updatePageMeta(api.site, page.route, { title: value }), `${page.route}:title`, true)} />
         </Field>
-        <Field label="Web address" hint="The address is set when a page is created.">
-          <TextInput value={page.route} disabled onChange={() => undefined} />
-        </Field>
+        {page.template === "home" || page.template === "marketing" || page.template === "legal" ? (
+          <Field label="Web address" hint="Built-in pages keep their address.">
+            <TextInput value={page.route} disabled onChange={() => undefined} />
+          </Field>
+        ) : (
+          <AddressField key={page.route} api={api} page={page} />
+        )}
       </Group>
       <Group title="Menu">
         <Toggle label="Show in the site menu" checked={page.navVisible} disabled={!api.canEdit || page.route === "/" || page.archived} onChange={(value) => api.commit(setNavVisible(api.site, page.route, value), true)} />
@@ -105,5 +110,40 @@ export function PostTab({ api, post, onPost, onBlock }: { api: EditorApi; post: 
         </div>
       </Group>
     </>
+  );
+}
+
+function AddressField({ api, page }: { api: EditorApi; page: PageDocument }) {
+  const [draft, setDraft] = useState(page.route);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function commit() {
+    if (busy || draft.trim() === page.route) return;
+    setBusy(true);
+    const problem = await api.changeRoute(draft);
+    setBusy(false);
+    setError(problem);
+  }
+  return (
+    <Field label="Web address" hint={error || "Lowercase words joined by dashes. Links to this page on the site follow the change."}>
+      <input
+        className={error ? "ed-input is-invalid" : "ed-input"}
+        value={draft}
+        disabled={!api.canEdit || page.locked || busy}
+        aria-invalid={error ? true : undefined}
+        onChange={(event) => {
+          setDraft(event.target.value);
+          setError("");
+        }}
+        onBlur={() => void commit()}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") void commit();
+          if (event.key === "Escape") {
+            setDraft(page.route);
+            setError("");
+          }
+        }}
+      />
+    </Field>
   );
 }

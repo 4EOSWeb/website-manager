@@ -54,5 +54,7 @@ export type EditorApi = {
   openPicker: () => void;
   openCrop: () => void;
   run: (action: "duplicate" | "delete" | "copy" | "template") => void;
+  /** Resolves to an error message, or "" once the page has moved. */
+  changeRoute: (to: string) => Promise<string>;
   media: MediaItem[];
 };

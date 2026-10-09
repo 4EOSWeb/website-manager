@@ -12,7 +12,8 @@ export default async function globalSetup() {
   await client.connect();
   const drafts = await client.query("select id, draft_data from workspace_drafts where website_id = 'web_quantum_age'");
   const posts = await client.query("select id from blog_posts where website_id = 'web_quantum_age'");
+  const media = await client.query("select id from media_assets where website_id = 'web_quantum_age'");
   await client.end();
   fs.mkdirSync("tests/e2e/.auth", { recursive: true });
-  fs.writeFileSync(SNAPSHOT, JSON.stringify({ drafts: drafts.rows, posts: posts.rows.map((row) => row.id) }));
+  fs.writeFileSync(SNAPSHOT, JSON.stringify({ drafts: drafts.rows, posts: posts.rows.map((row) => row.id), media: media.rows.map((row) => row.id) }));
 }

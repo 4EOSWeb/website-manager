@@ -5,11 +5,11 @@ import { Logo } from "@/components/site/logo";
 import { NavLinks, NavLinksList } from "@/components/site/nav-links";
 import { MobileNav } from "@/components/site/mobile-nav";
 import { Button } from "@/components/ui/button";
-import { readSite, type EditorPage } from "@/lib/editor-site";
+import { previewMode, readSite, type EditorPage } from "@/lib/editor-site";
 
 export function PrototypeBanner() {
   return (
-    <div className="bg-notice-bg text-notice" data-editor-chrome="banner">
+    <div className="bg-notice-bg text-notice" data-editor-chrome={previewMode ? "banner" : undefined}>
       <p className="container-page flex flex-wrap items-center justify-center gap-x-3 gap-y-1 py-2 text-center text-sm">
         <span>This is a preview. The live site changes only after a person accepts the review.</span>
         <Link href="/prototype-notes" className="link-underline font-semibold">

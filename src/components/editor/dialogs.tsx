@@ -123,12 +123,22 @@ export function CropDialog(props: { src: string; onClose: () => void; onSave: (f
     const h = Math.min(1, Math.max(0.05, next.h));
     return { w, h, x: Math.min(1 - w, Math.max(0, next.x)), y: Math.min(1 - h, Math.max(0, next.y)) };
   };
+  /** The box is stored as fractions of the image, so a pixel aspect needs the image's own shape. */
+  function shaped(next: Box, value: (typeof ASPECTS)[number]["value"]): Box {
+    const image = imageRef.current;
+    if (value === "free" || !image?.naturalWidth || !image.naturalHeight) return clamp(next);
+    const heightPerWidth = image.naturalWidth / image.naturalHeight / Number(value);
+    let w = Math.min(1, Math.max(0.05, next.w));
+    let h = w * heightPerWidth;
+    if (h > 1) {
+      h = 1;
+      w = h / heightPerWidth;
+    }
+    return clamp({ ...next, w, h });
+  }
   function applyAspect(value: (typeof ASPECTS)[number]["value"]) {
     setAspect(value);
-    const image = imageRef.current;
-    if (value === "free" || !image?.naturalWidth) return;
-    const ratio = Number(value) * (image.naturalHeight / image.naturalWidth);
-    setBox((current) => clamp({ ...current, h: current.w * ratio }));
+    setBox((current) => shaped(current, value));
   }
   function save() {
     const image = imageRef.current;
@@ -187,11 +197,7 @@ export function CropDialog(props: { src: string; onClose: () => void; onSave: (f
           const dx = (event.clientX - start.x) / rect.width;
           const dy = (event.clientY - start.y) / rect.height;
           if (start.mode === "move") setBox(clamp({ ...start.box, x: start.box.x + dx, y: start.box.y + dy }));
-          else {
-            const w = start.box.w + dx;
-            const ratio = aspect === "free" ? 0 : Number(aspect) * (image.naturalHeight / image.naturalWidth);
-            setBox(clamp({ ...start.box, w, h: ratio ? w * ratio : start.box.h + dy }));
-          }
+          else setBox(shaped({ ...start.box, w: start.box.w + dx, h: start.box.h + dy }, aspect));
         }}
         onPointerUp={() => { drag.current = null; }}
         onPointerCancel={() => { drag.current = null; }}

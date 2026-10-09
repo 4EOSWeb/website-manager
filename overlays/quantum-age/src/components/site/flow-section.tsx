@@ -113,6 +113,7 @@ function BlockView({ block, fluid }: { block: Block; fluid: boolean }) {
       data-editor-name={previewMode ? block.editorName || undefined : undefined}
       data-hidden={block.hidden ? "true" : undefined}
       data-item-locked={block.locked ? "true" : undefined}
+      data-image={previewMode && block.kind === "image" ? "true" : undefined}
       className={[block.pin ? "sticky top-24 z-20" : "", blockHide(block), block.kind === "button" || block.kind === "image" ? align : ""].join(" ").trim() || undefined}
       style={box}
     >
@@ -159,7 +160,7 @@ function BlockView({ block, fluid }: { block: Block; fluid: boolean }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img src={block.src} alt={block.alt || ""} className={`${fit} ${imageWidth}`} data-field="alt" style={{ objectPosition: block.focal || "center" }} />
       ) : null}
-      {block.kind === "image" && !block.src && previewMode ? <p className="border border-dashed border-stone px-4 py-8 text-center text-sm text-muted-foreground" data-image="true">Add your first image</p> : null}
+      {block.kind === "image" && !block.src && previewMode ? <p className="border border-dashed border-stone px-4 py-8 text-center text-sm text-muted-foreground">Add your first image</p> : null}
       {block.kind === "list" ? (
         block.listStyle === "number" ? (
           <ol className={`grid list-decimal gap-2 pl-6 ${textClasses(block, "")}`} style={color}>

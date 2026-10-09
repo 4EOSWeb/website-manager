@@ -6,6 +6,7 @@ import { signOutUser } from "@/app/signin/actions";
 import { defaultBlogDraft, type BlogDraft, type FreeformItem, type Section, type SiteDraft } from "@/lib/content-schema";
 import {
   addFlowBlock,
+  changePageRoute,
   addZoneItem,
   applyText,
   changeLines,
@@ -553,6 +554,20 @@ export function EditorShell(props: {
     return undefined;
   }
 
+  async function changeCurrentRoute(to: string) {
+    const result = changePageRoute(site, path, to);
+    if (result.error || !result.route) return result.error ?? "This page keeps its address.";
+    if (result.route === path) return "";
+    const ok = await persistSite(result.site);
+    if (!ok) return "The new address could not be saved. Try again.";
+    rememberHistory();
+    skipSite.current = true;
+    setSite(result.site);
+    openPage(result.route);
+    notify(`This page now lives at ${result.route}.`);
+    return "";
+  }
+
   function duplicateCurrentPage() {
     if (!page) return;
     const result = duplicatePage(site, page.route);
@@ -859,6 +874,7 @@ export function EditorShell(props: {
     openPicker: () => setPicker(true),
     openCrop: () => openCrop(),
     run: (action) => runAction(action, selection.sectionId, selection.itemId, selection.overlay, selection.itemIds),
+    changeRoute: changeCurrentRoute,
     media: mediaWithUse,
   };
 

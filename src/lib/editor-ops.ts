@@ -369,13 +369,20 @@ export function slugify(title: string) {
   return slug || "page";
 }
 
+/** Returns why a page address can't be used, or "" when it can. */
+export function routeProblem(site: SiteDraft, route: string, current?: string) {
+  if (!/^\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(route)) return "Use a short address such as /new-service.";
+  if (route !== current && (RESERVED.has(route) || site.pages.some((page) => page.route === route))) return "That address is already used.";
+  return "";
+}
+
 export function createPage(
   site: SiteDraft,
   input: { title: string; route: string; template: PageDocument["template"]; navVisible: boolean; seoTitle: string; metaDescription: string },
 ): { site: SiteDraft; error?: string } {
   const route = input.route.startsWith("/") ? input.route : `/${input.route}`;
-  if (!/^\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(route)) return { site, error: "Use a short address such as /new-service." };
-  if (RESERVED.has(route) || site.pages.some((page) => page.route === route)) return { site, error: "That address is already used." };
+  const problem = routeProblem(site, route);
+  if (problem) return { site, error: problem };
   if (input.template === "home" || input.template === "marketing" || input.template === "legal") return { site, error: "Choose a starting layout." };
   const next: PageDocument = {
     id: createId("page"),
@@ -414,6 +421,32 @@ export function duplicatePage(site: SiteDraft, route: string): { site: SiteDraft
   };
   if (copy.sections.length === 0) copy.sections = templateSections("landing");
   return { site: { ...site, pages: [...site.pages, copy] }, route: copyRoute };
+}
+
+/** Moves a page you created to a new address, and points its sub-pages and on-site links there. */
+export function changePageRoute(site: SiteDraft, from: string, input: string): { site: SiteDraft; route?: string; error?: string } {
+  const page = pageByRoute(site, from);
+  if (!page || page.locked || RESERVED.has(from)) return { site, error: "This page keeps its address." };
+  const route = input.trim().startsWith("/") ? input.trim() : `/${input.trim()}`;
+  if (route === from) return { site, route };
+  const problem = routeProblem(site, route, from);
+  if (problem) return { site, error: problem };
+  const relink = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(relink);
+    if (!value || typeof value !== "object") return value;
+    const next: Record<string, unknown> = {};
+    for (const [key, item] of Object.entries(value)) {
+      const linkKey = key === "href" || key === "buttonHref";
+      next[key] = linkKey && typeof item === "string" && (item === from || item.startsWith(`${from}#`)) ? route + item.slice(from.length) : relink(item);
+    }
+    return next;
+  };
+  const pages = site.pages.map((item) => {
+    const moved = item.route === from ? { ...item, route } : item;
+    const parent = moved.parentRoute === from ? { ...moved, parentRoute: route } : moved;
+    return { ...parent, sections: relink(parent.sections) as PageDocument["sections"] };
+  });
+  return { site: { ...site, pages, chrome: relink(site.chrome) as SiteDraft["chrome"] }, route };
 }
 
 export function setArchived(site: SiteDraft, route: string, archived: boolean): SiteDraft {

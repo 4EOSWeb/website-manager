@@ -4,6 +4,10 @@ import { notFound } from "next/navigation";
 import { SectionView } from "@/components/site/section-view";
 import { customPages, previewMode, readEditorPage } from "@/lib/editor-site";
 
+// Unlisted slugs must render completely before the response starts, or a missing
+// page goes out as a 200 fallback shell before notFound() can set the 404.
+export const ensureStatic = "navigation";
+
 export function generateStaticParams() {
   const slugs = customPages().map((page) => ({ slug: page.route.replace(/^\//, "") }));
   // Cache Components requires this function to return at least one result, even before any custom page exists.
