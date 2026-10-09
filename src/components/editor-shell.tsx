@@ -859,6 +859,7 @@ export function EditorShell(props: {
 
   const width = VIEWPORTS.find((item) => item.id === viewport)?.width ?? 1280;
   const recommended = recommendedFor(page?.sections ?? []);
+  const recommendedHere = recommendedFor(page?.sections ?? [], section?.type === "flow" && !selection.locked);
   const templates = site.sectionTemplates.map((item) => ({ id: item.id, name: item.name }));
   const canPlaceImage = Boolean(selection.sectionId && (selection.kind === "image" || imageSrc(selection.sectionId, selection.itemId)));
   const pageTitle = page?.title ?? activePost?.title ?? (path === "/" ? "Home" : path);
@@ -946,7 +947,7 @@ export function EditorShell(props: {
                 <div className="ed-panel-head">
                   <h2>Add</h2>
                 </div>
-                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommended} templates={templates} onChoose={(entry) => insertEntry(entry)} onTemplate={(id) => insertTemplate(id)} dense />
+                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommendedHere} templates={templates} onChoose={(entry) => insertEntry(entry)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>
             ) : null}
             {rail === "pages" ? (

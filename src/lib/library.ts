@@ -1,7 +1,7 @@
 import type { FlowBlock, Section } from "@/lib/content-schema";
 import { catalogSection, createId, createSection, type LibraryBlock } from "@/lib/page-documents";
 
-export type LibraryCategory = "Sections" | "Text" | "Media" | "Buttons and links" | "Layout" | "Forms" | "Business" | "Social" | "Blog";
+export type LibraryCategory = "Sections" | "Text" | "Media" | "Forms" | "Marketing" | "Testimonials" | "FAQ" | "Calls to action" | "Freeform zone";
 
 export type LibraryEntry = {
   id: string;
@@ -18,37 +18,37 @@ export const LIBRARY: LibraryEntry[] = [
   { id: "layout:hero", label: "Hero", description: "Big heading, a sentence, and a button", category: "Sections", keywords: "banner top intro welcome", thumb: "hero" },
   { id: "layout:split", label: "Text beside an image", description: "Two columns: words and a picture", category: "Sections", keywords: "columns about story", thumb: "split" },
   { id: "layout:cards", label: "Feature cards", description: "Three short points side by side", category: "Sections", keywords: "services benefits grid", thumb: "cards" },
-  { id: "layout:list", label: "Questions and answers", description: "A heading with a list of answers", category: "Sections", keywords: "faq help", thumb: "faq" },
-  { id: "section:testimonial", label: "Testimonial", description: "A client quote with their name", category: "Business", keywords: "review quote client", thumb: "quote" },
-  { id: "section:cta", label: "Call to action", description: "A short pitch and one button", category: "Business", keywords: "contact book signup", thumb: "cta" },
+  { id: "layout:list", label: "Questions and answers", description: "A heading with a list of answers", category: "FAQ", keywords: "faq help", thumb: "faq" },
+  { id: "section:testimonial", label: "Testimonial", description: "A client quote with their name", category: "Testimonials", keywords: "review quote client", thumb: "quote" },
+  { id: "section:cta", label: "Call to action", description: "A short pitch and one button", category: "Calls to action", keywords: "contact book signup", thumb: "cta" },
   { id: "section:form", label: "Contact form", description: "Name, email, and message", category: "Forms", keywords: "contact enquiry", thumb: "form" },
-  { id: "layout:stack", label: "Blank section", description: "An empty section to build in", category: "Layout", keywords: "empty start", thumb: "blank" },
+  { id: "layout:stack", label: "Blank section", description: "An empty section to build in", category: "Sections", keywords: "empty start", thumb: "blank" },
   { id: "block:heading", label: "Heading", description: "A title for a section", category: "Text", keywords: "title h2", thumb: "heading", block: "heading" },
   { id: "block:paragraph", label: "Paragraph", description: "A few sentences", category: "Text", keywords: "body copy text", thumb: "text", block: "paragraph" },
   { id: "block:eyebrow", label: "Small heading", description: "A short label above a heading", category: "Text", keywords: "eyebrow kicker label", thumb: "heading", block: "eyebrow" },
   { id: "block:list", label: "List", description: "Bulleted or numbered points", category: "Text", keywords: "bullets points", thumb: "list", block: "list" },
   { id: "block:quote", label: "Quote", description: "A pulled-out quote", category: "Text", keywords: "blockquote", thumb: "quote", block: "quote" },
-  { id: "block:button", label: "Button", description: "A link that looks like a button", category: "Buttons and links", keywords: "cta link", thumb: "button", block: "button" },
-  { id: "block:link", label: "Text link", description: "An underlined link", category: "Buttons and links", keywords: "anchor", thumb: "text", block: "link" },
+  { id: "block:button", label: "Button", description: "A link that looks like a button", category: "Calls to action", keywords: "cta link", thumb: "button", block: "button" },
+  { id: "block:link", label: "Text link", description: "An underlined link", category: "Calls to action", keywords: "anchor", thumb: "text", block: "link" },
   { id: "block:image", label: "Image", description: "One picture", category: "Media", keywords: "photo picture", thumb: "image", block: "image" },
   { id: "section:gallery", label: "Gallery", description: "A grid of pictures", category: "Media", keywords: "photos grid", thumb: "gallery" },
   { id: "section:video", label: "Video", description: "A YouTube or Vimeo video", category: "Media", keywords: "youtube vimeo", thumb: "video" },
   { id: "section:audio", label: "Audio", description: "An audio player", category: "Media", keywords: "podcast sound", thumb: "audio" },
-  { id: "section:divider", label: "Divider", description: "A thin line between sections", category: "Layout", keywords: "rule hr", thumb: "divider" },
-  { id: "section:spacer", label: "Spacer", description: "Empty space", category: "Layout", keywords: "gap space", thumb: "spacer" },
-  { id: "section:freeform", label: "Freeform zone", description: "Place items anywhere", category: "Layout", keywords: "canvas absolute", thumb: "zone" },
-  { id: "section:card", label: "Card", description: "A boxed heading and text", category: "Layout", keywords: "box panel", thumb: "card" },
-  { id: "section:features", label: "Feature list", description: "Points with short explanations", category: "Business", keywords: "services", thumb: "cards" },
-  { id: "section:faq", label: "FAQ", description: "Questions people ask", category: "Business", keywords: "questions", thumb: "faq" },
-  { id: "section:map", label: "Map", description: "Your address on a map", category: "Business", keywords: "location address", thumb: "map" },
+  { id: "section:divider", label: "Divider", description: "A thin line between sections", category: "Sections", keywords: "rule hr", thumb: "divider" },
+  { id: "section:spacer", label: "Spacer", description: "Empty space", category: "Sections", keywords: "gap space", thumb: "spacer" },
+  { id: "section:freeform", label: "Freeform zone", description: "Place items anywhere", category: "Freeform zone", keywords: "canvas absolute", thumb: "zone" },
+  { id: "section:card", label: "Card", description: "A boxed heading and text", category: "Sections", keywords: "box panel", thumb: "card" },
+  { id: "section:features", label: "Feature list", description: "Points with short explanations", category: "Marketing", keywords: "services", thumb: "cards" },
+  { id: "section:faq", label: "FAQ", description: "Questions people ask", category: "FAQ", keywords: "questions", thumb: "faq" },
+  { id: "section:map", label: "Map", description: "Your address on a map", category: "Marketing", keywords: "location address", thumb: "map" },
   { id: "section:newsletter", label: "Newsletter signup", description: "Collect email addresses", category: "Forms", keywords: "email subscribe", thumb: "newsletter" },
   { id: "section:search", label: "Search box", description: "Search pages and Insights", category: "Forms", keywords: "find", thumb: "search" },
-  { id: "section:social", label: "Social links", description: "Links to your profiles", category: "Social", keywords: "linkedin twitter instagram", thumb: "social" },
-  { id: "section:insights-summary", label: "Insights summary", description: "A heading for recent writing", category: "Blog", keywords: "posts articles", thumb: "summary" },
-  { id: "section:embed", label: "Embed", description: "Another site's widget (https only)", category: "Layout", keywords: "iframe widget", thumb: "embed", embed: true },
+  { id: "section:social", label: "Social links", description: "Links to your profiles", category: "Marketing", keywords: "linkedin twitter instagram", thumb: "social" },
+  { id: "section:insights-summary", label: "Insights summary", description: "A heading for recent writing", category: "Marketing", keywords: "posts articles", thumb: "summary" },
+  { id: "section:embed", label: "Embed", description: "Another site's widget (https only)", category: "Sections", keywords: "iframe widget", thumb: "embed", embed: true },
 ];
 
-export const CATEGORIES: LibraryCategory[] = ["Sections", "Text", "Media", "Buttons and links", "Layout", "Forms", "Business", "Social", "Blog"];
+export const CATEGORIES: LibraryCategory[] = ["Sections", "Text", "Media", "Forms", "Marketing", "Testimonials", "FAQ", "Calls to action", "Freeform zone"];
 
 export function searchLibrary(query: string, category: LibraryCategory | "All", canEmbed: boolean): LibraryEntry[] {
   const needle = query.trim().toLowerCase();
@@ -60,7 +60,9 @@ export function searchLibrary(query: string, category: LibraryCategory | "All", 
   });
 }
 
-export function recommendedFor(sections: Section[]): string[] {
+/** Suggestions for the insertion target: elements when adding inside a section, otherwise sections the page lacks. */
+export function recommendedFor(sections: Section[], insideSection = false): string[] {
+  if (insideSection) return ["block:heading", "block:paragraph", "block:button", "block:image"];
   const hasHero = sections.some((section) => section.type === "flow" && section.layout === "hero");
   const hasCta = sections.some((section) => section.type === "cta" || (section.type === "flow" && section.layout === "cta"));
   const picks = [hasHero ? "layout:split" : "layout:hero", "layout:cards", hasCta ? "section:testimonial" : "section:cta", "section:form"];

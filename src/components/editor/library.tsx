@@ -101,7 +101,7 @@ export function LibraryBrowser(props: {
       ) : null}
       {browsing ? (
         <>
-          <h3 className="ed-lib-heading">Suggested for this page</h3>
+          <h3 className="ed-lib-heading">Recommended here</h3>
           <ul className="ed-lib-grid">{recommended.map(card)}</ul>
         </>
       ) : null}
