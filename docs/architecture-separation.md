@@ -410,3 +410,49 @@ The shell keeps the iframe and the `postMessage` bridge. Site branches inside it
 - Test required: Home selection, undo, save, and device switch still work after this audit because this step does not edit the shell. Later Playwright covers flow reorder and canvas place.
 
 This section does not propose removing the iframe.
+
+## Inspector
+
+Shared controls for links, alt text, and text style stay reusable. Modes that know Quantum Age section kinds are replaced by fields generated from the component registry. A custom inspector is optional.
+
+### src/components/editor/inspector/index.tsx
+
+- Current file: `src/components/editor/inspector/index.tsx`
+- Current behavior: Line 25 labels kind `insights` as “Insights list”. Lines 35, 45, 65, 74, and 178 switch to a `freeform` mode for freeform sections and preset overlays, with Content and Arrange tabs.
+- Why it is site-specific: Freeform is the special zone. Insights is one component.
+- Generic replacement: Generated fields from the registry. Canvas children use canvas fields. A registered Insights component supplies its own props schema.
+- Destination adapter file: `adapters/quantum-age/components/insights.ts` for the Insights label. Canvas fields live in `src/components/editor/inspector/canvas-fields.tsx`.
+- Migration risk: Selecting a freeform item must still show content and position controls after the switch.
+- Test required: Playwright selects a heading, an image, and a canvas item and sees the matching fields.
+
+### src/components/editor/inspector/section.tsx
+
+- Current file: `src/components/editor/inspector/section.tsx`, lines 16, 33, 38, 48, 83, and 180
+- Current behavior: Layout choices include Hero. Preset sections display the preset name. Provider-locked presets cannot be hidden or restyled as reusable sections. Button href for a preset is `buttonHref`.
+- Why it is site-specific: Preset names and `buttonHref` are the current Quantum Age section model.
+- Generic replacement: Layout mode Flow, Stack, Grid, or Canvas. Button destination is a button prop. Locks come from the adapter.
+- Destination adapter file: `adapters/quantum-age/locking.ts` and the hero component.
+- Migration risk: A provider-locked hero must not become freely deletable.
+- Test required: A locked preset still refuses hide. A generic section can change layout mode later.
+
+### src/components/editor/inspector/blocks.tsx
+
+- Current file: `src/components/editor/inspector/blocks.tsx`, lines 35–39
+- Current behavior: A heading in a hero layout is forced to H1 and called the main title of the page.
+- Why it is site-specific: It assumes a hero layout is the page title.
+- Generic replacement: Heading level is a prop. The page can mark one heading as the title without a hero layout enum.
+- Destination adapter file: `adapters/quantum-age/components/hero.ts` if the Quantum Age hero still requires an H1. The platform does not.
+- Migration risk: The public home H1 must remain an H1.
+- Test required: Home still has one H1 after migration.
+
+### src/components/editor/inspector/chrome.tsx
+
+- Current file: `src/components/editor/inspector/chrome.tsx`, line 79
+- Current behavior: A preset overlay is named “Hero callouts” when `overlayName` is empty.
+- Why it is site-specific: The fallback name assumes the home hero.
+- Generic replacement: The node’s `metadata.name` or the registry display name.
+- Destination adapter file: `adapters/quantum-age/components/hero.ts`
+- Migration risk: The label can change. The callouts must remain.
+- Test required: The overlay items are still selectable.
+
+Reusable pieces that stay: link picker, alt text, fit and focal point, and text style. Image Content still offers Choose image. Those are not Quantum Age names.
