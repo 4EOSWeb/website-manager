@@ -332,3 +332,19 @@ The two constants were listed under Routes. This section records the user-facing
 - Destination adapter file: `adapters/quantum-age/seed.ts`
 - Migration risk: Calling the seed against `workspace_drafts` would replace saved edits. That must not happen.
 - Test required: After the move, `updated_at` on existing drafts is unchanged by the commit that relocates the file. A unit test finds the site name in the adapter file and not in `src/platform`.
+
+## Library
+
+The platform catalog is generic node factories plus whatever the active site registers. It must not contain the labels “Freeform zone” or “Insights summary”.
+
+### src/lib/library.ts
+
+- Current file: `src/lib/library.ts`, lines 39 and 47
+- Current behavior: `LIBRARY` includes `{ id: "section:freeform", label: "Freeform zone" }` and `{ id: "section:insights-summary", label: "Insights summary" }`. The category union includes “Freeform zone”. Search copy on line 45 says “Search pages and Insights”.
+- Why it is site-specific: Insights summary is one site’s writing block. Freeform zone is the old special section type, not a layout mode.
+- Generic replacement: A canvas container in the generic catalog. Insights summary is a registered Quantum Age component.
+- Destination adapter file: `adapters/quantum-age/components/insights.ts` for the summary. Canvas creation lives in `src/platform/elements/canvas.ts` with label “Canvas”, not “Freeform zone”.
+- Migration risk: Pages that already contain a freeform section or an insights-summary section must still open.
+- Test required: Search `Freeform zone` and `Insights summary` after the catalog switch and expect them only in the Quantum Age adapter or in version 3 fallback, not in `src/platform`.
+
+The other `LIBRARY` entries (heading, paragraph, button, image, card, FAQ, form) are generic and can become node factories. They are not Quantum Age names. `layout:hero` is a generic heading-and-button section today, but its id collides with the Quantum Age hero preset. The generic template must not emit `quantum-age.hero`.
