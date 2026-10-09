@@ -5,6 +5,7 @@ import { propsSchema } from "./props";
 import { stylesSchema } from "./styles";
 import { responsiveSchema } from "./responsive";
 import { visibilitySchema } from "./visibility";
+import { lockingSchema } from "./locking";
 
 export const nodeSchema = z.object({
   id: z.string().refine((value) => isPlatformId(value) && (value.startsWith("node_") || value.startsWith("grp_")), "Use a node id."),
@@ -15,7 +16,7 @@ export const nodeSchema = z.object({
   responsive: responsiveSchema,
   children: z.array(z.unknown()),
   visibility: visibilitySchema,
-  locked: z.boolean(),
+  locked: lockingSchema,
   metadata: z.record(z.string(), z.unknown()),
   layout: z.unknown().optional(),
   bindings: z.unknown().optional(),
