@@ -1186,7 +1186,25 @@
 .ed-status-right {
   display: flex;
   flex: none;
+  align-items: center;
   gap: 16px;
+}
+
+.ed-status .ed-zoom .ed-select {
+  height: 20px;
+  min-height: 20px;
+  padding: 0 22px 0 6px;
+  border-color: transparent;
+  background-color: transparent;
+  font-size: 12px;
+}
+
+.ed-status .ed-zoom .ed-select:hover {
+  background-color: var(--ed-hover);
+}
+
+.ed-status .ed-zoom .ed-select:focus-visible {
+  border-color: var(--ed-accent);
 }
 
 /* Toasts */

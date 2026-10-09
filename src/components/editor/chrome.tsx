@@ -79,9 +79,6 @@ export function TopBar(props: {
   onNewPage: () => void;
   viewport: Viewport;
   onViewport: (viewport: Viewport) => void;
-  zoom: Zoom;
-  scale: number;
-  onZoom: (zoom: Zoom) => void;
   canUndo: boolean;
   canRedo: boolean;
   onUndo: () => void;
@@ -122,15 +119,6 @@ export function TopBar(props: {
             </button>
           ))}
         </div>
-        <label className="ed-zoom">
-          <span className="sr-only">Zoom</span>
-          <select className="ed-input ed-select is-compact" value={String(props.zoom)} onChange={(event) => props.onZoom(event.target.value === "fit" ? "fit" : (Number(event.target.value) as Zoom))}>
-            <option value="fit">Fit ({Math.round(props.scale * 100)}%)</option>
-            <option value="50">50%</option>
-            <option value="75">75%</option>
-            <option value="100">100%</option>
-          </select>
-        </label>
       </div>
       <div className="ed-topbar-right">
         <IconButton label="Undo" shortcut={`${mod}Z`} disabled={!props.canUndo} onClick={props.onUndo}><Undo2 size={16} aria-hidden="true" /></IconButton>
@@ -181,12 +169,21 @@ export function ToolRail(props: { active: RailPanel | null; onChange: (panel: Ra
   );
 }
 
-export function StatusBar(props: { message: string; viewport: Viewport; scale: number; role: string; editing: boolean; onShortcuts: () => void }) {
+export function StatusBar(props: { message: string; viewport: Viewport; scale: number; zoom: Zoom; onZoom: (zoom: Zoom) => void; role: string; editing: boolean; onShortcuts: () => void }) {
   return (
     <footer className="ed-status">
       <span className="truncate">{props.editing ? "Typing. Press Esc when you're done." : props.message}</span>
       <span className="ed-status-right">
-        <span>{props.viewport === "mobile" ? "Phone" : props.viewport === "tablet" ? "Tablet" : "Desktop"} · {Math.round(props.scale * 100)}%</span>
+        <span>{props.viewport === "mobile" ? "Phone" : props.viewport === "tablet" ? "Tablet" : "Desktop"}</span>
+        <label className="ed-zoom">
+          <span className="sr-only">Zoom</span>
+          <select className="ed-input ed-select is-compact" value={String(props.zoom)} onChange={(event) => props.onZoom(event.target.value === "fit" ? "fit" : (Number(event.target.value) as Zoom))}>
+            <option value="fit">Fit ({Math.round(props.scale * 100)}%)</option>
+            <option value="50">50%</option>
+            <option value="75">75%</option>
+            <option value="100">100%</option>
+          </select>
+        </label>
         <button type="button" className="ed-link" onClick={props.onShortcuts}>Shortcuts</button>
       </span>
     </footer>

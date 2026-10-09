@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { signOutUser } from "@/app/signin/actions";
 import { defaultBlogDraft, type BlogDraft, type FreeformItem, type Section, type SiteDraft } from "@/lib/content-schema";
-import type { RichMark } from "@/lib/rich-text";
 import {
   addFlowBlock,
   addZoneItem,
@@ -42,6 +41,8 @@ import { Canvas } from "@/components/editor/canvas";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
 import { LibraryBrowser } from "@/components/editor/library";
 import { Inspector } from "@/components/editor/inspector";
+import { previewFrame as frame, readMarks, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
+import { useEditorHistory } from "@/components/editor/use-editor-history";
 import { AddPageDialog, CropDialog, ImagePickerDialog, InsertDialog, PublishDialog, ShortcutsDialog, TemplateDialog, type PageForm } from "@/components/editor/dialogs";
 
 type Toast = { id: number; message: string; tone: "info" | "error"; action?: { label: string; run: () => void } };
@@ -50,14 +51,6 @@ type Insert = { beforeId: string };
 const RECENT_KEY = "4eos-editor-recent-library";
 const TIP_KEY = "4eos-editor-tip-dismissed";
 const READY_TIMEOUT = 20000;
-
-function frame() {
-  return document.getElementById("site-preview") as HTMLIFrameElement | null;
-}
-
-function toFrame(message: Record<string, unknown>) {
-  frame()?.contentWindow?.postMessage(message, "*");
-}
 
 export function EditorShell(props: {
   websiteId: string;
@@ -79,8 +72,7 @@ export function EditorShell(props: {
   const [scale, setScale] = useState(1);
   const [site, setSite] = useState(props.initialSite);
   const [posts, setPosts] = useState(props.initialPosts);
-  const [past, setPast] = useState<Snapshot[]>([]);
-  const [future, setFuture] = useState<Snapshot[]>([]);
+  const history = useEditorHistory<Snapshot>();
   const [media, setMedia] = useState(props.media);
   const [recentImages, setRecentImages] = useState<string[]>([]);
   const [recentLibrary, setRecentLibrary] = useState<string[]>([]);
@@ -143,8 +135,7 @@ export function EditorShell(props: {
   }, []);
 
   function rememberHistory() {
-    setPast((items) => [...items.slice(-60), { site, posts }]);
-    setFuture([]);
+    history.record({ site, posts });
   }
 
   function commit(next: SiteDraft, reload: boolean) {
@@ -166,10 +157,8 @@ export function EditorShell(props: {
   }
 
   function undo() {
-    const previous = past[past.length - 1];
+    const previous = history.undo({ site, posts });
     if (!previous) return;
-    setPast(past.slice(0, -1));
-    setFuture([{ site, posts }, ...future]);
     setSite(previous.site);
     setPosts(previous.posts);
     reloadAfter.current = true;
@@ -177,10 +166,8 @@ export function EditorShell(props: {
   }
 
   function redo() {
-    const next = future[0];
+    const next = history.redo({ site, posts });
     if (!next) return;
-    setFuture(future.slice(1));
-    setPast([...past, { site, posts }]);
     setSite(next.site);
     setPosts(next.posts);
     reloadAfter.current = true;
@@ -686,16 +673,12 @@ export function EditorShell(props: {
   }
 
   const undoRef = useRef(undo);
-  const handlerRef = useRef<(event: MessageEvent) => void>(() => undefined);
 
   function postConfig(route: string) {
     toFrame({ type: "4eos-config", scale, clipboard: Boolean(clipboard), scrollY: scrollByPath.current[route] ?? 0, selection: { sectionId: selection.sectionId, itemId: selection.itemId } });
   }
 
-  function onMessage(event: MessageEvent) {
-    const node = frame();
-    if (!node || event.source !== node.contentWindow || !event.data || typeof event.data !== "object") return;
-    const data = event.data as Record<string, unknown>;
+  function onMessage(data: CanvasMessage, node: HTMLIFrameElement) {
     const text = (key: string) => String(data[key] ?? "");
     switch (data.type) {
       case "4eos-ready": {
@@ -726,14 +709,7 @@ export function EditorShell(props: {
         setEditing(Boolean(data.active));
         break;
       case "4eos-text": {
-        const marks = Array.isArray(data.marks)
-          ? data.marks.flatMap((mark): RichMark[] => {
-              if (!mark || typeof mark !== "object") return [];
-              const item = mark as { start?: number; end?: number; kind?: string; href?: string; color?: string };
-              if (item.kind !== "bold" && item.kind !== "italic" && item.kind !== "underline" && item.kind !== "link" && item.kind !== "color") return [];
-              return [{ start: Number(item.start), end: Number(item.end), kind: item.kind, href: item.href, color: item.color }];
-            })
-          : undefined;
+        const marks = readMarks(data.marks);
         commitText(applyText(site, path, text("sectionId"), text("field") || "text", text("value"), text("itemId") || undefined, marks), `${text("sectionId")}:${text("itemId")}:${text("field")}`);
         break;
       }
@@ -811,14 +787,9 @@ export function EditorShell(props: {
 
   useEffect(() => {
     undoRef.current = undo;
-    handlerRef.current = onMessage;
   });
 
-  useEffect(() => {
-    const listener = (event: MessageEvent) => handlerRef.current(event);
-    window.addEventListener("message", listener);
-    return () => window.removeEventListener("message", listener);
-  }, []);
+  useCanvasMessages(onMessage);
 
   useEffect(() => {
     toFrame({ type: "4eos-config", scale, clipboard: Boolean(clipboard) });
@@ -948,11 +919,8 @@ export function EditorShell(props: {
         onNewPage={() => setAddingPage(true)}
         viewport={viewport}
         onViewport={setViewport}
-        zoom={zoom}
-        scale={scale}
-        onZoom={setZoom}
-        canUndo={past.length > 0}
-        canRedo={future.length > 0}
+        canUndo={history.canUndo}
+        canRedo={history.canRedo}
         onUndo={undo}
         onRedo={redo}
         save={save}
@@ -1049,7 +1017,7 @@ export function EditorShell(props: {
           managedRoute={managedRoute}
         />
       </div>
-      <StatusBar message={statusMessage} viewport={viewport} scale={scale} role={props.role} editing={editing} onShortcuts={() => setShortcuts(true)} />
+      <StatusBar message={statusMessage} viewport={viewport} scale={scale} zoom={zoom} onZoom={setZoom} role={props.role} editing={editing} onShortcuts={() => setShortcuts(true)} />
       <div className="ed-toasts" aria-live="polite">
         {toasts.map((toast) => (
           <div key={toast.id} className={toast.tone === "error" ? "ed-toast is-error" : "ed-toast"} role={toast.tone === "error" ? "alert" : "status"}>
