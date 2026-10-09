@@ -19,7 +19,7 @@ test("a missing repository fails and branch dev passes", () => {
     defaultBranch: site.defaultBranch,
   };
   assert.equal(siteMetadataSchema.safeParse(withoutRepository).success, false);
-  const checked = validateAdapterIdentity({ version: 1, site: withoutRepository });
+  const checked = validateAdapterIdentity({ version: 1, level: 1, site: withoutRepository });
   assert.equal(checked.ok, false);
   if (!checked.ok) assert.equal(checked.error.path, "site.repository");
   const valid = siteMetadataSchema.safeParse(site);

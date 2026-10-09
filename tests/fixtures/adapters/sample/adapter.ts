@@ -1,5 +1,6 @@
 const adapter = {
   version: 1 as const,
+  level: 1 as const,
   site: {
     id: "sample",
     name: "Sample",

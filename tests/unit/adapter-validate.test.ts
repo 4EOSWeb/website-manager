@@ -13,6 +13,7 @@ test("a missing version fails and version 1 with id and name passes", () => {
 
   const valid = validateAdapterIdentity({
     version: 1,
+    level: 1,
     site: {
       id: "sample",
       name: "Sample",
