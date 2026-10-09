@@ -14,7 +14,7 @@ const DEVICES: { id: Viewport; label: string; icon: React.ReactNode }[] = [
   { id: "mobile", label: "Phone", icon: <Smartphone size={16} aria-hidden="true" /> },
 ];
 
-export function SaveStatus({ state, onRetry }: { state: SaveState; onRetry: () => void }) {
+export function SaveStatus({ state, savedAt, onRetry }: { state: SaveState; savedAt?: number | null; onRetry: () => void }) {
   if (state === "error") {
     return (
       <span className="ed-save is-error" role="alert">
@@ -26,7 +26,7 @@ export function SaveStatus({ state, onRetry }: { state: SaveState; onRetry: () =
   return (
     <span className={`ed-save is-${state}`} role="status" aria-live="polite">
       {state === "saved" ? <Check size={14} aria-hidden="true" /> : <LoaderCircle size={14} aria-hidden="true" className="ed-spin" />}
-      {state === "saved" ? "Saved" : state === "saving" ? "Saving…" : "Unsaved changes"}
+      {state === "saved" ? (savedAt ? `Saved ${new Date(savedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}` : "Saved") : state === "saving" ? "Saving…" : "Unsaved changes"}
     </span>
   );
 }
@@ -84,6 +84,7 @@ export function TopBar(props: {
   onUndo: () => void;
   onRedo: () => void;
   save: SaveState;
+  savedAt: number | null;
   onRetry: () => void;
   previewHref: string;
   canEdit: boolean;
@@ -123,7 +124,7 @@ export function TopBar(props: {
       <div className="ed-topbar-right">
         <IconButton label="Undo" shortcut={`${mod}Z`} disabled={!props.canUndo} onClick={props.onUndo}><Undo2 size={16} aria-hidden="true" /></IconButton>
         <IconButton label="Redo" shortcut={`${mod}Shift+Z`} disabled={!props.canRedo} onClick={props.onRedo}><Redo2 size={16} aria-hidden="true" /></IconButton>
-        <SaveStatus state={props.save} onRetry={props.onRetry} />
+        <SaveStatus state={props.save} savedAt={props.savedAt} onRetry={props.onRetry} />
         <a className="ed-button" href={props.previewHref} target="_blank" rel="noreferrer">
           <Eye size={14} aria-hidden="true" /> Preview
         </a>

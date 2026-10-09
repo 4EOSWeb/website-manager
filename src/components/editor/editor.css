@@ -18,7 +18,7 @@
   --ed-ok: #89d185;
   --ed-warn: #cca700;
   --ed-radius: 4px;
-  --ed-focus: 0 0 0 1px var(--ed-bg), 0 0 0 3px var(--ed-accent);
+  --ed-focus: var(--state-focus);
   display: grid;
   grid-template-rows: 44px minmax(0, 1fr) 24px;
   height: 100dvh;
@@ -545,7 +545,7 @@
 }
 
 .ed-group-head svg {
-  transition: transform 0.15s;
+  transition: transform var(--state-duration);
 }
 
 .ed-group-body {
@@ -702,11 +702,12 @@
 }
 
 .ed-input:disabled {
-  opacity: 0.55;
+  opacity: var(--state-disabled-opacity);
 }
 
 .ed-input.is-invalid {
   border-color: var(--ed-error);
+  box-shadow: var(--state-invalid);
 }
 
 .ed-input.is-inline {
@@ -780,7 +781,7 @@
   height: 16px;
   border-radius: 8px;
   background: #4a4a4a;
-  transition: background 0.15s;
+  transition: background var(--state-duration);
 }
 
 .ed-switch::after {
@@ -792,7 +793,7 @@
   height: 12px;
   border-radius: 50%;
   background: #d4d4d4;
-  transition: transform 0.15s;
+  transition: transform var(--state-duration);
 }
 
 .ed-toggle input:checked + .ed-switch {

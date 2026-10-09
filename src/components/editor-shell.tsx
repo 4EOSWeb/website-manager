@@ -82,6 +82,7 @@ export function EditorShell(props: {
   const [publications, setPublications] = useState(props.publications);
   const [progress, setProgress] = useState<number | null>(null);
   const [save, setSave] = useState<SaveState>("saved");
+  const [savedAt, setSavedAt] = useState<number | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [editing, setEditing] = useState(false);
   const [frameFailed, setFrameFailed] = useState(false);
@@ -191,7 +192,10 @@ export function EditorShell(props: {
           notify(body.message ?? "Your last change was not saved. Check your connection and press Retry.", "error");
           return false;
         }
-        if (seq === saveSeq.current) setSave("saved");
+        if (seq === saveSeq.current) {
+          setSave("saved");
+          setSavedAt(Date.now());
+        }
         return true;
       } catch {
         setSave("error");
@@ -246,6 +250,7 @@ export function EditorShell(props: {
           return;
         }
         setSave("saved");
+        setSavedAt(Date.now());
         if (shouldReload) {
           reloadAfter.current = false;
           setVersion((value) => value + 1);
@@ -925,6 +930,7 @@ export function EditorShell(props: {
         onUndo={undo}
         onRedo={redo}
         save={save}
+        savedAt={savedAt}
         onRetry={retrySave}
         previewHref={`${previewSrc}&clean=1`}
         canEdit={props.canEdit}
