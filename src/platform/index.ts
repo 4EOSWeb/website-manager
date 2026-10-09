@@ -10,6 +10,7 @@ export {
   lockedError,
   migrationFailed,
   nodeNotFound,
+  siteMismatch,
   parentRejected,
   platformError,
   platformErrorCodes,
@@ -20,3 +21,5 @@ export {
 export { err, ok, type Err, type Ok, type Result } from "./result";
 
 export { createPlatformId, isPlatformId, type PlatformIdPrefix } from "./ids";
+
+export { assertSameSite, type SiteContext } from "./context";

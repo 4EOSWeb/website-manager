@@ -10,6 +10,7 @@ import {
   nodeNotFound,
   parentRejected,
   platformErrorCodes,
+  siteMismatch,
 } from "../../src/platform/errors.ts";
 
 const helpers = {
@@ -21,6 +22,7 @@ const helpers = {
   parent_rejected: parentRejected,
   locked: lockedError,
   migration_failed: migrationFailed,
+  site_mismatch: siteMismatch,
 } as const;
 
 test("every platform error code has a helper and no site name", () => {

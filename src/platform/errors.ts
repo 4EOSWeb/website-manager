@@ -7,6 +7,7 @@ export const platformErrorCodes = [
   "parent_rejected",
   "locked",
   "migration_failed",
+  "site_mismatch",
 ] as const;
 
 export type PlatformErrorCode = (typeof platformErrorCodes)[number];
@@ -25,6 +26,7 @@ const defaultMessages: Record<PlatformErrorCode, string> = {
   parent_rejected: "That item cannot be placed there.",
   locked: "This item is locked.",
   migration_failed: "The document could not be converted.",
+  site_mismatch: "These records belong to different sites.",
 };
 
 export function platformError(code: PlatformErrorCode, message = defaultMessages[code]): PlatformError {
@@ -61,4 +63,8 @@ export function lockedError(message?: string): PlatformError {
 
 export function migrationFailed(message?: string): PlatformError {
   return platformError("migration_failed", message);
+}
+
+export function siteMismatch(message?: string): PlatformError {
+  return platformError("site_mismatch", message);
 }
