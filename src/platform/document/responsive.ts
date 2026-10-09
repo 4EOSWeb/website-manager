@@ -7,7 +7,10 @@ const breakpointOverride = z.object({
   box: canvasBoxSchema.optional(),
 }).strict();
 
+export const responsiveStrategySchema = z.enum(["scale", "reflow", "custom"]);
+
 export const responsiveSchema = z.object({
+  strategy: responsiveStrategySchema.optional(),
   tablet: breakpointOverride.optional(),
   mobile: breakpointOverride.optional(),
 }).strict();

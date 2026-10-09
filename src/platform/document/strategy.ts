@@ -27,10 +27,22 @@ export function resolveReflow(): FlowPlacement {
   return { mode: "flow", direction: "vertical" };
 }
 
-/** A missing smaller breakpoint reflows. It does not copy the desktop box. */
-export function resolveMissingBreakpoint(child: CanvasChild, breakpoint: BreakpointName): FlowPlacement | { box: CanvasPercentages } {
+export type BreakpointPlacement = FlowPlacement | { box: CanvasPercentages };
+
+function copyBox(box: CanvasPercentages): CanvasPercentages {
+  return { x: box.x, y: box.y, w: box.w, h: box.h };
+}
+
+/** Custom uses a breakpoint box when one is stored. A missing custom breakpoint reflows. */
+export function resolveBreakpoint(child: CanvasChild, breakpoint: BreakpointName): BreakpointPlacement {
   const strategy = child.responsive?.strategy ?? defaultCanvasStrategy;
-  const missing = child.responsive?.[breakpoint]?.box === undefined;
-  if (strategy === "scale" && missing && child.box) return { box: resolveScale(child.box) };
+  const box = child.responsive?.[breakpoint]?.box;
+  if (strategy === "custom") return box ? { box: copyBox(box) } : resolveReflow();
+  if (strategy === "scale" && child.box) return { box: resolveScale(child.box) };
   return resolveReflow();
+}
+
+/** A missing smaller breakpoint reflows. It does not copy the desktop box. */
+export function resolveMissingBreakpoint(child: CanvasChild, breakpoint: BreakpointName): BreakpointPlacement {
+  return resolveBreakpoint(child, breakpoint);
 }
