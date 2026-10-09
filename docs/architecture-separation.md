@@ -348,3 +348,27 @@ The platform catalog is generic node factories plus whatever the active site reg
 - Test required: Search `Freeform zone` and `Insights summary` after the catalog switch and expect them only in the Quantum Age adapter or in version 3 fallback, not in `src/platform`.
 
 The other `LIBRARY` entries (heading, paragraph, button, image, card, FAQ, form) are generic and can become node factories. They are not Quantum Age names. `layout:hero` is a generic heading-and-button section today, but its id collides with the Quantum Age hero preset. The generic template must not emit `quantum-age.hero`.
+
+## Manifest
+
+`editorManifestSchema` must not require npm, branch `main`, or an Insights collection. Those values become adapter data. The current parser stays a compatibility reader until step 19.25.
+
+### src/lib/manifest.ts
+
+- Current file: `src/lib/manifest.ts`
+- Current behavior: `packageManager` is the literal `npm`. `installCommand` is `npm ci`. `devCommand` is `npm run dev`. `buildCommand` is `npm run build`. `defaultBranch` is the literal `main`. `blog.collection` is the literal `insights` and `blog.format` is `structured-json`. `media` is the literal `git`.
+- Why it is site-specific: Another site can use pnpm, a branch named `develop`, and a journal that is not called Insights.
+- Generic replacement: The versioned adapter fields for commands, branch, articles, and media.
+- Destination adapter file: `adapters/quantum-age/commands.ts`, `adapters/quantum-age/articles.ts`, and `adapters/quantum-age/media.ts`
+- Migration risk: `Website.manifest` in Postgres holds this JSON for Quantum Age. Do not rewrite that column in the audit.
+- Test required: `tests/unit/manifest-compat.test.ts` when the compatibility reader is added. Do not add that test in this step.
+
+### overlays/quantum-age/4eos.editor.config.json
+
+- Current file: `overlays/quantum-age/4eos.editor.config.json`
+- Current behavior: The file matches the schema: npm, main, and `blog.collection` `insights`.
+- Why it is site-specific: It is this site’s manifest.
+- Generic replacement: The assembled Quantum Age adapter. The JSON can remain until the editor reads the adapter.
+- Destination adapter file: `adapters/quantum-age/adapter.ts`
+- Migration risk: Seed and preview still read this file today.
+- Test required: `tests/unit/qa-adapter-full.test.ts` once the adapter parses. The editor still opens `web_quantum_age` from the current manifest until that wiring lands.
