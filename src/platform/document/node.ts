@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { isPlatformId } from "../ids";
 import { nodeTypeSchema } from "./node-type";
+import { propsSchema } from "./props";
 
 export const nodeSchema = z.object({
   id: z.string().refine((value) => isPlatformId(value) && (value.startsWith("node_") || value.startsWith("grp_")), "Use a node id."),
   type: nodeTypeSchema,
   componentId: z.string().min(1),
-  props: z.record(z.string(), z.unknown()),
+  props: propsSchema,
   styles: z.record(z.string(), z.unknown()),
   responsive: z.record(z.string(), z.unknown()),
   children: z.array(z.unknown()),
