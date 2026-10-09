@@ -10,6 +10,9 @@
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run lint && npm run build",
     "verify": "node --experimental-strip-types scripts/verify-slice.ts",
+    "test": "node --experimental-strip-types --no-warnings --test tests/unit/",
+    "test:e2e": "playwright test",
+    "routes": "node --experimental-strip-types --no-warnings scripts/route-inventory.ts --write",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -28,6 +31,7 @@
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.23.1",
