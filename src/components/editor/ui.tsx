@@ -184,7 +184,7 @@ export function Dialog(props: { title: string; onClose: () => void; children: Re
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const node = ref.current;
-    const first = node?.querySelector<HTMLElement>("[autofocus], input, select, textarea, button:not([data-close])");
+    const first = node?.querySelector<HTMLElement>("[autofocus], input, select, textarea, button:not([data-close])") ?? node?.querySelector<HTMLElement>("[data-close]") ?? node;
     first?.focus();
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -212,7 +212,7 @@ export function Dialog(props: { title: string; onClose: () => void; children: Re
   }, []);
   return (
     <div className="ed-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) props.onClose(); }}>
-      <div ref={ref} className={props.wide ? "ed-dialog is-wide" : "ed-dialog"} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <div ref={ref} className={props.wide ? "ed-dialog is-wide" : "ed-dialog"} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
         <div className="ed-dialog-head">
           <div>
             <h2 id={titleId}>{props.title}</h2>

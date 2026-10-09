@@ -87,7 +87,6 @@
   color: var(--ed-muted);
   font-size: 11px;
   white-space: nowrap;
-  text-transform: capitalize;
 }
 
 .ed-kbd {
@@ -127,6 +126,24 @@
   white-space: nowrap;
   pointer-events: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Hover tips wait so they don't flash while the pointer passes; keyboard focus shows them at once. */
+.ed-root [data-tip]:hover:not(:focus-visible)::after {
+  animation: ed-tip-in 0s 700ms both;
+}
+
+.ed-root [data-tip][aria-expanded="true"]::after {
+  display: none;
+}
+
+@keyframes ed-tip-in {
+  from {
+    visibility: hidden;
+  }
+  to {
+    visibility: visible;
+  }
 }
 
 .ed-root [data-tip-side="right"]:hover::after,
@@ -1261,6 +1278,10 @@
   background: rgba(0, 0, 0, 0.55);
 }
 
+.ed-dialog:focus {
+  outline: none;
+}
+
 .ed-dialog {
   display: flex;
   width: min(480px, 100%);
@@ -1387,7 +1408,7 @@
   height: 100px;
   border-radius: 3px;
   object-fit: cover;
-  background: #2b2b2b;
+  background: repeating-conic-gradient(#e6e6e6 0 25%, #fff 0 50%) 0 0 / 10px 10px;
 }
 
 .ed-crop-tools {
@@ -1474,7 +1495,7 @@
   overflow: hidden;
   border: 1px solid var(--ed-border-strong);
   border-radius: 3px;
-  background: #2b2b2b;
+  background: repeating-conic-gradient(#e6e6e6 0 25%, #fff 0 50%) 0 0 / 10px 10px;
 }
 
 .ed-media-thumb:disabled {
@@ -1798,5 +1819,26 @@
   .ed-backdrop * {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+.ed-history-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ed-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Most saves finish in well under 300ms; only show the spinner for slow ones. */
+.ed-save .ed-spin {
+  opacity: 0;
+  animation: studio-spin 0.9s linear infinite, ed-reveal 0s 300ms forwards;
+}
+
+@keyframes ed-reveal {
+  to {
+    opacity: 1;
   }
 }

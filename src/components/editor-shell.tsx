@@ -908,7 +908,7 @@ export function EditorShell(props: {
       const response = await fetch(`/api/sites/${props.websiteId}/publish`, { method: "POST" });
       const body = (await response.json().catch(() => ({}))) as { message?: string; status?: string; reviewUrl?: string | null };
       setPublishMessage(body.message ?? "The changes could not be sent.");
-      if (response.ok && body.status) setPublications((items) => [{ status: body.status!, summary: body.message ?? "", reviewUrl: body.reviewUrl ?? null }, ...items]);
+      if (response.ok && body.status) setPublications((items) => [{ status: body.status!, summary: body.message ?? "", reviewUrl: body.reviewUrl ?? null, createdAt: new Date().toISOString() }, ...items]);
     } catch {
       setPublishMessage("The changes could not be sent. Check your connection and try again.");
     } finally {

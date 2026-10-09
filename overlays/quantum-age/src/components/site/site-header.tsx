@@ -32,8 +32,11 @@ function menuItems(pages: EditorPage[]) {
 }
 
 export async function SiteHeader() {
-  const path = (await headers()).get("x-4eos-path") ?? "";
   const { pages, chrome } = readSite();
+  const hidesSomewhere = pages.some((page) => page.hideHeader) || Boolean(chrome?.header.hiddenOn.length);
+  // Only read the request path when a page can hide the header, so the default
+  // site stays statically prerendered.
+  const path = hidesSomewhere ? (await headers()).get("x-4eos-path") ?? "" : "";
   const current = pages.find((page) => page.route === path);
   if (current?.hideHeader || chrome?.header.hiddenOn.includes(path)) return null;
   const items = menuItems(pages);

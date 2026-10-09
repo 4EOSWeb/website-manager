@@ -69,7 +69,7 @@ export function homeSections(): Section[] {
       block("blk_tagline", "heading", "Elevate strategy. Accelerate growth."),
       block("blk_positioning", "paragraph", "The only marketing firm in senior care steeped in both consumer and business-to-business."),
       block("blk_talk", "button", "Talk with us", { href: "/contact" }),
-      block("blk_explore", "button", "Explore solutions", { href: "/solutions" }),
+      block("blk_explore", "button", "Explore solutions", { href: "/solutions", variant: "outline" }),
       block("blk_rings", "brand-mark", "Rings", { locked: true, editorName: "Rings" }),
     ]),
     flow("audience", "band", "Who we work with", [

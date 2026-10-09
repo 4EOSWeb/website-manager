@@ -280,8 +280,11 @@ export function PublishDialog(props: {
       {props.publications.length ? (
         <ul className="ed-history">
           {props.publications.map((item, index) => (
-            <li key={`${item.status}-${index}`}>
-              <span className="ed-tag">{item.status.replaceAll("_", " ").toLowerCase()}</span>
+            <li key={`${item.createdAt}-${index}`}>
+              <span className="ed-history-meta">
+                <span className="ed-tag">{item.status.replaceAll("_", " ").toLowerCase()}</span>
+                <time dateTime={item.createdAt}>{new Date(item.createdAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</time>
+              </span>
               <p>{item.summary.split("\n")[0]}</p>
               {item.reviewUrl ? <a className="ed-link" href={item.reviewUrl} target="_blank" rel="noreferrer">Open the review <ExternalLink size={12} aria-hidden="true" /></a> : null}
             </li>

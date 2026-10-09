@@ -10,7 +10,7 @@ export type MediaItem = {
   usedBy?: string[];
 };
 
-export type Publication = { status: string; summary: string; reviewUrl: string | null };
+export type Publication = { status: string; summary: string; reviewUrl: string | null; createdAt: string };
 
 export type Selection = {
   sectionId: string;

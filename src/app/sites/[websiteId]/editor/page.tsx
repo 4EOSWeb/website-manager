@@ -75,6 +75,7 @@ export default async function EditorPage({ params }: { params: Promise<{ website
         status: item.status,
         summary: item.summary,
         reviewUrl: item.pullRequestUrl,
+        createdAt: item.createdAt.toISOString(),
       }))}
     />
   );

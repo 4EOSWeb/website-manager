@@ -20,6 +20,7 @@ export type StructuredPost = {
   blocks: StructuredBlock[];
   featuredImage: { src: string; alt: string } | null;
   publishAt?: string;
+  updatedAt: string;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -69,6 +70,7 @@ function parsePost(value: unknown, slugFromFile: string): StructuredPost | null 
     blocks,
     featuredImage: featured,
     publishAt: typeof value.publishAt === "string" ? value.publishAt : "",
+    updatedAt: "",
   };
 }
 
@@ -79,8 +81,9 @@ export function readStructuredPosts(): StructuredPost[] {
   for (const file of fs.readdirSync(dir)) {
     if (!file.endsWith(".json")) continue;
     try {
-      const parsed = parsePost(JSON.parse(fs.readFileSync(path.join(dir, file), "utf8")), file.replace(/\.json$/, ""));
-      if (parsed) posts.push(parsed);
+      const full = path.join(dir, file);
+      const parsed = parsePost(JSON.parse(fs.readFileSync(full, "utf8")), file.replace(/\.json$/, ""));
+      if (parsed) posts.push({ ...parsed, updatedAt: fs.statSync(full).mtime.toISOString() });
     } catch {
       continue;
     }

@@ -18,7 +18,7 @@ export default async function InsightsPage() {
   const structured = readStructuredPosts().map((post) => ({
     slug: post.slug,
     title: post.title,
-    date: new Date().toISOString().slice(0, 10),
+    date: (post.publishAt || post.updatedAt).slice(0, 10),
     author: post.authorDisplayName,
     readMinutes: null,
     tags: ["Draft"],

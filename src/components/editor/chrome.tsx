@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlertCircle, Check, ChevronDown, CloudUpload, Eye, FilePlus2, Files, ImageIcon, Keyboard, Layers, LoaderCircle, LogOut, Monitor, Palette, Plus, Redo2, ShieldCheck, Smartphone, Tablet, Undo2 } from "lucide-react";
+import { AlertCircle, Check, ChevronDown, Circle, CloudUpload, Eye, FilePlus2, Files, ImageIcon, Keyboard, Layers, LoaderCircle, LogOut, Monitor, Palette, Plus, Redo2, ShieldCheck, Smartphone, Tablet, Undo2 } from "lucide-react";
 import { signOutUser } from "@/app/signin/actions";
 import type { RailPanel, SaveState, Viewport } from "@/components/editor/types";
 import { IconButton } from "@/components/editor/ui";
@@ -25,7 +25,7 @@ export function SaveStatus({ state, savedAt, onRetry }: { state: SaveState; save
   }
   return (
     <span className={`ed-save is-${state}`} role="status" aria-live="polite">
-      {state === "saved" ? <Check size={14} aria-hidden="true" /> : <LoaderCircle size={14} aria-hidden="true" className="ed-spin" />}
+      {state === "saved" ? <Check size={14} aria-hidden="true" /> : state === "saving" ? <LoaderCircle size={14} aria-hidden="true" className="ed-spin" /> : <Circle size={8} aria-hidden="true" fill="currentColor" />}
       {state === "saved" ? (savedAt ? `Saved ${new Date(savedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}` : "Saved") : state === "saving" ? "Saving…" : "Unsaved changes"}
     </span>
   );

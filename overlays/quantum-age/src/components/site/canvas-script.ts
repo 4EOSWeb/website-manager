@@ -70,6 +70,9 @@ body.eos-dragging,body.eos-dragging *{cursor:grabbing!important;user-select:none
 .eos-ui .eos-chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 8px 0 6px;color:#cbd5e1;white-space:nowrap}
 .eos-ui .eos-sep{width:1px;height:18px;margin:0 3px;background:rgba(255,255,255,.14)}
 .eos-ui [data-tip]:hover::after,.eos-ui [data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);padding:4px 7px;border-radius:5px;background:#0b0d10;color:#fff;font-size:11px;white-space:nowrap;pointer-events:none;z-index:2}
+.eos-ui [data-tip]:hover:not(:focus-visible)::after{animation:eos-tip-in 0s .7s both}
+.eos-ui [data-tip][aria-expanded=true]::after{display:none}
+@keyframes eos-tip-in{from{visibility:hidden}to{visibility:visible}}
 .eos-menu{min-width:208px;padding:4px;background:var(--eos-ui);border-radius:8px;box-shadow:0 12px 32px rgba(15,23,42,.35),0 0 0 1px rgba(255,255,255,.06)}
 .eos-menu [role=menuitem]{display:flex;width:100%;justify-content:flex-start;gap:10px;height:32px;padding:0 10px}
 .eos-menu [role=menuitem] kbd{margin-left:auto;color:#94a3b8;font:inherit}
