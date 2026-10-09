@@ -30,6 +30,8 @@ export { validateAdapterIdentity, type AdapterIdentity } from "./adapter-validat
 
 export { discoverAdapters } from "./discover-adapters";
 
+export { adapterSchema, composeAdapterSchema, parseAdapter, supportedAdapterVersions, type AdapterContract } from "./adapter";
+
 export { capabilityNames, hasCapability, type CapabilityFlags, type CapabilityName } from "./capabilities";
 
 export {
