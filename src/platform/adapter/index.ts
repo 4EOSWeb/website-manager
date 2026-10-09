@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { adapterInvalid } from "../errors";
+import { adapterInvalid, type PlatformError } from "../errors";
 import { err, ok, type Result } from "../result";
+import { formatAdapterError } from "./errors";
 import { articlesSchema, validateArticles } from "./articles";
 import { breakpointsSchema } from "./breakpoints";
 import { validateAdapterCapabilities, adapterCapabilitiesSchema } from "./capabilities";
@@ -60,32 +61,37 @@ export type AdapterContract = Omit<z.infer<typeof adapterSchema>, "validateDocum
   serialize: SerializeHook;
 };
 
+function reject(error: PlatformError): Result<AdapterContract> {
+  const formatted = formatAdapterError(error);
+  return err({ code: formatted.code, message: formatted.message, path: formatted.path });
+}
+
 export function parseAdapter(value: unknown): Result<AdapterContract> {
-  if (value === null || typeof value !== "object") return err(adapterInvalid("The adapter must be an object.", "adapter"));
+  if (value === null || typeof value !== "object") return reject(adapterInvalid("The adapter must be an object.", "adapter"));
   const version = (value as { version?: unknown }).version;
   if (!(supportedAdapterVersions as readonly unknown[]).includes(version)) {
-    return err(adapterInvalid("The adapter version is not supported.", "version"));
+    return reject(adapterInvalid("The adapter version is not supported.", "version"));
   }
   const parsed = adapterSchema.safeParse(value);
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
     const path = issue?.path.length ? issue.path.join(".") : "adapter";
-    return err(adapterInvalid(issue?.message ?? "The adapter is missing a required field.", path));
+    return reject(adapterInvalid(issue?.message ?? "The adapter is missing a required field.", path));
   }
   const capabilities = validateAdapterCapabilities(parsed.data.level, parsed.data.capabilities);
-  if (!capabilities.ok) return capabilities;
+  if (!capabilities.ok) return reject(capabilities.error);
   const articles = validateArticles(capabilities.value.supportsBlog, parsed.data.articles);
-  if (!articles.ok) return articles;
+  if (!articles.ok) return reject(articles.error);
   const navigation = validateNavigation(capabilities.value.supportsNavigationEditing, parsed.data.navigation);
-  if (!navigation.ok) return navigation;
+  if (!navigation.ok) return reject(navigation.error);
   const fonts = validateFonts(parsed.data.level, parsed.data.fonts);
-  if (!fonts.ok) return fonts;
+  if (!fonts.ok) return reject(fonts.error);
   const sharedLayout = validateSharedLayout(capabilities.value.supportsSharedLayouts, parsed.data.sharedLayout);
-  if (!sharedLayout.ok) return sharedLayout;
+  if (!sharedLayout.ok) return reject(sharedLayout.error);
   const publish = validatePublication(capabilities.value.supportsReviewPublishing, parsed.data.publish);
-  if (!publish.ok) return publish;
+  if (!publish.ok) return reject(publish.error);
   const pageCapabilities = resolvePageCapabilities(parsed.data.level, parsed.data.pageCapabilities);
-  if (!pageCapabilities.ok) return pageCapabilities;
+  if (!pageCapabilities.ok) return reject(pageCapabilities.error);
   return ok({
     ...parsed.data,
     validateDocument: parsed.data.validateDocument ?? defaultValidateDocumentHook,
