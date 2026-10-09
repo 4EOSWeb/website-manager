@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { nodeTypeSchema } from "./node-type";
 
 export const nodeSchema = z.object({
   id: z.string().min(1),
-  type: z.string().min(1),
+  type: nodeTypeSchema,
   componentId: z.string().min(1),
   props: z.record(z.string(), z.unknown()),
   styles: z.record(z.string(), z.unknown()),
