@@ -16,3 +16,5 @@ export {
   type PlatformError,
   type PlatformErrorCode,
 } from "./errors";
+
+export { err, ok, type Err, type Ok, type Result } from "./result";
