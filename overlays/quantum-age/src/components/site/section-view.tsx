@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { EditorSection, Share } from "@/lib/editor-site";
 import { previewMode } from "@/lib/editor-site";
+import { hideClass, styleFor } from "@/components/site/section-style";
 
 function shares(box: Share | undefined, prefix: string) {
   if (!box) return {};
@@ -38,6 +39,7 @@ function ZoneItem({ item }: { item: NonNullable<EditorSection["items"]>[number] 
       className={`ff-item${item.tablet ? " has-tablet" : ""}${item.mobile ? " has-mobile" : ""}${item.hidden ? " is-hidden" : ""}`}
       style={style}
       data-item-id={item.id}
+      data-kind={previewMode ? item.kind : undefined}
       data-group={item.groupId}
       data-item-locked={item.locked ? "true" : undefined}
       data-hidden={item.hidden ? "true" : undefined}
@@ -128,7 +130,7 @@ export function SectionView({ section }: { section: EditorSection }) {
   if (section.hidden && !previewMode) return null;
   const body = renderSection(section);
   return (
-    <div data-section-id={section.id} data-section-type={section.type} data-hidden={section.hidden ? "true" : undefined} className={section.hidden ? "opacity-60" : undefined}>
+    <div data-section-id={section.id} data-section-type={section.type} data-editor-name={previewMode ? section.editorName || undefined : undefined} data-hidden={section.hidden ? "true" : undefined} className={`${hideClass(section)} ${section.hidden ? "opacity-60" : ""}`.trim() || undefined} style={section.style ? styleFor(section) : undefined}>
       {section.hidden && previewMode ? <p className="container-page py-2 text-sm text-muted-foreground">Hidden on the public site</p> : null}
       {body}
     </div>

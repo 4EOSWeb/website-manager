@@ -167,7 +167,7 @@ export const richMarkSchema = z
   .object({
     start: z.number().int().min(0),
     end: z.number().int().min(0),
-    kind: z.enum(["bold", "italic", "link", "color"]),
+    kind: z.enum(["bold", "italic", "underline", "link", "color"]),
     href: z.string().max(300).optional(),
     color: hexColor.optional(),
   })
@@ -195,6 +195,8 @@ export const sectionStyleSchema = z
     minHeight: z.enum(["auto", "quarter", "half", "full"]).optional(),
     border: z.boolean().optional(),
     shadow: z.boolean().optional(),
+    width: z.enum(["content", "full"]).optional(),
+    align: z.enum(["start", "center"]).optional(),
   })
   .strict();
 
@@ -204,6 +206,20 @@ const socialLinkSchema = z
     href: z.string().max(300),
   })
   .strict();
+
+export const textStyleSchema = z
+  .object({
+    preset: z.enum(["small", "body", "lead", "title", "display"]).optional(),
+    tag: z.enum(["eyebrow", "h1", "h2", "h3", "p"]).optional(),
+    weight: z.enum(["regular", "medium", "bold"]).optional(),
+    leading: z.enum(["tight", "normal", "loose"]).optional(),
+    tracking: z.enum(["tight", "normal", "wide"]).optional(),
+    align: z.enum(["start", "center", "end"]).optional(),
+    color: hexColor.optional(),
+  })
+  .strict();
+
+export type TextStyle = z.infer<typeof textStyleSchema>;
 
 export const flowBlockSchema = z
   .object({
@@ -224,6 +240,15 @@ export const flowBlockSchema = z
     desktop: placementSchema.optional(),
     tablet: placementSchema.optional(),
     mobile: placementSchema.optional(),
+    textStyle: textStyleSchema.optional(),
+    variant: z.enum(["filled", "outline", "text"]).optional(),
+    size: z.enum(["s", "m", "l"]).optional(),
+    align: z.enum(["start", "center", "end"]).optional(),
+    target: z.enum(["same", "new"]).optional(),
+    icon: z.enum(["arrow", "none", "external", "mail", "phone"]).optional(),
+    width: z.enum(["s", "m", "l", "full"]).optional(),
+    listStyle: z.enum(["bullet", "number"]).optional(),
+    hideOn: z.array(z.enum(["desktop", "tablet", "mobile"])).max(3).optional(),
   })
   .strict();
 

@@ -26,7 +26,7 @@ export default async function CustomPage({ params }: { params: Promise<{ slug: s
   return (
     <article>
       {page.archived && previewMode ? <p className="container-page py-3 text-sm">This page is archived. It stays off the public site until you restore it.</p> : null}
-      {page.sections.length === 0 ? <p className="container-page py-16 text-center text-muted-foreground">Click to add content</p> : null}
+      {page.sections.length === 0 && previewMode ? <div data-empty-page="true" className="min-h-40" /> : null}
       {page.sections.map((section) => (
         <SectionView key={section.id} section={section} />
       ))}

@@ -3,7 +3,7 @@ export const THEME_COLORS = ["#1c1915", "#5c3d6e", "#3f6b4a", "#8c4a2f", "#f7f4e
 export type RichMark = {
   start: number;
   end: number;
-  kind: "bold" | "italic" | "link" | "color";
+  kind: "bold" | "italic" | "underline" | "link" | "color";
   href?: string;
   color?: string;
 };
@@ -23,7 +23,7 @@ export function asRich(value: RichText | string | undefined, fallback = ""): Ric
 
 export function sanitizeMarks(text: string, marks: RichMark[] | undefined): RichMark[] {
   if (!marks) return [];
-  const allowed = new Set(["bold", "italic", "link", "color"]);
+  const allowed = new Set(["bold", "italic", "underline", "link", "color"]);
   return marks
     .filter((mark) => {
       if (!allowed.has(mark.kind)) return false;

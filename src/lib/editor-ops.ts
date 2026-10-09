@@ -1,4 +1,5 @@
-import type { BlogDraft, FreeformItem, PageDocument, Placement, Section, SiteDraft } from "@/lib/content-schema";
+import type { BlogDraft, FlowBlock, FreeformItem, PageDocument, Placement, Section, SiteDraft } from "@/lib/content-schema";
+import { sanitizeMarks, type RichMark } from "@/lib/rich-text";
 import { clampPlacement, createFreeformItem, createId, createSection, templateSections, type LibraryBlock } from "@/lib/page-documents";
 
 function mapPage(site: SiteDraft, route: string, update: (page: PageDocument) => PageDocument): SiteDraft {
@@ -125,7 +126,7 @@ function setField(section: Section, field: string, value: string): Section {
   return { ...section, [field]: value } as Section;
 }
 
-export function applyText(site: SiteDraft, route: string, sectionId: string, field: string, value: string, itemId?: string, marks?: { start: number; end: number; kind: "bold" | "italic" | "link" | "color"; href?: string; color?: string }[]): SiteDraft {
+export function applyText(site: SiteDraft, route: string, sectionId: string, field: string, value: string, itemId?: string, marks?: RichMark[]): SiteDraft {
   return mapSection(site, route, sectionId, (section) => {
     if (section.type === "preset" && section.providerLocked) return section;
     if (itemId && section.type === "freeform") {
@@ -145,10 +146,18 @@ export function applyText(site: SiteDraft, route: string, sectionId: string, fie
         ...section,
         blocks: section.blocks.map((block) => {
           if (block.id !== itemId || block.locked) return block;
+          if (field.startsWith("line.")) {
+            const index = Number(field.slice(5));
+            const current = block.text && typeof block.text === "object" ? block.text.text : "";
+            const rows = current.split("\n");
+            if (!Number.isInteger(index) || index < 0 || index >= rows.length) return block;
+            rows[index] = value.replace(/\n/g, " ");
+            return { ...block, text: { text: rows.join("\n"), marks: [] } };
+          }
           if (field === "text" || field === "detail") {
             const current = block[field];
             const kept = marks ?? (current && typeof current === "object" ? current.marks : []);
-            return { ...block, [field]: { text: value, marks: kept } };
+            return { ...block, [field]: { text: value, marks: sanitizeMarks(value, kept) } };
           }
           return { ...block, [field]: value };
         }),
@@ -190,6 +199,15 @@ export function placeItems(
     });
   return mapSection(site, route, sectionId, (section) => {
     if (overlay && section.type === "preset") return { ...section, overlay: apply(section.overlay ?? []) };
+    if (section.type === "flow") {
+      return {
+        ...section,
+        blocks: section.blocks.map((block) => {
+          const next = placements.find((entry) => entry.id === block.id);
+          return next && !block.locked ? { ...block, [key]: clampPlacement(next.placement) } : block;
+        }),
+      };
+    }
     if (section.type !== "freeform") return section;
     return { ...section, items: apply(section.items) };
   });
@@ -427,6 +445,85 @@ export function imageUsage(site: SiteDraft, posts: BlogDraft[], filename: string
     if (JSON.stringify(post).includes(needle)) names.push(`Insights, ${post.title}`);
   }
   return [...new Set(names)];
+}
+
+export function moveSectionById(site: SiteDraft, route: string, sectionId: string, beforeId: string): SiteDraft {
+  const sections = pageByRoute(site, route)?.sections ?? [];
+  const from = sections.findIndex((section) => section.id === sectionId);
+  const to = beforeId ? sections.findIndex((section) => section.id === beforeId) : sections.length;
+  if (from < 0 || to < 0) return site;
+  return moveSection(site, route, from, to);
+}
+
+export function moveFlowBlockById(site: SiteDraft, route: string, sectionId: string, blockId: string, targetId: string, after: boolean): SiteDraft {
+  const section = pageByRoute(site, route)?.sections.find((item) => item.id === sectionId);
+  if (!section || section.type !== "flow") return site;
+  const from = section.blocks.findIndex((block) => block.id === blockId);
+  const target = section.blocks.findIndex((block) => block.id === targetId);
+  if (from < 0 || target < 0) return site;
+  return moveFlowBlock(site, route, sectionId, from, after ? target + 1 : target);
+}
+
+export function insertSectionCopy(site: SiteDraft, route: string, afterSectionId: string, section: Section): SiteDraft {
+  const sections = pageByRoute(site, route)?.sections ?? [];
+  const at = sections.findIndex((item) => item.id === afterSectionId);
+  return insertSection(site, route, at < 0 ? sections.length : at + 1, cloneSection(section));
+}
+
+type BlockPatch = Partial<Pick<FlowBlock, "kind" | "href" | "alt" | "fit" | "focal" | "textStyle" | "variant" | "size" | "align" | "target" | "icon" | "width" | "listStyle" | "editorName">>;
+
+export function patchFlowBlock(site: SiteDraft, route: string, sectionId: string, blockId: string, patch: BlockPatch): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    if (section.type !== "flow") return section;
+    return {
+      ...section,
+      blocks: section.blocks.map((block) => {
+        if (block.id !== blockId || block.locked) return block;
+        const next = { ...block, ...patch };
+        if (patch.textStyle) {
+          const style = { ...block.textStyle, ...patch.textStyle };
+          for (const key of Object.keys(style) as (keyof typeof style)[]) if (style[key] === undefined) delete style[key];
+          next.textStyle = style;
+        }
+        return next;
+      }),
+    };
+  });
+}
+
+export function setBlockHideOn(site: SiteDraft, route: string, sectionId: string, blockId: string, device: "desktop" | "tablet" | "mobile", hidden: boolean): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    if (section.type !== "flow") return section;
+    return {
+      ...section,
+      blocks: section.blocks.map((block) => {
+        if (block.id !== blockId) return block;
+        const current = new Set(block.hideOn ?? []);
+        if (hidden) current.add(device);
+        else current.delete(device);
+        return { ...block, hideOn: [...current] };
+      }),
+    };
+  });
+}
+
+export function addFlowBlock(site: SiteDraft, route: string, sectionId: string, kind: FlowBlock["kind"], afterBlockId?: string): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    if (section.type !== "flow") return section;
+    const block: FlowBlock = { id: createId("blk"), kind, hidden: false };
+    if (kind === "heading") block.text = { text: "New heading", marks: [] };
+    else if (kind === "paragraph") block.text = { text: "Write a sentence or two here.", marks: [] };
+    else if (kind === "button") {
+      block.text = { text: "Get in touch", marks: [] };
+      block.href = "/contact";
+    } else if (kind === "list") block.text = { text: "First point\nSecond point", marks: [] };
+    else if (kind === "eyebrow") block.text = { text: "Small heading", marks: [] };
+    else if (kind === "quote") block.text = { text: "A short quote from a client.", marks: [] };
+    const blocks = [...section.blocks];
+    const at = afterBlockId ? blocks.findIndex((item) => item.id === afterBlockId) : -1;
+    blocks.splice(at < 0 ? blocks.length : at + 1, 0, block);
+    return { ...section, blocks };
+  });
 }
 
 export function moveFlowBlock(site: SiteDraft, route: string, sectionId: string, from: number, to: number): SiteDraft {

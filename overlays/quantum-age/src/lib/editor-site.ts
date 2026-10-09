@@ -5,6 +5,7 @@ export type EditorSection = {
   id: string;
   type: string;
   hidden?: boolean;
+  editorName?: string;
   providerLocked?: boolean;
   preset?: string;
   text?: string;
@@ -38,9 +39,19 @@ export type EditorSection = {
   blocks?: {
     id: string;
     kind: string;
+    editorName?: string;
     hidden?: boolean;
     locked?: boolean;
     pin?: boolean;
+    textStyle?: TextStyle;
+    variant?: "filled" | "outline" | "text";
+    size?: "s" | "m" | "l";
+    align?: "start" | "center" | "end";
+    target?: "same" | "new";
+    icon?: "arrow" | "none" | "external" | "mail" | "phone";
+    width?: "s" | "m" | "l" | "full";
+    listStyle?: "bullet" | "number";
+    hideOn?: ("desktop" | "tablet" | "mobile")[];
     fit?: string;
     focal?: string;
     text?: { text: string; marks?: { start: number; end: number; kind: string; href?: string; color?: string }[] } | string;
@@ -55,7 +66,7 @@ export type EditorSection = {
   }[];
   layout?: string;
   hideOn?: ("desktop" | "tablet" | "mobile")[];
-  style?: { background?: string; color?: string; padding?: string; minHeight?: string; overlay?: number };
+  style?: { background?: string; color?: string; padding?: string; minHeight?: string; overlay?: number; width?: "content" | "full"; align?: "start" | "center" };
   fields?: { id: string; label: string; kind: string; required: boolean }[];
   thankYou?: string;
   recipient?: string;
@@ -74,6 +85,16 @@ export type EditorSection = {
 };
 
 export type Share = { x: number; y: number; w: number; h: number };
+
+export type TextStyle = {
+  preset?: "small" | "body" | "lead" | "title" | "display";
+  tag?: "eyebrow" | "h1" | "h2" | "h3" | "p";
+  weight?: "regular" | "medium" | "bold";
+  leading?: "tight" | "normal" | "loose";
+  tracking?: "tight" | "normal" | "wide";
+  align?: "start" | "center" | "end";
+  color?: string;
+};
 
 export type EditorPage = {
   id: string;
