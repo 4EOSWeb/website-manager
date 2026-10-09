@@ -238,3 +238,37 @@ The platform only knows an image or a custom component id. It does not know this
 - Destination adapter file: `adapters/quantum-age/components/logo.ts`
 - Migration risk: The label can change from “Logo” to the registry name. The graphic must not change.
 - Test required: Layers shows the registry name for that node and does not hardcode it in `src/platform`.
+
+## Tokens
+
+Platform theme tokens are an open list of `{ id, value }`. The names `ink`, `plum`, and `green` must not appear as required keys in `src/platform`.
+
+### src/lib/content-schema.ts
+
+- Current file: `src/lib/content-schema.ts`, lines 296–303
+- Current behavior: `theme` requires `ink`, `plum`, `green`, `paper`, `font` of `serif` or `sans`, `button` of `filled` or `outline`, and `spacing` of `compact`, `comfortable`, or `roomy`.
+- Why it is site-specific: Those color names are this brand’s palette.
+- Generic replacement: Adapter tokens with their own ids. A token reference in a node is `token:<id>`, and the id is not required by the platform.
+- Destination adapter file: `adapters/quantum-age/theme.ts`
+- Migration risk: Stored drafts contain these keys. The migrator must copy the hex values onto adapter token ids.
+- Test required: `tests/unit/qa-adapter-theme.test.ts` and `rg "plum" src/platform` empty after the theme module exists.
+
+### src/lib/flow-seed.ts
+
+- Current file: `src/lib/flow-seed.ts`, lines 46–54
+- Current behavior: Seeds ink `#231a25`, plum `#70456e`, green `#3d5f12`, paper `#f7f5f0`, serif, filled buttons, comfortable spacing.
+- Why it is site-specific: These are the brand values.
+- Generic replacement: The same values on the adapter theme. They are not platform defaults.
+- Destination adapter file: `adapters/quantum-age/theme.ts`
+- Migration risk: A second site must not inherit these hex values.
+- Test required: Harbor’s palette test later. Quantum Age preview colors stay as they are.
+
+### overlays/quantum-age/src/app/layout.tsx
+
+- Current file: `overlays/quantum-age/src/app/layout.tsx`, line 61
+- Current behavior: Writes `--ink`, `--plum`, `--paper`, and `--green` from the draft theme.
+- Why it is site-specific: The public layout applies this site’s tokens.
+- Generic replacement: The site layout keeps doing this. The hub does not invent the variable names.
+- Destination adapter file: `adapters/quantum-age/theme.ts`. The layout file stays in the overlay.
+- Migration risk: Editing the layout would change the public site. Do not edit it in the token move except to read values.
+- Test required: Public home colors match the baseline screenshot. `git diff` on this layout stays empty during the token move.
