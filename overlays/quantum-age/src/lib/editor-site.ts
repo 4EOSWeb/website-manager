@@ -42,6 +42,7 @@ export type EditorSection = {
     locked?: boolean;
     pin?: boolean;
     fit?: string;
+    focal?: string;
     text?: { text: string; marks?: { start: number; end: number; kind: string; href?: string; color?: string }[] } | string;
     detail?: { text: string; marks?: { start: number; end: number; kind: string; href?: string; color?: string }[] } | string;
     href?: string;

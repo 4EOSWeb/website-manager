@@ -124,7 +124,7 @@ function BlockView({ block, fluid }: { block: Block; fluid: boolean }) {
       ) : null}
       {block.kind === "image" && block.src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={block.src} alt={block.alt || ""} className={fit} data-field="alt" />
+        <img src={block.src} alt={block.alt || ""} className={fit} data-field="alt" style={{ objectPosition: block.focal || "center" }} />
       ) : null}
       {block.kind === "image" && !block.src && previewMode ? <p className="text-sm text-muted-foreground">Add your first image</p> : null}
       {block.kind === "list" ? <p><RichText value={block.text} field="text" /></p> : null}

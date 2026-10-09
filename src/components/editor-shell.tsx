@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { signOutUser } from "@/app/signin/actions";
-import { Monitor, Redo2, Smartphone, Tablet, Undo2 } from "lucide-react";
+import { Eye, EyeOff, Files, Home, ImageIcon, ListTree, Monitor, Palette, PanelLeft, Plus, Redo2, Search, Settings2, Smartphone, Tablet, Undo2 } from "lucide-react";
 import {
   PROVIDER_LOCK_MESSAGE,
   SITE_AUTHORS,
@@ -39,7 +39,11 @@ import {
   renameZone,
   saveSectionTemplate,
   setArchived,
+  setEditorName,
+  setHideOn,
   setImageSource,
+  setSectionLayout,
+  setSectionStyle,
   reorderPages,
   setBlockHidden,
   setNavVisible,
@@ -98,6 +102,9 @@ export function EditorShell(props: {
   const [propTab, setPropTab] = useState<"content" | "design" | "layout">("content");
   const [chromeHidden, setChromeHidden] = useState(false);
   const [pageQuery, setPageQuery] = useState("");
+  const [addQuery, setAddQuery] = useState("");
+  const [chromeFocus, setChromeFocus] = useState<"header" | "footer" | null>(null);
+  const [renamingId, setRenamingId] = useState("");
   const [selection, setSelection] = useState<Selection>(emptySelection);
   const [library, setLibrary] = useState<LibraryState>(null);
   const [status, setStatus] = useState("Saved");
@@ -479,6 +486,7 @@ export function EditorShell(props: {
       if (data.type === "4eos-select") {
         const itemId = String(data.itemId ?? "");
         const itemIds = Array.isArray(data.itemIds) ? data.itemIds.map((item) => String(item)).filter(Boolean) : itemId ? [itemId] : [];
+        setChromeFocus(null);
         setSelection({
           sectionId: String(data.sectionId ?? ""),
           itemId,
@@ -487,6 +495,7 @@ export function EditorShell(props: {
           locked: Boolean(data.locked),
         });
         setPanel("page");
+        setPropTab("content");
       }
       if (data.type === "4eos-text") {
         const marks = Array.isArray(data.marks) ? data.marks.flatMap((mark) => {
@@ -581,86 +590,92 @@ export function EditorShell(props: {
 
   const usedHere = media.map((item) => ({ ...item, usedBy: item.usedBy ?? imageUsage(site, posts, item.filename) }));
 
+  const addItems = LIBRARY_BLOCKS.filter((item) => (item.type !== "embed" || props.canEmbed) && item.label.toLowerCase().includes(addQuery.toLowerCase()));
+  const sectionCatalog = [
+    ["hero", "Hero"],
+    ["split", "Text beside an image"],
+    ["cards", "Features"],
+    ["list", "Questions and answers"],
+    ["stack", "Blank section"],
+  ] as const;
+  const visibleCatalog = sectionCatalog.filter((item) => item[1].toLowerCase().includes(addQuery.toLowerCase()));
+
   return (
-    <div className="grid h-dvh grid-rows-[auto_1fr] bg-[var(--paper)] text-[var(--ink)]">
-      <header className="flex items-center gap-3 border-b border-[var(--line)] bg-white px-4 py-2">
-        <div className="min-w-0">
-          <p className="truncate text-sm text-[var(--muted)]">{props.websiteName}</p>
-          <p className="truncate font-medium">{page?.title ?? activePost?.title ?? path}</p>
-        </div>
+    <div className="studio grid h-dvh grid-rows-[auto_1fr_auto]">
+      <header className="studio-titlebar">
+        <button className="studio-icon" type="button" title={chromeHidden ? "Show panels" : "Hide panels"} onClick={() => setChromeHidden((value) => !value)}><PanelLeft size={16} /></button>
+        <span className="truncate text-[var(--studio-muted)]">{props.websiteName}</span>
+        <strong className="truncate">{page?.title ?? activePost?.title ?? "Page"}</strong>
         <div className="ml-auto flex items-center gap-1">
           {selection.sectionId && !selection.locked ? (
             <>
-              <button className="icon-button" type="button" onClick={() => runAction("duplicate", selection.sectionId, selection.itemId, selection.overlay, selection.itemIds)}>Duplicate</button>
-              <button className="icon-button" type="button" onClick={() => runAction("delete", selection.sectionId, selection.itemId, selection.overlay, selection.itemIds)}>Delete</button>
-              <button className="icon-button" type="button" onClick={() => runAction(selection.itemId ? "hide" : "hide", selection.sectionId, selection.itemId, selection.overlay, selection.itemIds)}>Hide</button>
-              <button className="icon-button" type="button" onClick={() => setPropTab("design")}>Design</button>
+              <button className="studio-icon" type="button" title="Duplicate" onClick={() => runAction("duplicate", selection.sectionId, selection.itemId, selection.overlay, selection.itemIds)}>Duplicate</button>
+              <button className="studio-icon" type="button" title="Delete" onClick={() => runAction("delete", selection.sectionId, selection.itemId, selection.overlay, selection.itemIds)}>Delete</button>
+              <button className="studio-icon" type="button" title="Hide" onClick={() => runAction("hide", selection.sectionId, selection.itemId, selection.overlay, selection.itemIds)}>Hide</button>
+              <button className="studio-icon" type="button" title="Design" onClick={() => setPropTab("design")}>Design</button>
             </>
           ) : null}
-          <button className="icon-button" type="button" aria-label="Undo" disabled={past.length === 0} onClick={undo}><Undo2 aria-hidden="true" size={16} /></button>
-          <button className="icon-button" type="button" aria-label="Redo" disabled={future.length === 0} onClick={redo}><Redo2 aria-hidden="true" size={16} /></button>
+          <button className="studio-icon" type="button" aria-label="Undo" disabled={past.length === 0} onClick={undo}><Undo2 aria-hidden="true" size={16} /></button>
+          <button className="studio-icon" type="button" aria-label="Redo" disabled={future.length === 0} onClick={redo}><Redo2 aria-hidden="true" size={16} /></button>
           {viewports.map((item) => (
-            <button key={item.id} className={viewport === item.id ? "icon-button is-active" : "icon-button"} type="button" aria-label={item.label} aria-pressed={viewport === item.id} onClick={() => setViewport(item.id)}>
+            <button key={item.id} className={viewport === item.id ? "studio-icon is-active" : "studio-icon"} type="button" aria-label={item.label} aria-pressed={viewport === item.id} onClick={() => setViewport(item.id)}>
               <item.icon aria-hidden="true" size={16} />
             </button>
           ))}
-          <button className="icon-button" type="button" onClick={() => setChromeHidden((value) => !value)}>{chromeHidden ? "Show panels" : "Hide panels"}</button>
-          <a className="icon-button" href={previewSrc} target="_blank" rel="noreferrer">Preview</a>
-          <span className="px-2 text-sm text-[var(--muted)]">{status}</span>
-          {progress !== null ? <span className="px-2 text-sm">Uploading {progress}%</span> : null}
+          <a className="studio-icon" href={`${previewSrc}&clean=1`} target="_blank" rel="noreferrer">Preview</a>
           {props.canPublish ? (
-            <button className="bg-[var(--ink)] px-3 py-2 text-sm text-white" type="button" onClick={() => void publish()}>Submit for publish</button>
-          ) : props.canEdit ? (
-            <span className="px-2 text-sm text-[var(--muted)]">Drafts only</span>
+            <button className="studio-primary" type="button" onClick={() => void publish()}>Submit for publish</button>
           ) : (
-            <span className="px-2 text-sm text-[var(--muted)]">View only</span>
+            <span className="px-2 text-[var(--studio-muted)]">{props.canEdit ? "Drafts only" : "View only"}</span>
           )}
           <details className="relative">
-            <summary className="cursor-pointer list-none px-2 py-2 text-sm">{props.userName}</summary>
-            <div className="absolute right-0 z-10 w-56 border border-[var(--line)] bg-white p-3 text-sm">
+            <summary className="cursor-pointer list-none px-2">{props.userName}</summary>
+            <div className="absolute right-0 z-20 mt-2 w-56 border border-[var(--studio-border)] bg-[var(--studio-sidebar)] p-3 text-sm">
               <p>{props.role}</p>
               <form action={signOutUser} className="mt-2"><button type="submit">Sign out</button></form>
             </div>
           </details>
         </div>
       </header>
-      <div className={`grid min-h-0 ${chromeHidden ? "grid-cols-[3.5rem_1fr]" : "grid-cols-[auto_1fr_20rem]"}`}>
+      <div className={`grid min-h-0 ${chromeHidden ? "grid-cols-[48px_1fr]" : "grid-cols-[auto_1fr_320px]"}`}>
         <div className="flex min-h-0">
-        <nav className="flex w-14 shrink-0 flex-col items-center gap-1 bg-[#2f1d31] py-2 text-white" aria-label="Editor">
+        <nav className="studio-activity" aria-label="Editor">
           {([
-            ["add", "Add"],
-            ["pages", "Pages"],
-            ["layers", "Layers"],
-            ["design", "Design"],
-            ["media", "Media"],
-          ] as const).map(([id, label]) => (
-            <button key={id} type="button" className={`min-h-11 w-12 text-[10px] ${rail === id ? "bg-white/20" : ""}`} onClick={() => setRail((current) => (current === id ? null : id))}>{label}</button>
+            ["add", "Add", Plus],
+            ["pages", "Pages", Files],
+            ["layers", "Layers", ListTree],
+            ["design", "Design", Palette],
+            ["media", "Media", ImageIcon],
+          ] as const).map(([id, label, Icon]) => (
+            <button key={id} type="button" className={rail === id ? "is-active" : ""} title={label} aria-label={label} aria-pressed={rail === id} onClick={() => setRail((current) => (current === id ? null : id))}><Icon size={22} /></button>
           ))}
         </nav>
-        {rail && !chromeHidden ? <aside className="w-64 overflow-auto border-r border-[var(--line)] bg-white p-3">
+        {rail && !chromeHidden ? <aside className="studio-side">
           {rail === "pages" ? (
             <>
-              <div className="flex items-center justify-between">
-                <p className="px-2 text-xs tracking-wide text-[var(--muted)] uppercase">Main navigation</p>
-                {props.canEdit ? <button className="px-2 text-sm" type="button" onClick={() => { setRouteTouched(false); setPageForm({ title: "", route: "", template: "landing", navVisible: true, seoTitle: "", metaDescription: "" }); setAddingPage(true); }}>Add page</button> : null}
+              <div className="studio-side-title">
+                <span>Explorer</span>
+                {props.canEdit ? <button type="button" title="Add page" onClick={() => { setRouteTouched(false); setPageForm({ title: "", route: "", template: "landing", navVisible: true, seoTitle: "", metaDescription: "" }); setAddingPage(true); }}><Plus size={16} /></button> : null}
               </div>
-              <input className="field mt-2" placeholder="Search pages" value={pageQuery} onChange={(event) => setPageQuery(event.target.value)} />
-              <ul className="mt-2">
-                {site.pages.filter((item) => !item.archived && item.navVisible && `${item.title} ${item.route}`.toLowerCase().includes(pageQuery.toLowerCase())).map((item, index) => (
-                  <li key={item.route} draggable={item.route !== "/"} onDragStart={(event) => event.dataTransfer.setData("text/plain", String(index))} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); commit(reorderPages(site, Number(event.dataTransfer.getData("text/plain")), index), true); }}>
-                    <button className={path === item.route ? "nav-button is-active" : "nav-button"} type="button" onClick={() => openPage(item.route)}>
-                      {item.route === "/" ? "Home · " : ""}{item.navLabel || item.title}{item.locked ? " · Managed" : ""}
+              <label className="studio-search"><Search size={14} /><input placeholder="Search pages" value={pageQuery} onChange={(event) => setPageQuery(event.target.value)} /></label>
+              <p className="studio-group">Main navigation</p>
+              <ul>
+                {site.pages.filter((item) => !item.archived && item.navVisible && `${item.title} ${item.route}`.toLowerCase().includes(pageQuery.toLowerCase())).map((item) => (
+                  <li key={item.route} className="flex items-center" draggable={item.route !== "/"} onDragStart={(event) => event.dataTransfer.setData("text/plain", String(site.pages.findIndex((page) => page.route === item.route)))} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); commit(reorderPages(site, Number(event.dataTransfer.getData("text/plain")), site.pages.findIndex((page) => page.route === item.route)), true); }}>
+                    <button className={path === item.route ? "nav-button is-active" : "nav-button"} type="button" onClick={() => { setChromeFocus(null); openPage(item.route); }}>
+                      {item.route === "/" ? <Home size={14} /> : null}{item.navLabel || item.title}{item.locked ? " · Managed" : ""}
                     </button>
+                    <button className="studio-icon" type="button" title="Page settings" onClick={() => { setChromeFocus(null); openPage(item.route); setPropTab("content"); }}><Settings2 size={14} /></button>
                   </li>
                 ))}
               </ul>
-              <p className="mt-6 px-2 text-xs tracking-wide text-[var(--muted)] uppercase">Not in the menu</p>
+              <p className="studio-group">Not in the menu</p>
               <ul>
                 {site.pages.filter((item) => !item.archived && !item.navVisible).map((item) => (
                   <li key={item.route}><button className="nav-button" type="button" onClick={() => openPage(item.route)}>{item.title}</button></li>
                 ))}
               </ul>
-              <p className="mt-6 px-2 text-xs tracking-wide text-[var(--muted)] uppercase">Archived</p>
+              <p className="studio-group">Archived</p>
               <ul>
                 {site.pages.filter((item) => item.archived).map((item) => (
                   <li key={item.route}><button className="nav-button" type="button" onClick={() => openPage(item.route)}>{item.title}</button></li>
@@ -674,63 +689,93 @@ export function EditorShell(props: {
             </>
           ) : null}
           {rail === "add" ? (
-            <div className="grid gap-2">
-              <p className="px-2 text-xs tracking-wide text-[var(--muted)] uppercase">Sections</p>
-              {(["hero", "split", "cards", "list", "stack"] as const).map((layout) => (
-                <button key={layout} className="nav-button" type="button" onClick={() => page && commit(insertSection(site, path, page.sections.length, catalogSection(layout)), true)}>{layout === "hero" ? "Hero" : layout === "split" ? "Text beside an image" : layout === "cards" ? "Features" : layout === "list" ? "List" : "Blank"}</button>
+            <div>
+              <p className="studio-side-title">Add</p>
+              <label className="studio-search"><Search size={14} /><input placeholder="Search sections and blocks" value={addQuery} onChange={(event) => setAddQuery(event.target.value)} /></label>
+              <p className="studio-group">Sections</p>
+              {visibleCatalog.map(([layout, label]) => (
+                <button key={layout} className="nav-button" type="button" onClick={() => page && commit(insertSection(site, path, page.sections.length, catalogSection(layout)), true)}>{label}</button>
               ))}
-              <p className="mt-4 px-2 text-xs tracking-wide text-[var(--muted)] uppercase">Blocks</p>
-              {LIBRARY_BLOCKS.filter((item) => item.type !== "embed" || props.canEmbed).map((item) => (
+              <p className="studio-group">Blocks</p>
+              {addItems.map((item) => (
                 <button key={item.type} className="nav-button" type="button" onClick={() => chooseLibrary(item.type)}>{item.label}</button>
               ))}
+              {visibleCatalog.length === 0 && addItems.length === 0 ? <p className="studio-empty">Nothing matches that search.</p> : null}
             </div>
           ) : null}
           {rail === "layers" ? (
             <div>
-              <p className="px-2 text-xs tracking-wide text-[var(--muted)] uppercase">This page</p>
-              <button className="nav-button" type="button" onClick={() => setSelection(emptySelection)}>Header</button>
+              <p className="studio-side-title">Layers</p>
+              <button className={chromeFocus === "header" ? "nav-button is-active" : "nav-button"} type="button" onClick={() => { setSelection(emptySelection); setChromeFocus("header"); setPropTab("content"); }}>Header</button>
               {(page?.sections ?? []).map((item, index) => (
                 <div key={item.id}>
-                  <button className={selection.sectionId === item.id && !selection.itemId ? "nav-button is-active" : "nav-button"} type="button" draggable onDragStart={(event) => event.dataTransfer.setData("text/plain", String(index))} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); commit(moveSection(site, path, Number(event.dataTransfer.getData("text/plain")), index), true); }} onClick={() => setSelection({ sectionId: item.id, itemId: "", itemIds: [], overlay: false, locked: false })}>
-                    {item.editorName || item.type}
-                  </button>
+                  <div className="flex items-center">
+                    {renamingId === item.id ? (
+                      <input className="field" autoFocus defaultValue={item.editorName || item.type} onBlur={(event) => { setRenamingId(""); commit(setEditorName(site, path, item.id, event.target.value), false); }} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }} />
+                    ) : (
+                      <button className={selection.sectionId === item.id && !selection.itemId ? "nav-button is-active" : "nav-button"} type="button" draggable onDragStart={(event) => event.dataTransfer.setData("text/plain", String(index))} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); commit(moveSection(site, path, Number(event.dataTransfer.getData("text/plain")), index), true); }} onClick={() => { setChromeFocus(null); setSelection({ sectionId: item.id, itemId: "", itemIds: [], overlay: false, locked: false }); }} onDoubleClick={() => setRenamingId(item.id)}>
+                        {item.editorName || item.type}{item.hidden ? " · Hidden" : ""}
+                      </button>
+                    )}
+                    <button className="studio-icon" type="button" title={item.hidden ? "Show" : "Hide"} onClick={() => commit(setSectionHidden(site, path, item.id, !item.hidden), true)}>{item.hidden ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+                  </div>
                   {item.type === "flow" ? item.blocks.map((block) => (
-                    <button key={block.id} className={selection.itemId === block.id ? "nav-button is-active pl-6" : "nav-button pl-6"} type="button" onClick={() => setSelection({ sectionId: item.id, itemId: block.id, itemIds: [block.id], overlay: false, locked: Boolean(block.locked) })}>{block.editorName || block.kind}</button>
+                    <div key={block.id} className="flex items-center">
+                      {renamingId === block.id ? (
+                        <input className="field" autoFocus defaultValue={block.editorName || block.kind} onBlur={(event) => { setRenamingId(""); commit(setEditorName(site, path, item.id, event.target.value, block.id), false); }} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }} />
+                      ) : (
+                        <button className={selection.itemId === block.id ? "nav-button is-active pl-6" : "nav-button pl-6"} type="button" onClick={() => { setChromeFocus(null); setSelection({ sectionId: item.id, itemId: block.id, itemIds: [block.id], overlay: false, locked: Boolean(block.locked) }); setPropTab("content"); }} onDoubleClick={() => setRenamingId(block.id)}>{block.editorName || block.kind}{block.hidden ? " · Hidden" : ""}</button>
+                      )}
+                      <button className="studio-icon" type="button" title={block.hidden ? "Show" : "Hide"} onClick={() => commit(setBlockHidden(site, path, item.id, block.id, !block.hidden), true)}>{block.hidden ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+                    </div>
                   )) : null}
                 </div>
               ))}
-              <button className="nav-button" type="button">Footer</button>
-              {viewport === "mobile" ? <p className="mt-4 px-2 text-xs text-[var(--muted)]">Hidden on this phone</p> : null}
+              <button className={chromeFocus === "footer" ? "nav-button is-active" : "nav-button"} type="button" onClick={() => { setSelection(emptySelection); setChromeFocus("footer"); setPropTab("content"); }}>Footer</button>
+              {viewport === "mobile" ? (
+                <div>
+                  <p className="studio-group">Hidden on this phone</p>
+                  {(page?.sections ?? []).filter((item) => item.hideOn?.includes("mobile") || item.hidden).map((item) => (
+                    <button key={item.id} className="nav-button" type="button" onClick={() => commit(setHideOn(site, path, item.id, "mobile", false), true)}>Show {item.editorName || item.type}</button>
+                  ))}
+                  {(page?.sections ?? []).every((item) => !item.hideOn?.includes("mobile") && !item.hidden) ? <p className="studio-empty">Nothing is hidden on this phone.</p> : null}
+                </div>
+              ) : null}
             </div>
           ) : null}
           {rail === "design" ? (
-            <div className="grid gap-3 text-sm">
-              <p className="font-medium">Site styles</p>
-              <label>Button style
+            <div className="grid gap-1 text-sm">
+              <p className="studio-side-title">Site styles</p>
+              {(["ink", "plum", "green", "paper"] as const).map((token) => (
+                <label key={token} className="studio-row"><span>{token === "ink" ? "Text" : token === "plum" ? "Accent" : token === "green" ? "Highlight" : "Page"}</span>
+                  <input type="color" value={site.chrome.theme[token]} onChange={(event) => commit(patchChrome(site, { ...site.chrome, theme: { ...site.chrome.theme, [token]: event.target.value } }), true)} />
+                </label>
+              ))}
+              <label className="studio-row"><span>Buttons</span>
                 <select className="field" value={site.chrome.theme.button} onChange={(event) => commit(patchChrome(site, { ...site.chrome, theme: { ...site.chrome.theme, button: event.target.value as "filled" | "outline" } }), true)}>
                   <option value="filled">Filled</option>
                   <option value="outline">Outline</option>
                 </select>
               </label>
-              <label>Type
+              <label className="studio-row"><span>Headings</span>
                 <select className="field" value={site.chrome.theme.font} onChange={(event) => commit(patchChrome(site, { ...site.chrome, theme: { ...site.chrome.theme, font: event.target.value as "serif" | "sans" } }), true)}>
                   <option value="serif">Serif headings</option>
                   <option value="sans">Sans headings</option>
                 </select>
               </label>
-              <label>Spacing
+              <label className="studio-row"><span>Spacing</span>
                 <select className="field" value={site.chrome.theme.spacing} onChange={(event) => commit(patchChrome(site, { ...site.chrome, theme: { ...site.chrome.theme, spacing: event.target.value as "compact" | "comfortable" | "roomy" } }), true)}>
                   <option value="compact">Compact</option>
                   <option value="comfortable">Comfortable</option>
                   <option value="roomy">Roomy</option>
                 </select>
               </label>
-              <label>Business name<input className="field" value={site.chrome.profile.name} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, name: event.target.value } }), false)} /></label>
-              <label>Phone<input className="field" value={site.chrome.profile.phone} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, phone: event.target.value } }), false)} /></label>
-              <label>Email<input className="field" value={site.chrome.profile.email} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, email: event.target.value } }), false)} /></label>
-              <label>Address<textarea className="field" value={site.chrome.profile.address} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, address: event.target.value } }), false)} /></label>
-              <label>Cookie notice<textarea className="field" value={site.chrome.cookieText} onChange={(event) => commit(patchChrome(site, { ...site.chrome, cookieText: event.target.value }), false)} /></label>
-              <label>Analytics id for review<input className="field" value={site.chrome.analyticsId} onChange={(event) => commit(patchChrome(site, { ...site.chrome, analyticsId: event.target.value.replace(/[^A-Za-z0-9-]/g, "") }), false)} /></label>
+              <label className="studio-row"><span>Business name</span><input value={site.chrome.profile.name} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, name: event.target.value } }), true)} /></label>
+              <label className="studio-row"><span>Phone</span><input value={site.chrome.profile.phone} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, phone: event.target.value } }), true)} /></label>
+              <label className="studio-row"><span>Email</span><input value={site.chrome.profile.email} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, email: event.target.value } }), true)} /></label>
+              <label className="studio-row"><span>Address</span><input value={site.chrome.profile.address} onChange={(event) => commit(patchChrome(site, { ...site.chrome, profile: { ...site.chrome.profile, address: event.target.value } }), true)} /></label>
+              <label className="studio-row"><span>Cookie notice</span><input value={site.chrome.cookieText} onChange={(event) => commit(patchChrome(site, { ...site.chrome, cookieText: event.target.value }), true)} /></label>
+              <label className="studio-row"><span>Analytics id</span><input value={site.chrome.analyticsId} onChange={(event) => commit(patchChrome(site, { ...site.chrome, analyticsId: event.target.value.replace(/[^A-Za-z0-9-]/g, "") }), false)} /></label>
             </div>
           ) : null}
           {rail === "media" ? (
@@ -738,44 +783,101 @@ export function EditorShell(props: {
           ) : null}
         </aside> : null}
         </div>
-        <div className="min-w-0 overflow-auto bg-[#e7e2da] p-4">
-          <iframe id="site-preview" title={`${props.websiteName} preview`} sandbox="allow-scripts allow-forms" src={previewSrc} className="mx-auto h-full min-h-[40rem] border border-[var(--line)] bg-white" style={{ width }} />
+        <div className="studio-canvas">
+          <iframe id="site-preview" title={`${props.websiteName} preview`} sandbox="allow-scripts allow-forms" src={previewSrc} style={{ width }} />
         </div>
-        {!chromeHidden ? <aside className="overflow-auto border-l border-[var(--line)] bg-white p-4">
-          <div className="mb-4 flex gap-2 text-sm">
+        {!chromeHidden ? <aside className="studio-props">
+          <div className="studio-tabs">
             {(["content", "design", "layout"] as const).map((tab) => (
-              <button key={tab} type="button" className={propTab === tab ? "border-b-2 border-[var(--ink)]" : ""} onClick={() => setPropTab(tab)}>{tab[0]?.toUpperCase()}{tab.slice(1)}</button>
+              <button key={tab} type="button" className={propTab === tab ? "is-active" : ""} onClick={() => setPropTab(tab)}>{tab === "content" ? "Content" : tab === "design" ? "Design" : "Layout"}</button>
             ))}
           </div>
-          {notice ? <p className="mb-4 border border-[var(--line)] bg-[var(--paper)] p-3 text-sm leading-relaxed">{notice}</p> : null}
-          {selection.locked ? <p className="text-sm leading-relaxed">{PROVIDER_LOCK_MESSAGE}</p> : null}
+          {notice ? <p className="m-3 border border-[var(--studio-border)] p-3 text-sm leading-relaxed">{notice}</p> : null}
+          {selection.locked ? <p className="studio-empty">{PROVIDER_LOCK_MESSAGE}</p> : null}
           {panel === "history" ? <History publications={publications} onConfirm={() => void confirmIdentity()} /> : null}
-          {panel === "media" ? (
-            <MediaPanel
-              media={usedHere}
-              recent={recent}
-              canEdit={props.canEdit}
-              progress={progress}
-              onUpload={(file) => void upload(file, "").catch((error: Error) => setNotice(error.message))}
-              onUse={chooseImage}
-              onDelete={(filename) => void removeMedia(filename)}
-            />
+          {propTab === "content" && chromeFocus === "header" ? (
+            <div>
+              <label className="studio-row"><span>Site name</span><input value={site.chrome.header.siteName} onChange={(event) => commit(patchChrome(site, { ...site.chrome, header: { ...site.chrome.header, siteName: event.target.value } }), true)} /></label>
+              <label className="studio-row"><span>Button label</span><input value={site.chrome.header.buttonLabel} onChange={(event) => commit(patchChrome(site, { ...site.chrome, header: { ...site.chrome.header, buttonLabel: event.target.value } }), true)} /></label>
+              <label className="studio-row"><span>Where this goes</span><input value={site.chrome.header.buttonHref} onChange={(event) => commit(patchChrome(site, { ...site.chrome, header: { ...site.chrome.header, buttonHref: event.target.value } }), true)} /></label>
+              <label className="studio-row"><span>Sticks while scrolling</span><input type="checkbox" checked={site.chrome.header.sticky} onChange={(event) => commit(patchChrome(site, { ...site.chrome, header: { ...site.chrome.header, sticky: event.target.checked } }), true)} /></label>
+              <label className="studio-row"><span>Announcement</span><input value={site.chrome.announcement.text} onChange={(event) => commit(patchChrome(site, { ...site.chrome, announcement: { ...site.chrome.announcement, enabled: event.target.value.length > 0, text: event.target.value } }), true)} /></label>
+            </div>
           ) : null}
-          {selectedBlock && ["eyebrow", "heading", "paragraph", "button", "link", "card", "quote", "person"].includes(selectedBlock.kind) ? (
-            <div className="mb-4 grid gap-2 border border-[var(--line)] p-3">
-              <p className="font-medium">Text</p>
-              <p>{selectedText}</p>
-              <div className="flex flex-wrap gap-2">
+          {propTab === "content" && chromeFocus === "footer" ? (
+            <div>
+              <label className="studio-row"><span>Note</span><input value={site.chrome.footer.note} onChange={(event) => commit(patchChrome(site, { ...site.chrome, footer: { ...site.chrome.footer, note: event.target.value } }), true)} /></label>
+              <label className="studio-row"><span>Copyright</span><input value={site.chrome.footer.copyright} onChange={(event) => commit(patchChrome(site, { ...site.chrome, footer: { ...site.chrome.footer, copyright: event.target.value } }), true)} /></label>
+            </div>
+          ) : null}
+          {propTab === "content" && selectedBlock && ["eyebrow", "heading", "paragraph", "button", "link", "card", "quote", "person"].includes(selectedBlock.kind) ? (
+            <div>
+              <label className="studio-row"><span>Words</span><input value={selectedText} onChange={(event) => section && commit(applyText(site, path, section.id, "text", event.target.value, selectedBlock.id), false)} /></label>
+              <div className="flex gap-2 p-2">
                 <button type="button" onClick={() => formatBlock("bold")}>Bold</button>
                 <button type="button" onClick={() => formatBlock("italic")}>Italic</button>
                 <button type="button" onClick={() => formatBlock("clear")}>Clear formatting</button>
               </div>
               {selectedBlock.kind === "button" || selectedBlock.kind === "link" ? (
-                <label>Where this goes<input className="field" value={selectedBlock.href ?? ""} onChange={(event) => section && commit(applyText(site, path, section.id, "href", event.target.value, selectedBlock.id), false)} /></label>
+                <label className="studio-row"><span>Where this goes</span><input value={selectedBlock.href ?? ""} onChange={(event) => section && commit(applyText(site, path, section.id, "href", event.target.value, selectedBlock.id), false)} /></label>
               ) : null}
             </div>
           ) : null}
-          {panel === "page" && !selection.locked ? (
+          {propTab === "design" && section ? (
+            <div>
+              <label className="studio-row"><span>Background</span>
+                <select value={section.style?.background ?? "paper"} onChange={(event) => commit(setSectionStyle(site, path, section.id, { background: event.target.value as "paper" | "band" | "ink" }), true)}>
+                  <option value="paper">Page color</option>
+                  <option value="band">Soft band</option>
+                  <option value="ink">Dark</option>
+                </select>
+              </label>
+              <label className="studio-row"><span>Padding</span>
+                <select value={section.style?.padding ?? "m"} onChange={(event) => commit(setSectionStyle(site, path, section.id, { padding: event.target.value as "s" | "m" | "l" }), true)}>
+                  <option value="s">Tight</option>
+                  <option value="m">Comfortable</option>
+                  <option value="l">Roomy</option>
+                </select>
+              </label>
+              <label className="studio-row"><span>Height</span>
+                <select value={section.style?.minHeight ?? "auto"} onChange={(event) => commit(setSectionStyle(site, path, section.id, { minHeight: event.target.value as "auto" | "quarter" | "half" | "full" }), true)}>
+                  <option value="auto">As tall as the content</option>
+                  <option value="quarter">Quarter screen</option>
+                  <option value="half">Half screen</option>
+                  <option value="full">Full screen</option>
+                </select>
+              </label>
+            </div>
+          ) : null}
+          {propTab === "design" && !section && !chromeFocus ? <p className="studio-empty">Site colors, type, and spacing are in Design on the left. Select a section to change its background and spacing.</p> : null}
+          {propTab === "layout" && section ? (
+            <div>
+              <label className="studio-row"><span>Arrangement</span>
+                <select value={section.layout ?? "stack"} onChange={(event) => commit(setSectionLayout(site, path, section.id, event.target.value as NonNullable<Section["layout"]>), true)}>
+                  <option value="stack">Stacked</option>
+                  <option value="split">Side by side</option>
+                  <option value="cards">Cards</option>
+                  <option value="list">List</option>
+                  <option value="hero">Hero</option>
+                  <option value="band">Band</option>
+                  <option value="fluid">Free position</option>
+                </select>
+              </label>
+              {(["desktop", "tablet", "mobile"] as const).map((device) => (
+                <label key={device} className="studio-row"><span>Hide on {device === "mobile" ? "phone" : device}</span>
+                  <input type="checkbox" checked={section.hideOn?.includes(device) ?? false} onChange={(event) => commit(setHideOn(site, path, section.id, device, event.target.checked), true)} />
+                </label>
+              ))}
+              {selectedBlock ? (
+                <label className="studio-row"><span>Pin while scrolling</span>
+                  <input type="checkbox" checked={Boolean(selectedBlock.pin)} onChange={(event) => commit(pinBlock(site, path, section.id, selectedBlock.id, event.target.checked), true)} />
+                </label>
+              ) : null}
+            </div>
+          ) : null}
+          {propTab === "layout" && !section ? <p className="studio-empty">Select a section to change how it is arranged.</p> : null}
+          {!selection.sectionId && !chromeFocus && propTab === "content" && panel !== "history" ? <p className="studio-empty">Click something to edit it. Page settings are below.</p> : null}
+          {propTab === "content" && panel === "page" && !selection.locked && !chromeFocus ? (
             <Settings
               page={page}
               section={section}
@@ -805,7 +907,8 @@ export function EditorShell(props: {
               }}
               onAlt={(alt) => {
                 if (!selection.sectionId) return;
-                if (selection.itemId) commit(patchItem(site, path, selection.sectionId, selection.itemId, { alt }, selection.overlay), false);
+                if (selection.itemId && section?.type === "flow") commit(applyText(site, path, selection.sectionId, "alt", alt, selection.itemId), false);
+                else if (selection.itemId) commit(patchItem(site, path, selection.sectionId, selection.itemId, { alt }, selection.overlay), false);
                 else if (section?.type === "preset" && section.heroImage) commit(applySectionHero(site, path, section.id, { ...section.heroImage, alt }), false);
                 else commit(applyText(site, path, selection.sectionId, "alt", alt), false);
               }}
@@ -816,6 +919,8 @@ export function EditorShell(props: {
                 commit(applySectionHero(site, path, section.id, { ...section.heroImage, ...patch }), true);
               }}
               onReplace={() => setPicker(true)}
+              focal={selectedBlock?.focal || "center"}
+              onFocal={(focal) => selection.sectionId && selection.itemId && commit(applyText(site, path, selection.sectionId, "focal", focal, selection.itemId), true)}
               onPost={(next) => {
                 rememberHistory();
                 textKey.current = "";
@@ -831,6 +936,11 @@ export function EditorShell(props: {
           ) : null}
         </aside> : null}
       </div>
+      <footer className="studio-status">
+        <span>{status}{progress !== null ? ` · Uploading ${progress}%` : ""}</span>
+        <span>{viewport === "mobile" ? "Phone" : viewport === "tablet" ? "Tablet" : "Desktop"}</span>
+        <span className="ml-auto">{props.role}</span>
+      </footer>
       {library ? (
         <div className="fixed inset-0 z-40 grid place-items-center bg-black/30 p-6">
           <div className="max-h-[80vh] w-full max-w-3xl overflow-auto bg-white p-6">
@@ -992,6 +1102,8 @@ function Settings(props: {
   onVideo: (url: string) => void;
   onHero: (patch: Partial<NonNullable<Extract<Section, { type: "preset" }>["heroImage"]>>) => void;
   onReplace: () => void;
+  onFocal: (focal: "center" | "top" | "bottom" | "left" | "right") => void;
+  focal: string;
   onPost: (post: BlogDraft) => void;
   onBlogBlock: (block: BlogDraft["blocks"][number]) => void;
   templateFor: string;
@@ -1049,7 +1161,7 @@ function Settings(props: {
         <div className="grid gap-2">
           <label>Description for people who cannot see the image<input className="field" disabled={disabled} value={alt} onChange={(event) => props.onAlt(event.target.value)} /></label>
           <button type="button" disabled={disabled} onClick={props.onReplace}>Replace image</button>
-          <label>Which part of the image stays in view<select className="field" disabled={disabled} defaultValue="center"><option value="center">Center</option><option value="top">Top</option><option value="bottom">Bottom</option></select></label>
+          <label className="studio-row"><span>Which part of the image stays in view</span><select className="field" disabled={disabled} value={props.focal || "center"} onChange={(event) => props.onFocal(event.target.value as "center" | "top" | "bottom" | "left" | "right")}><option value="center">Center</option><option value="top">Top</option><option value="bottom">Bottom</option><option value="left">Left</option><option value="right">Right</option></select></label>
         </div>
       ) : null}
       {props.post ? (
@@ -1095,6 +1207,7 @@ function MediaPanel(props: {
     <div className="grid gap-4 text-sm">
       {props.canEdit ? <label>Upload<input className="field" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={(event) => { const file = event.target.files?.[0]; if (file) props.onUpload(file); }} /></label> : null}
       {props.progress !== null ? <p>Uploading {props.progress}%</p> : null}
+      {recentUsed.length === 0 && recentUploads.length === 0 ? <p className="studio-empty">No pictures yet. Upload a PNG, JPEG, WebP, or SVG.</p> : null}
       <ImageGroup title="Recently used" items={recentUsed} onUse={props.onUse} onDelete={props.onDelete} />
       <ImageGroup title="Recently uploaded" items={recentUploads} onUse={props.onUse} onDelete={props.onDelete} />
     </div>

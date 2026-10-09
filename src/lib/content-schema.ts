@@ -220,6 +220,7 @@ export const flowBlockSchema = z
     pin: z.boolean().optional(),
     zIndex: z.number().int().min(0).max(200).optional(),
     fit: z.enum(["fit", "fill"]).optional(),
+    focal: z.enum(["center", "top", "bottom", "left", "right"]).optional(),
     desktop: placementSchema.optional(),
     tablet: placementSchema.optional(),
     mobile: placementSchema.optional(),

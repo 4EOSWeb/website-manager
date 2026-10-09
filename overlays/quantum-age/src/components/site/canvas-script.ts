@@ -4,6 +4,7 @@ const LOCK =
 export function canvasScript(origin: string) {
   return `(function () {
     var origin = ${JSON.stringify(origin)};
+    if (location.search.indexOf("clean=1") !== -1) return;
     var LOCK = ${JSON.stringify(LOCK)};
     var selected = null;
     var selectedItems = [];

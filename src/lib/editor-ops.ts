@@ -70,6 +70,32 @@ export function deleteSection(site: SiteDraft, route: string, sectionId: string)
   });
 }
 
+export function setEditorName(site: SiteDraft, route: string, sectionId: string, name: string, blockId?: string): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    if (blockId && section.type === "flow") {
+      return { ...section, blocks: section.blocks.map((block) => (block.id === blockId ? { ...block, editorName: name.slice(0, 80) } : block)) };
+    }
+    return { ...section, editorName: name.slice(0, 80) };
+  });
+}
+
+export function setSectionLayout(site: SiteDraft, route: string, sectionId: string, layout: NonNullable<Section["layout"]>): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => ({ ...section, layout }));
+}
+
+export function setSectionStyle(site: SiteDraft, route: string, sectionId: string, style: NonNullable<Section["style"]>): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => ({ ...section, style: { ...section.style, ...style } }));
+}
+
+export function setHideOn(site: SiteDraft, route: string, sectionId: string, device: "desktop" | "tablet" | "mobile", hidden: boolean): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    const current = new Set(section.hideOn ?? []);
+    if (hidden) current.add(device);
+    else current.delete(device);
+    return { ...section, hideOn: [...current] };
+  });
+}
+
 export function setSectionHidden(site: SiteDraft, route: string, sectionId: string, hidden: boolean): SiteDraft {
   return mapSection(site, route, sectionId, (section) => {
     if (section.type === "preset" && section.providerLocked) return section;
@@ -278,6 +304,9 @@ export function setImageSource(site: SiteDraft, route: string, sectionId: string
     }
     if (itemId && section.type === "preset") {
       return { ...section, overlay: (section.overlay ?? []).map((item) => (item.id === itemId ? { ...item, src, alt: alt || item.alt } : item)) };
+    }
+    if (itemId && section.type === "flow") {
+      return { ...section, blocks: section.blocks.map((block) => (block.id === itemId ? { ...block, src, alt: alt || block.alt } : block)) };
     }
     if (section.type === "image") return { ...section, src, alt: alt || section.alt };
     if (section.type === "preset" && section.heroImage) return { ...section, heroImage: { ...section.heroImage, src, alt: alt || section.heroImage.alt } };

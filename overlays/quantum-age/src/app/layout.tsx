@@ -57,7 +57,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${figtree.variable} ${sourceSerif.variable} ${theme?.font === "sans" ? "font-sans" : ""}`}>
       <body className={`flex min-h-dvh flex-col ${spacing}`}>
-        {theme ? <style>{`:root{--ink:${theme.ink};--plum:${theme.plum};--paper:${theme.paper};--green:${theme.green};--background:${theme.paper};}`}</style> : null}
+        {theme ? (
+          <style>{`:root{--ink:${theme.ink};--plum:${theme.plum};--paper:${theme.paper};--green:${theme.green};--background:${theme.paper};}
+            ${theme.font === "sans" ? "h1,h2,h3,.text-display,.text-h1,.text-h2,.text-h3{font-family:var(--font-figtree),sans-serif;}" : ""}
+            ${theme.button === "outline" ? "a.bg-plum,.bg-plum{background:transparent !important;color:var(--plum) !important;box-shadow:inset 0 0 0 1.5px var(--plum);}" : ""}
+            ${theme.spacing === "compact" ? ".py-16{padding-top:2.5rem;padding-bottom:2.5rem;}" : ""}
+            ${theme.spacing === "roomy" ? ".py-16{padding-top:6.5rem;padding-bottom:6.5rem;}" : ""}
+          `}</style>
+        ) : null}
         {process.env.EDITOR_PREVIEW === "1" ? null : <style>{`[data-hidden="true"]{display:none !important}`}</style>}
         <EditorPreviewScript />
         <EditorPreviewProvider enabled={process.env.EDITOR_PREVIEW === "1"}>
