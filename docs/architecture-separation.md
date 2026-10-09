@@ -372,3 +372,25 @@ The other `LIBRARY` entries (heading, paragraph, button, image, card, FAQ, form)
 - Destination adapter file: `adapters/quantum-age/adapter.ts`
 - Migration risk: Seed and preview still read this file today.
 - Test required: `tests/unit/qa-adapter-full.test.ts` once the adapter parses. The editor still opens `web_quantum_age` from the current manifest until that wiring lands.
+
+## Publish paths
+
+`ADAPTER_FILES` in `src/lib/publish.ts` lines 16–48 is a fixed Quantum Age file list. The hub must not keep that array. The replacement is `adapter.publishing.allowlist`. A temporary fallback may remain until step 19.25, and the audit must name that removal.
+
+Classification of every entry:
+
+- Generic runtime, copied from the platform later: `src/components/site/canvas-script.ts` (becomes the shared canvas runtime), `src/middleware.ts` (preview token gate is site-local today).
+- Quantum Age pages: `src/app/page.tsx`, `src/app/layout.tsx`, `src/app/insights/page.tsx`, `src/app/insights/[slug]/page.tsx`, `src/app/about/page.tsx`, `src/app/approach/page.tsx`, `src/app/solutions/page.tsx`, `src/app/team/page.tsx`, `src/app/references/page.tsx`, `src/app/contact/page.tsx`, `src/app/search/page.tsx`, `src/app/[slug]/page.tsx`.
+- Quantum Age components: `src/components/site/hero-content-image.tsx`, `src/components/site/structured-article.tsx`, `src/components/site/editor-regions.tsx`, `src/components/site/home-canvas.tsx`, `src/components/site/section-view.tsx`, `src/components/site/blocks.tsx`, `src/components/site/nav-links.tsx`, `src/components/site/mobile-nav.tsx`, `src/components/site/flow-section.tsx`, `src/components/site/site-header.tsx`, `src/components/site/site-footer.tsx`.
+- Quantum Age libraries: `src/lib/structured-posts.ts`, `src/lib/editor-site.ts`, `src/lib/editor-nav.ts`.
+- Site config and content JSON: `4eos.editor.config.json`, `4eos.editor.config.ts`, `src/content/editor/site.json`.
+
+`src/lib/publish-git.ts` repeats the insights page paths in its own allowlist. Same destination.
+
+- Current file: `src/lib/publish.ts` and `src/lib/publish-git.ts`
+- Current behavior: `submitForPublish` commits only these paths, plus `home.json`, blog JSON, and media.
+- Why it is site-specific: The list names Quantum Age routes and components.
+- Generic replacement: The adapter allowlist. Lookup is by discovered adapter id, not `if (websiteId === "web_quantum_age")`.
+- Destination adapter file: `adapters/quantum-age/publish-allowlist.ts`
+- Migration risk: Dropping a path means a review commit will not include that file. The Quantum Age allowlist must start as this list.
+- Test required: `tests/unit/publish-allowlist.test.ts`. Do not call `submitForPublish` during this audit.
