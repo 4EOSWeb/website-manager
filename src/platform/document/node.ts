@@ -8,6 +8,7 @@ import { visibilitySchema } from "./visibility";
 import { lockingSchema } from "./locking";
 import { sourceSchema } from "./source";
 import { bindingsSchema } from "./bindings";
+import { layoutSchema } from "./layout";
 
 type NodeShape = {
   id: string;
@@ -20,7 +21,7 @@ type NodeShape = {
   visibility: z.infer<typeof visibilitySchema>;
   locked: z.infer<typeof lockingSchema>;
   metadata: Record<string, unknown>;
-  layout?: unknown;
+  layout?: z.infer<typeof layoutSchema>;
   bindings?: z.infer<typeof bindingsSchema>;
   source?: z.infer<typeof sourceSchema>;
 };
@@ -45,7 +46,7 @@ export const nodeSchema: z.ZodType<NodeShape> = z.lazy(() =>
     visibility: visibilitySchema,
     locked: lockingSchema,
     metadata: z.record(z.string(), z.unknown()),
-    layout: z.unknown().optional(),
+    layout: layoutSchema.optional(),
     bindings: bindingsSchema.optional(),
     source: sourceSchema.optional(),
   }).refine((node) => treeDepth(node) <= 12, "A page cannot nest more than 12 levels."),
