@@ -56,3 +56,41 @@ Each of these names the site. None of them are a platform concept.
 - `docs/architecture.md`, `docs/copy-review.md`, `docs/hallmark-audit.md`, `docs/sprint-report.md`, `README.md`, and `docs/baseline/editor-behavior.md` — describe the current product. Destination: historical docs. Risk: none for runtime. Test: none.
 
 Re-check command: `rg -l -i "quantum|web_quantum_age" --glob '!node_modules/**' --glob '!.next/**' --glob '!.qa/**'`.
+
+## Routes
+
+The platform must not keep a reserved-route constant. Reserved addresses are adapter data.
+
+Two hub sets match each other. A third copy lives in the overlay.
+
+### src/lib/editor-ops.ts
+
+- Current file: `src/lib/editor-ops.ts`, line 361, `const RESERVED`
+- Current behavior: Refuses address changes for `/`, `/about`, `/approach`, `/solutions`, `/team`, `/references`, `/insights`, `/contact`, `/privacy`, `/terms`, and `/prototype-notes`.
+- Why it is site-specific: Those paths are this website’s pages, not a rule of every Next.js site.
+- Generic replacement: `adapter.pages.reservedRoutes`, checked by generic page rules.
+- Destination adapter file: `adapters/quantum-age/routes.ts` and `adapters/quantum-age/page-rules.ts`
+- Migration risk: Custom pages that reused one of these paths would already be blocked. Moving the list must keep the same block for Quantum Age.
+- Test required: `tests/unit/qa-adapter-reserved.test.ts`, plus a second adapter that does not reserve `/insights`.
+
+### src/lib/content-schema.ts
+
+- Current file: `src/lib/content-schema.ts`, lines 464–476, `BUILT_IN_ROUTES`
+- Current behavior: The same eleven paths as `RESERVED`.
+- Why it is site-specific: Same as above.
+- Generic replacement: The adapter reserved list. The visual document schema has no built-in route set.
+- Destination adapter file: `adapters/quantum-age/page-rules.ts`
+- Migration risk: Validation that depends on this set must keep rejecting those addresses for Quantum Age until the adapter is wired.
+- Test required: The same reserved-route test, comparing both constants to the adapter list before either constant is deleted.
+
+### overlays/quantum-age/src/lib/editor-site.ts
+
+- Current file: `overlays/quantum-age/src/lib/editor-site.ts`, lines 117–129, `BUILT_IN`
+- Current behavior: The overlay repeats the same eleven paths.
+- Why it is site-specific: The preview site knows its own pages.
+- Generic replacement: The site adapter. The overlay may keep its own routes as site code. The hub must not import this set.
+- Destination adapter file: `adapters/quantum-age/routes.ts`
+- Migration risk: Public pages are rendered by these routes. Do not rename them.
+- Test required: Preview still opens `/about` and `/insights`.
+
+Content links to `/contact` and `/about` in `src/lib/flow-seed.ts`, `src/lib/page-documents.ts`, `src/lib/library.ts`, and the overlay components are page content, not the reserved set. They move with the seed and the site components. `overlays/quantum-age/4eos.editor.config.json` lines 14–22 list the same routes except `/` and `/prototype-notes`.
