@@ -29,3 +29,5 @@ export { loadAdapter, type AdapterLoader } from "./adapter-loader";
 export { validateAdapterIdentity, type AdapterIdentity } from "./adapter-validate";
 
 export { discoverAdapters } from "./discover-adapters";
+
+export { capabilityNames, hasCapability, type CapabilityFlags, type CapabilityName } from "./capabilities";
