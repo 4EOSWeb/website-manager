@@ -461,7 +461,8 @@ export const sectionSchema = z.discriminatedUnion("type", [
 
 export type Section = z.infer<typeof sectionSchema>;
 
-const BUILT_IN_ROUTES = new Set([
+/** Removal is step 14.10 after the editor reads the adapter. */
+export const BUILT_IN_ROUTES = new Set([
   "/",
   "/about",
   "/approach",

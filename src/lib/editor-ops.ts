@@ -358,7 +358,8 @@ export function setImageSource(site: SiteDraft, route: string, sectionId: string
   });
 }
 
-const RESERVED = new Set(["/", "/about", "/approach", "/solutions", "/team", "/references", "/insights", "/contact", "/privacy", "/terms", "/prototype-notes"]);
+/** Removal is step 14.10 after the editor reads the adapter. */
+export const RESERVED = new Set(["/", "/about", "/approach", "/solutions", "/team", "/references", "/insights", "/contact", "/privacy", "/terms", "/prototype-notes"]);
 
 export function slugify(title: string) {
   const slug = title
