@@ -13,3 +13,21 @@ export function canDrag(definition: Pick<ComponentDefinition, "capabilities">, n
   if (node.locked.locked) return false;
   return definition.capabilities.draggable === true;
 }
+
+type ParentLayout = {
+  mode: string;
+};
+
+/**
+ * Resize is allowed only for an unlocked component on a canvas parent.
+ * Flow parents cannot resize, even when the component is resizable.
+ */
+export function canResize(
+  definition: Pick<ComponentDefinition, "capabilities">,
+  node: LockedNode,
+  parent: ParentLayout,
+): boolean {
+  if (node.locked.locked) return false;
+  if (definition.capabilities.resizable !== true) return false;
+  return parent.mode === "canvas";
+}
