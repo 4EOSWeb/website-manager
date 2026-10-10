@@ -1,6 +1,7 @@
 import { adapterInvalid } from "../errors";
 import { err, ok, type Result } from "../result";
 import { assertStyleCapability } from "./capabilities";
+import { assertCategory } from "./categories";
 import type { ComponentDefinition } from "./types";
 
 export type ComponentRegistry = {
@@ -16,6 +17,8 @@ export function createRegistry(): ComponentRegistry {
     register(definition) {
       const styles = assertStyleCapability(definition);
       if (!styles.ok) return styles;
+      const category = assertCategory(definition);
+      if (!category.ok) return category;
       if (items.has(definition.id)) return err(adapterInvalid("That component id is already registered.", "components"));
       items.set(definition.id, definition);
       return ok(definition);
