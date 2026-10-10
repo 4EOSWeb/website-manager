@@ -26,6 +26,7 @@ export type ComponentDefinition = {
   propsSchemaId: string;
   propsSchema?: ZodType;
   inspector: string;
+  customInspectorId?: string;
   acceptsChildren: boolean;
   allowedParents: readonly string[];
   allowedChildren?: readonly string[];

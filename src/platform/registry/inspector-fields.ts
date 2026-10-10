@@ -7,6 +7,7 @@ export type InspectorField = {
   label: string;
   control: InspectorControl;
   warning?: string;
+  supplement?: boolean;
 };
 
 type SchemaNode = {
@@ -34,8 +35,9 @@ function controlFor(node: SchemaNode, prop: string): { control: InspectorControl
   return { control: "skipped", warning };
 }
 
-/** Turns a props schema into inspector descriptors. This module does not render React. */
-export function inspectorFields(schema: ZodType): { fields: InspectorField[]; warnings: string[] } {
+/** Turns a props schema into inspector descriptors. A custom inspector id is opaque and does not load site UI. */
+export function inspectorFields(schema: ZodType, definition?: { customInspectorId?: string }): { fields: InspectorField[]; warnings: string[] } {
+  const supplement = Boolean(definition?.customInspectorId);
   const shape = (schema as SchemaNode).shape;
   if (!shape) {
     const warning = "The props schema is not an object, so no fields were generated.";
@@ -45,7 +47,7 @@ export function inspectorFields(schema: ZodType): { fields: InspectorField[]; wa
   const warnings: string[] = [];
   for (const [prop, child] of Object.entries(shape)) {
     const mapped = controlFor(child, prop);
-    const field: InspectorField = { prop, label: labelFor(prop), control: mapped.control };
+    const field: InspectorField = { prop, label: labelFor(prop), control: mapped.control, ...(supplement ? { supplement: true } : {}) };
     if (mapped.warning) {
       field.warning = mapped.warning;
       warnings.push(mapped.warning);

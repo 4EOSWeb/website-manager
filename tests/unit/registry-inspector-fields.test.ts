@@ -24,4 +24,9 @@ test("a string prop becomes a text control and unknown types are skipped", () =>
   assert.equal(many.fields[0]?.control, "select");
   const source = readFileSync(new URL("../../src/platform/registry/inspector-fields.ts", import.meta.url), "utf8");
   assert.equal(source.includes("react"), false);
+  const custom = inspectorFields(z.object({ label: z.string() }), { customInspectorId: "sample.text.panel" });
+  assert.equal(custom.fields[0]?.control, "text");
+  assert.equal(custom.fields[0]?.supplement, true);
+  assert.equal(source.includes("overlays/"), false);
+  assert.equal(source.includes("src/components/editor/inspector"), false);
 });
