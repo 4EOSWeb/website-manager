@@ -1,3 +1,4 @@
+import { quantumAgeBreakpoints } from "./breakpoints";
 import { quantumAgeCommands } from "./commands";
 import { quantumAgeFonts } from "./fonts";
 import { quantumAgeMetadata } from "./metadata";
@@ -15,6 +16,7 @@ const adapter = {
   navigation: quantumAgeNavigation,
   theme: quantumAgeTheme,
   fonts: quantumAgeFonts,
+  breakpoints: quantumAgeBreakpoints,
 };
 
 export default adapter;
