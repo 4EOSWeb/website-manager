@@ -28,6 +28,7 @@ export type ComponentDefinition = {
   inspector: string;
   acceptsChildren: boolean;
   allowedParents: readonly string[];
+  allowedChildren?: readonly string[];
   capabilities: Readonly<Record<string, boolean>>;
   locking: RegistryLock;
   renderer: RegistryRenderer;
