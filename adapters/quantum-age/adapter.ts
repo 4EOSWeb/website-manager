@@ -1,5 +1,6 @@
 import { quantumAgeCommands } from "./commands";
 import { quantumAgeMetadata } from "./metadata";
+import { quantumAgeNavigation } from "./navigation";
 import { quantumAgePageRules } from "./page-rules";
 import { quantumAgeRoutes } from "./routes";
 
@@ -9,6 +10,7 @@ const adapter = {
   commands: quantumAgeCommands,
   routes: quantumAgeRoutes,
   pageRules: quantumAgePageRules,
+  navigation: quantumAgeNavigation,
 };
 
 export default adapter;
