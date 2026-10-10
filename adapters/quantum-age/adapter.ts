@@ -1,4 +1,5 @@
 import { quantumAgeCommands } from "./commands";
+import { quantumAgeFonts } from "./fonts";
 import { quantumAgeMetadata } from "./metadata";
 import { quantumAgeNavigation } from "./navigation";
 import { quantumAgePageRules } from "./page-rules";
@@ -13,6 +14,7 @@ const adapter = {
   pageRules: quantumAgePageRules,
   navigation: quantumAgeNavigation,
   theme: quantumAgeTheme,
+  fonts: quantumAgeFonts,
 };
 
 export default adapter;
