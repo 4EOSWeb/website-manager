@@ -5,6 +5,7 @@ import { quantumAgeMetadata } from "./metadata";
 import { quantumAgeNavigation } from "./navigation";
 import { quantumAgePageRules } from "./page-rules";
 import { quantumAgeRoutes } from "./routes";
+import { quantumAgeTemplates } from "./templates";
 import { quantumAgeTheme } from "./theme";
 
 /** Partial adapter. It is not served to the editor until step 6.25. */
@@ -17,6 +18,7 @@ const adapter = {
   theme: quantumAgeTheme,
   fonts: quantumAgeFonts,
   breakpoints: quantumAgeBreakpoints,
+  templates: quantumAgeTemplates,
 };
 
 export default adapter;

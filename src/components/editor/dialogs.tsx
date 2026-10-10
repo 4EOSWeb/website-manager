@@ -11,6 +11,7 @@ import { LibraryBrowser } from "@/components/editor/library";
 
 export type PageForm = { title: string; route: string; template: PageDocument["template"]; navVisible: boolean; seoTitle: string; metaDescription: string };
 
+/** Removal is step 14.8, when Add page reads adapter templates. */
 const TEMPLATES = [
   { value: "blank", label: "Blank page" },
   { value: "landing", label: "Landing page" },
