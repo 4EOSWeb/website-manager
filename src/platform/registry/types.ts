@@ -1,3 +1,5 @@
+import type { ZodType } from "zod";
+
 /**
  * A component definition. The site bundle resolves `renderer.exportName`.
  * This module does not import React or a site package.
@@ -22,6 +24,7 @@ export type ComponentDefinition = {
   thumbnail: RegistryThumbnail;
   defaultProps: Record<string, unknown>;
   propsSchemaId: string;
+  propsSchema?: ZodType;
   inspector: string;
   acceptsChildren: boolean;
   allowedParents: readonly string[];
