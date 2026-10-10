@@ -55,3 +55,9 @@ export function assertStyleCapability(definition: StyleableDefinition): Result<t
   }
   return ok(true);
 }
+
+/** Breakpoint overrides require a responsive, unlocked component. */
+export function canOverrideBreakpoint(definition: Pick<ComponentDefinition, "capabilities">, node: LockedNode): boolean {
+  if (node.locked.locked) return false;
+  return definition.capabilities.responsive === true;
+}
