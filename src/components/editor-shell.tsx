@@ -39,7 +39,8 @@ import { entryById, recommendedFor, sectionForEntry, type LibraryEntry } from "@
 import { articlePatternFrom, articleRouteFor, articleSlug, selectActivePage } from "@/components/editor/state/page";
 import { clearNodeSelection, nodeIdsFromLegacy } from "@/components/editor/state/selection";
 import { activeSiteContext, createSiteState } from "@/components/editor/state/site";
-import { emptySelection, VIEWPORTS, type EditorApi, type MediaItem, type Publication, type RailPanel, type SaveState, type Selection, type Snapshot, type Viewport } from "@/components/editor/types";
+import { breakpointWidth, previewRadioLabel, type BreakpointId } from "@/components/editor/state/breakpoint";
+import { emptySelection, type EditorApi, type MediaItem, type Publication, type RailPanel, type SaveState, type Selection, type Snapshot, type Viewport } from "@/components/editor/types";
 import type { SiteContext } from "@/platform/context";
 import { StatusBar, ToolRail, TopBar, type Zoom } from "@/components/editor/chrome";
 import { Canvas } from "@/components/editor/canvas";
@@ -80,7 +81,7 @@ export function EditorShell(props: {
   const [adapterId] = useState(props.adapterId);
   const [adapter] = useState(props.adapter);
   const [path, setPath] = useState("/");
-  const [viewport, setViewport] = useState<Viewport>("desktop");
+  const [viewport, setViewport] = useState<BreakpointId>("desktop");
   const [zoom, setZoom] = useState<Zoom>("fit");
   const [scale, setScale] = useState(1);
   const [site, setSite] = useState(props.initialSite);
@@ -919,7 +920,8 @@ export function EditorShell(props: {
     media: mediaWithUse,
   };
 
-  const width = VIEWPORTS.find((item) => item.id === viewport)?.width ?? 1280;
+  const width = breakpointWidth(adapter, viewport);
+  const devices = (["desktop", "tablet", "mobile"] as const).map((id) => ({ id, label: previewRadioLabel[id] }));
   const recommended = recommendedFor(page?.sections ?? []);
   const recommendedHere = recommendedFor(page?.sections ?? [], section?.type === "flow" && !selection.locked);
   const templates = site.sectionTemplates.map((item) => ({ id: item.id, name: item.name }));
@@ -981,6 +983,7 @@ export function EditorShell(props: {
         onPages={() => setRail("pages")}
         onNewPage={() => setAddingPage(true)}
         viewport={viewport}
+        devices={devices}
         onViewport={setViewport}
         canUndo={history.canUndo}
         canRedo={history.canRedo}

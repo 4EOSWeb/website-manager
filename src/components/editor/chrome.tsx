@@ -3,16 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Check, ChevronDown, Circle, CloudUpload, Eye, FilePlus2, Files, ImageIcon, Keyboard, Layers, LoaderCircle, LogOut, Monitor, Palette, Plus, Redo2, ShieldCheck, Smartphone, Tablet, Undo2 } from "lucide-react";
 import { signOutUser } from "@/app/signin/actions";
+import type { BreakpointId } from "@/components/editor/state/breakpoint";
 import type { RailPanel, SaveState, Viewport } from "@/components/editor/types";
 import { IconButton } from "@/components/editor/ui";
 
 export type Zoom = "fit" | 50 | 75 | 100;
 
-const DEVICES: { id: Viewport; label: string; icon: React.ReactNode }[] = [
-  { id: "desktop", label: "Desktop", icon: <Monitor size={16} aria-hidden="true" /> },
-  { id: "tablet", label: "Tablet", icon: <Tablet size={16} aria-hidden="true" /> },
-  { id: "mobile", label: "Phone", icon: <Smartphone size={16} aria-hidden="true" /> },
-];
+const DEVICE_ICONS: Record<BreakpointId, React.ReactNode> = {
+  desktop: <Monitor size={16} aria-hidden="true" />,
+  tablet: <Tablet size={16} aria-hidden="true" />,
+  mobile: <Smartphone size={16} aria-hidden="true" />,
+};
 
 export function SaveStatus({ state, savedAt, onRetry }: { state: SaveState; savedAt?: number | null; onRetry: () => void }) {
   if (state === "error") {
@@ -78,6 +79,7 @@ export function TopBar(props: {
   onPages: () => void;
   onNewPage: () => void;
   viewport: Viewport;
+  devices: { id: BreakpointId; label: string }[];
   onViewport: (viewport: Viewport) => void;
   canUndo: boolean;
   canRedo: boolean;
@@ -114,9 +116,9 @@ export function TopBar(props: {
       </div>
       <div className="ed-topbar-center">
         <div className="ed-segmented is-toolbar" role="radiogroup" aria-label="Preview size">
-          {DEVICES.map((device) => (
+          {props.devices.map((device) => (
             <button key={device.id} type="button" role="radio" aria-checked={props.viewport === device.id} aria-label={device.label} data-tip={device.label} onClick={() => props.onViewport(device.id)}>
-              {device.icon}
+              {DEVICE_ICONS[device.id]}
             </button>
           ))}
         </div>
