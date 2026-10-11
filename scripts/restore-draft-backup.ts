@@ -12,14 +12,35 @@ if (!process.env.DATABASE_URL) {
   }
 }
 
-const backupId = process.argv[2];
-if (!backupId || backupId.startsWith("-")) {
-  console.error("Pass a backup id.");
+const args = process.argv.slice(2);
+const websiteAt = args.indexOf("--website");
+const websiteId = websiteAt === -1 ? "" : args[websiteAt + 1];
+if (!websiteId || websiteId.startsWith("-")) {
+  console.error("Pass --website.");
+  process.exit(1);
+}
+
+const latest = args.includes("--latest");
+const backupId = args.find((arg, index) => !arg.startsWith("-") && args[index - 1] !== "--website");
+if (!latest && !backupId) {
+  console.error("Pass a backup id, or pass --latest.");
   process.exit(1);
 }
 
 const { prisma } = await import("../src/lib/prisma.ts");
-const { restoreDraftBackup } = await import("../src/platform/migrate/restore.ts");
-const draftId = await restoreDraftBackup(backupId, prisma);
-console.log(`Restored ${draftId} from ${backupId}.`);
-await prisma.$disconnect();
+const { restoreDraftBackup, restoreLatestBackups } = await import("../src/platform/migrate/restore.ts");
+
+try {
+  if (latest) {
+    const drafts = await restoreLatestBackups(websiteId, prisma);
+    console.log(drafts.length ? `Restored ${drafts.join(", ")}.` : "No backups for that site.");
+  } else {
+    const draftId = await restoreDraftBackup(backupId!, websiteId, prisma);
+    console.log(`Restored ${draftId} from ${backupId}.`);
+  }
+} catch (error) {
+  console.error(error instanceof Error ? error.message : "The backup could not be restored.");
+  process.exitCode = 1;
+} finally {
+  await prisma.$disconnect();
+}

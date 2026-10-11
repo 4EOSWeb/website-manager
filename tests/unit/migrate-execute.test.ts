@@ -88,7 +88,7 @@ test("execution stores a visual document beside version 3 and rolls the fixture 
 
       const backupId = result.drafts.find((draft) => draft.id === "draft_exec_ok")?.backupId;
       assert.ok(backupId);
-      await restoreDraftBackup(backupId, tx);
+      await restoreDraftBackup(backupId, "web_quantum_age", tx);
       const restored = await tx.workspaceDraft.findUnique({ where: { id: "draft_exec_ok" } });
       assert.equal(restored?.visualDocument, null);
       assert.equal(parseVersion3(restored?.draftData).ok, true);

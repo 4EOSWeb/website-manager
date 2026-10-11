@@ -9,6 +9,7 @@ test("backing up a draft copies the payload and leaves the source row alone", as
   const draftId = "draft_0ddb6f7c7f7a";
   const before = await prisma.workspaceDraft.findUnique({ where: { id: draftId } });
   assert.ok(before);
+  const prior = new Set((await prisma.draftBackup.findMany({ where: { sourceDraftId: draftId }, select: { id: true } })).map((row) => row.id));
   const first = await backupDraft(draftId);
   const second = await backupDraft(draftId);
   assert.equal(second, first);
@@ -18,5 +19,5 @@ test("backing up a draft copies the payload and leaves the source row alone", as
   assert.equal(after?.updatedAt.getTime(), before.updatedAt.getTime());
   assert.deepEqual(backup?.payload, before.draftData);
   assert.equal(backup?.sourceDraftId, draftId);
-  await prisma.draftBackup.delete({ where: { id: first } });
+  if (!prior.has(first)) await prisma.draftBackup.delete({ where: { id: first } });
 });

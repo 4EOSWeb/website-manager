@@ -14,6 +14,7 @@
     "test:e2e": "playwright test",
     "migrate:dry": "node --experimental-strip-types --no-warnings --import ./tests/unit/resolve-ts.mjs scripts/migrate-drafts.ts",
     "migrate:execute": "node --experimental-strip-types --no-warnings --import ./tests/unit/resolve-ts.mjs scripts/migrate-drafts.ts --execute",
+    "migrate:rollback": "node --experimental-strip-types --no-warnings --import ./tests/unit/resolve-ts.mjs scripts/restore-draft-backup.ts",
     "overlay:sync": "node --experimental-strip-types --no-warnings scripts/sync-overlay.ts",
     "routes": "node --experimental-strip-types --no-warnings scripts/route-inventory.ts --write",
     "postinstall": "prisma generate"
