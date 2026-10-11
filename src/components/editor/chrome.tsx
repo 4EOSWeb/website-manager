@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Check, ChevronDown, Circle, CloudUpload, Eye, FilePlus2, Files, ImageIcon, Keyboard, Layers, LoaderCircle, LogOut, Monitor, Palette, Plus, Redo2, ShieldCheck, Smartphone, Tablet, Undo2 } from "lucide-react";
 import { signOutUser } from "@/app/signin/actions";
 import type { BreakpointId } from "@/components/editor/state/breakpoint";
+import type { ExperienceMode } from "@/components/editor/state/experience";
 import type { RailPanel, SaveState, Viewport } from "@/components/editor/types";
 import { IconButton } from "@/components/editor/ui";
 
@@ -32,7 +33,21 @@ export function SaveStatus({ state, savedAt, onRetry }: { state: SaveState; save
   );
 }
 
-function AccountMenu(props: { userName: string; role: string; onConfirm: () => void; onShortcuts: () => void }) {
+const EXPERIENCE_MODES: { id: ExperienceMode; label: string }[] = [
+  { id: "basic", label: "Basic" },
+  { id: "advanced", label: "Advanced" },
+  { id: "administrator", label: "Administrator" },
+];
+
+function AccountMenu(props: {
+  userName: string;
+  role: string;
+  experience: ExperienceMode;
+  canAdminister: boolean;
+  onExperience: (mode: ExperienceMode) => void;
+  onConfirm: () => void;
+  onShortcuts: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -61,6 +76,23 @@ function AccountMenu(props: { userName: string; role: string; onConfirm: () => v
           <div className="ed-popover-head">
             <strong>{props.userName}</strong>
             <span className="ed-hint">{props.role.replaceAll("_", " ").toLowerCase()}</span>
+          </div>
+          <div className="ed-experience" role="group" aria-label="Experience">
+            {EXPERIENCE_MODES.filter((mode) => mode.id !== "administrator" || props.canAdminister).map((mode) => (
+              <button
+                key={mode.id}
+                type="button"
+                role="menuitem"
+                aria-checked={props.experience === mode.id}
+                onClick={() => {
+                  props.onExperience(mode.id);
+                  setOpen(false);
+                }}
+              >
+                {props.experience === mode.id ? <Check size={14} aria-hidden="true" /> : <span className="ed-experience-mark" aria-hidden="true" />}
+                {mode.label}
+              </button>
+            ))}
           </div>
           <button type="button" role="menuitem" onClick={() => { setOpen(false); props.onConfirm(); }}><ShieldCheck size={14} aria-hidden="true" /> Confirm it’s you</button>
           <button type="button" role="menuitem" onClick={() => { setOpen(false); props.onShortcuts(); }}><Keyboard size={14} aria-hidden="true" /> Keyboard shortcuts</button>
@@ -94,6 +126,9 @@ export function TopBar(props: {
   onPublish: () => void;
   userName: string;
   role: string;
+  experience: ExperienceMode;
+  canAdminister: boolean;
+  onExperience: (mode: ExperienceMode) => void;
   onConfirm: () => void;
   onShortcuts: () => void;
 }) {
@@ -137,7 +172,7 @@ export function TopBar(props: {
         ) : (
           <span className="ed-tag">{props.canEdit ? "Drafts only" : "View only"}</span>
         )}
-        <AccountMenu userName={props.userName} role={props.role} onConfirm={props.onConfirm} onShortcuts={props.onShortcuts} />
+        <AccountMenu userName={props.userName} role={props.role} experience={props.experience} canAdminister={props.canAdminister} onExperience={props.onExperience} onConfirm={props.onConfirm} onShortcuts={props.onShortcuts} />
       </div>
     </header>
   );

@@ -371,6 +371,18 @@
   color: white;
 }
 
+.ed-experience {
+  display: grid;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--ed-border-strong);
+}
+
+.ed-experience-mark {
+  width: 14px;
+  flex: none;
+}
+
 /* Segmented control */
 .ed-segmented {
   display: inline-flex;

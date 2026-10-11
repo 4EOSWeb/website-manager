@@ -40,6 +40,7 @@ import { articlePatternFrom, articleRouteFor, articleSlug, selectActivePage } fr
 import { clearNodeSelection, nodeIdsFromLegacy } from "@/components/editor/state/selection";
 import { activeSiteContext, createSiteState } from "@/components/editor/state/site";
 import { breakpointWidth, previewRadioLabel, type BreakpointId } from "@/components/editor/state/breakpoint";
+import { persistExperience, readExperience, type ExperienceMode } from "@/components/editor/state/experience";
 import { emptySelection, type EditorApi, type MediaItem, type Publication, type RailPanel, type SaveState, type Selection, type Snapshot, type Viewport } from "@/components/editor/types";
 import type { SiteContext } from "@/platform/context";
 import { StatusBar, ToolRail, TopBar, type Zoom } from "@/components/editor/chrome";
@@ -72,6 +73,7 @@ export function EditorShell(props: {
   canEdit: boolean;
   canPublish: boolean;
   canEmbed: boolean;
+  canAdminister: boolean;
   role: string;
   userName: string;
   previewAccess: string;
@@ -82,6 +84,10 @@ export function EditorShell(props: {
   const [adapter] = useState(props.adapter);
   const [path, setPath] = useState("/");
   const [viewport, setViewport] = useState<BreakpointId>("desktop");
+  const [experience, setExperience] = useState<ExperienceMode>("basic");
+  useEffect(() => {
+    setExperience(readExperience(window.localStorage, props.websiteId, props.canAdminister));
+  }, [props.websiteId, props.canAdminister]);
   const [zoom, setZoom] = useState<Zoom>("fit");
   const [scale, setScale] = useState(1);
   const [site, setSite] = useState(props.initialSite);
@@ -976,7 +982,7 @@ export function EditorShell(props: {
   }
 
   return (
-    <div className="ed-root" data-adapter={adapterId ?? undefined} data-nodes={nodeIds.join(" ")}>
+    <div className="ed-root" data-adapter={adapterId ?? undefined} data-experience={experience} data-nodes={nodeIds.join(" ")}>
       <TopBar
         websiteName={props.websiteName}
         pageTitle={pageTitle}
@@ -1001,6 +1007,9 @@ export function EditorShell(props: {
         }}
         userName={props.userName}
         role={props.role}
+        experience={experience}
+        canAdminister={props.canAdminister}
+        onExperience={(mode) => setExperience(persistExperience(window.localStorage, props.websiteId, mode, props.canAdminister))}
         onConfirm={() => void confirmIdentity()}
         onShortcuts={() => setShortcuts(true)}
       />

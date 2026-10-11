@@ -4,6 +4,7 @@ import "@/components/editor/editor.css";
 import { AuthzError, authorize } from "@/lib/authorize";
 import { blogDraftSchema } from "@/lib/content-schema";
 import { imageSize, mediaRoot } from "@/lib/media";
+import { canUseAdministrator } from "@/components/editor/state/experience";
 import { draftForSite } from "@/components/editor/state/site";
 import { editorAdapterForSite } from "@/lib/editor-adapter";
 import { normalizeSiteDraft } from "@/lib/page-documents";
@@ -84,6 +85,7 @@ export default async function EditorPage({ params }: { params: Promise<{ website
       canEdit={can(actions, "edit")}
       canPublish={can(actions, "publish.request")}
       canEmbed={canEmbed}
+      canAdminister={canUseAdministrator(actor.platformRole, actor.membershipRole)}
       role={roleLabel(actor.platformRole, actor.membershipRole)}
       userName={actor.user.displayName}
       previewAccess={mintPreviewAccess(websiteId, actor.user.id)}
