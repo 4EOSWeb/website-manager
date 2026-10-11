@@ -55,6 +55,8 @@ const READY_TIMEOUT = 20000;
 
 export function EditorShell(props: {
   websiteId: string;
+  adapterId: string | null;
+  adapter: Record<string, unknown> | null;
   websiteName: string;
   initialSite: SiteDraft;
   initialPosts: BlogDraft[];
@@ -67,6 +69,8 @@ export function EditorShell(props: {
   previewAccess: string;
   publications: Publication[];
 }) {
+  const [adapterId] = useState(props.adapterId);
+  const [adapter] = useState(props.adapter);
   const [path, setPath] = useState("/");
   const [viewport, setViewport] = useState<Viewport>("desktop");
   const [zoom, setZoom] = useState<Zoom>("fit");
@@ -861,6 +865,8 @@ export function EditorShell(props: {
   const mediaWithUse = media.map((item) => ({ ...item, usedBy: imageUsage(site, posts, item.filename) }));
   const api: EditorApi = {
     websiteId: props.websiteId,
+    adapterId,
+    adapter,
     site,
     path,
     page,
@@ -933,7 +939,7 @@ export function EditorShell(props: {
   }
 
   return (
-    <div className="ed-root">
+    <div className="ed-root" data-adapter={adapterId ?? undefined}>
       <TopBar
         websiteName={props.websiteName}
         pageTitle={pageTitle}

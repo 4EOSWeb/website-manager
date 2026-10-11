@@ -41,6 +41,8 @@ export const VIEWPORTS: { id: Viewport; label: string; width: number }[] = [
 
 export type EditorApi = {
   websiteId: string;
+  adapterId: string | null;
+  adapter: Record<string, unknown> | null;
   site: SiteDraft;
   path: string;
   page?: PageDocument;

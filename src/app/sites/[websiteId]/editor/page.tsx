@@ -4,6 +4,7 @@ import "@/components/editor/editor.css";
 import { AuthzError, authorize } from "@/lib/authorize";
 import { blogDraftSchema } from "@/lib/content-schema";
 import { imageSize, mediaRoot } from "@/lib/media";
+import { editorAdapterForSite } from "@/lib/editor-adapter";
 import { normalizeSiteDraft } from "@/lib/page-documents";
 import { mintPreviewAccess } from "@/lib/preview-access";
 import { prisma } from "@/lib/prisma";
@@ -28,6 +29,7 @@ export default async function EditorPage({ params }: { params: Promise<{ website
       })
     : null;
   const site = normalizeSiteDraft(draft?.draftData);
+  const adapter = await editorAdapterForSite(websiteId);
   const storedPosts = await prisma.blogPost.findMany({
     where: { websiteId, status: { in: ["DRAFT", "SCHEDULED"] } },
     orderBy: { updatedAt: "desc" },
@@ -48,6 +50,8 @@ export default async function EditorPage({ params }: { params: Promise<{ website
   return (
     <EditorShell
       websiteId={websiteId}
+      adapterId={adapter?.id ?? null}
+      adapter={adapter?.fields ?? null}
       websiteName={actor.website.name}
       initialSite={site}
       initialPosts={posts.length > 0 ? posts : []}
