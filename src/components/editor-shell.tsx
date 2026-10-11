@@ -40,6 +40,7 @@ import { articlePatternFrom, articleRouteFor, articleSlug, selectActivePage } fr
 import { clearNodeSelection, nodeIdsFromLegacy } from "@/components/editor/state/selection";
 import { activeSiteContext, createSiteState } from "@/components/editor/state/site";
 import { breakpointWidth, previewRadioLabel, type BreakpointId } from "@/components/editor/state/breakpoint";
+import { emptyDirty, markChanged, markSaved, shouldWarnBeforeUnload, switchWebsite } from "@/components/editor/state/dirty";
 import { persistExperience, readExperience, type ExperienceMode } from "@/components/editor/state/experience";
 import { emptySelection, type EditorApi, type MediaItem, type Publication, type RailPanel, type SaveState, type Selection, type Snapshot, type Viewport } from "@/components/editor/types";
 import type { SiteContext } from "@/platform/context";
@@ -85,6 +86,10 @@ export function EditorShell(props: {
   const [path, setPath] = useState("/");
   const [viewport, setViewport] = useState<BreakpointId>("desktop");
   const [experience, setExperience] = useState<ExperienceMode>("basic");
+  const [dirtyState, setDirtyState] = useState(() => emptyDirty(props.websiteId));
+  const dirtyRef = useRef(dirtyState);
+  dirtyRef.current = dirtyState;
+  const dirtyWebsite = useRef(props.websiteId);
   useEffect(() => {
     setExperience(readExperience(window.localStorage, props.websiteId, props.canAdminister));
   }, [props.websiteId, props.canAdminister]);
@@ -174,6 +179,7 @@ export function EditorShell(props: {
     if (!props.canEdit || next === site) return;
     textKey.current = "";
     rememberHistory();
+    setDirtyState((state) => markChanged(state, { version3: next }));
     setSite(next);
     if (reload) reloadAfter.current = true;
   }
@@ -184,6 +190,7 @@ export function EditorShell(props: {
       textKey.current = key;
       rememberHistory();
     }
+    setDirtyState((state) => markChanged(state, { version3: next }));
     setSite(next);
     if (reload) reloadAfter.current = true;
   }
@@ -226,6 +233,7 @@ export function EditorShell(props: {
         if (seq === saveSeq.current) {
           setSave("saved");
           setSavedAt(Date.now());
+          setDirtyState((state) => markSaved(state));
         }
         return true;
       } catch {
@@ -236,6 +244,14 @@ export function EditorShell(props: {
     },
     [notify, props.websiteId],
   );
+
+  useEffect(() => {
+    if (dirtyWebsite.current === props.websiteId) return;
+    const moved = switchWebsite(dirtyRef.current, props.websiteId);
+    dirtyWebsite.current = props.websiteId;
+    skipSite.current = true;
+    setDirtyState(moved.state);
+  }, [props.websiteId]);
 
   useEffect(() => {
     if (skipSite.current) {
@@ -282,6 +298,7 @@ export function EditorShell(props: {
         }
         setSave("saved");
         setSavedAt(Date.now());
+        setDirtyState((state) => markSaved(state));
         if (shouldReload) {
           reloadAfter.current = false;
           setVersion((value) => value + 1);
@@ -304,14 +321,14 @@ export function EditorShell(props: {
   }
 
   useEffect(() => {
-    if (save === "saved") return;
+    if (save === "saved" && !shouldWarnBeforeUnload(dirtyState)) return;
     function onLeave(event: BeforeUnloadEvent) {
       event.preventDefault();
       event.returnValue = "";
     }
     window.addEventListener("beforeunload", onLeave);
     return () => window.removeEventListener("beforeunload", onLeave);
-  }, [save]);
+  }, [save, dirtyState]);
 
   useEffect(() => {
     let timer = window.setTimeout(() => void signOutUser(), 30 * 60 * 1000);
@@ -566,6 +583,7 @@ export function EditorShell(props: {
     skipPost.current = true;
     setPosts((items) => [post, ...items]);
     setSave("saved");
+    setDirtyState((state) => markSaved(state));
     if (articleRoute) openPage(articleRouteFor(articleRoute, post.slug));
   }
 
