@@ -37,6 +37,7 @@ import {
 import { blockFitsInZone, createId } from "@/lib/page-documents";
 import { entryById, recommendedFor, sectionForEntry, type LibraryEntry } from "@/lib/library";
 import { articlePatternFrom, articleRouteFor, articleSlug, selectActivePage } from "@/components/editor/state/page";
+import { clearNodeSelection, nodeIdsFromLegacy } from "@/components/editor/state/selection";
 import { activeSiteContext, createSiteState } from "@/components/editor/state/site";
 import { emptySelection, VIEWPORTS, type EditorApi, type MediaItem, type Publication, type RailPanel, type SaveState, type Selection, type Snapshot, type Viewport } from "@/components/editor/types";
 import type { SiteContext } from "@/platform/context";
@@ -89,6 +90,7 @@ export function EditorShell(props: {
   const [recentLibrary, setRecentLibrary] = useState<string[]>([]);
   const [rail, setRail] = useState<RailPanel | null>("pages");
   const [selection, setSelection] = useState<Selection>(emptySelection);
+  const [nodeIds, setNodeIds] = useState<string[]>([]);
   const [version, setVersion] = useState(0);
   const [publications, setPublications] = useState(props.publications);
   const [progress, setProgress] = useState<number | null>(null);
@@ -133,6 +135,10 @@ export function EditorShell(props: {
   useEffect(() => {
     siteRef.current = site;
   }, [site]);
+
+  useEffect(() => {
+    setNodeIds(nodeIdsFromLegacy(selection).nodeIds);
+  }, [selection]);
 
   useEffect(() => {
     try {
@@ -705,6 +711,7 @@ export function EditorShell(props: {
   function openPage(route: string) {
     setPath(route);
     setSelection(emptySelection);
+    setNodeIds(clearNodeSelection().nodeIds);
     setVersion((value) => value + 1);
   }
 
@@ -952,7 +959,7 @@ export function EditorShell(props: {
   }
 
   return (
-    <div className="ed-root" data-adapter={adapterId ?? undefined}>
+    <div className="ed-root" data-adapter={adapterId ?? undefined} data-nodes={nodeIds.join(" ")}>
       <TopBar
         websiteName={props.websiteName}
         pageTitle={pageTitle}
