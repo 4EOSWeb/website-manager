@@ -154,6 +154,18 @@ model WorkspaceDraft {
   @@map("workspace_drafts")
 }
 
+model DraftBackup {
+  id            String   @id
+  websiteId     String   @map("website_id")
+  sourceDraftId String   @map("source_draft_id")
+  versionLabel  String   @map("version_label")
+  payload       Json
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([websiteId, sourceDraftId])
+  @@map("draft_backups")
+}
+
 model BlogPost {
   id                String     @id
   websiteId         String     @map("website_id")
