@@ -1,20 +1,30 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { emptyHistory, redoStep, remember, undoStep, type History } from "@/lib/history";
+import { emptyHistory, redoScoped, rememberScoped, undoScoped, type History, type ScopedSnapshot } from "@/lib/history";
 
-export function useEditorHistory<T>() {
-  const [history, setHistory] = useState<History<T>>(emptyHistory);
-  const record = useCallback((current: T) => setHistory((value) => remember(value, current)), []);
-  const undo = (current: T) => {
-    const step = undoStep(history, current);
+export function useEditorHistory<T>(websiteId = "") {
+  const [history, setHistory] = useState<History<ScopedSnapshot<T>>>(emptyHistory);
+  const record = useCallback((current: T, visualDocument?: unknown) => {
+    setHistory((value) => rememberScoped(value, websiteId, current, visualDocument));
+  }, [websiteId]);
+  const undo = (current: T, visualDocument?: unknown) => {
+    const step = undoScoped(history, websiteId, current, visualDocument);
     if (step) setHistory(step.history);
-    return step?.state ?? null;
+    return step?.value ?? null;
   };
-  const redo = (current: T) => {
-    const step = redoStep(history, current);
+  const redo = (current: T, visualDocument?: unknown) => {
+    const step = redoScoped(history, websiteId, current, visualDocument);
     if (step) setHistory(step.history);
-    return step?.state ?? null;
+    return step?.value ?? null;
   };
-  return { record, undo, redo, canUndo: history.past.length > 0, canRedo: history.future.length > 0 };
+  const previous = history.past[history.past.length - 1];
+  const upcoming = history.future[0];
+  return {
+    record,
+    undo,
+    redo,
+    canUndo: previous !== undefined && previous.websiteId === websiteId,
+    canRedo: upcoming !== undefined && upcoming.websiteId === websiteId,
+  };
 }

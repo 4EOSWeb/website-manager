@@ -92,7 +92,7 @@ export function EditorShell(props: {
   const [scale, setScale] = useState(1);
   const [site, setSite] = useState(props.initialSite);
   const [posts, setPosts] = useState(props.initialPosts);
-  const history = useEditorHistory<Snapshot>();
+  const history = useEditorHistory<Snapshot>(props.websiteId);
   const [media, setMedia] = useState(props.media);
   const [recentImages, setRecentImages] = useState<string[]>([]);
   const [recentLibrary, setRecentLibrary] = useState<string[]>([]);

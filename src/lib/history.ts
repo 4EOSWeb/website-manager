@@ -23,3 +23,45 @@ export function redoStep<T>(history: History<T>, current: T): { state: T; histor
   if (state === undefined) return null;
   return { state, history: { past: [...history.past, current], future: history.future.slice(1) } };
 }
+
+export type ScopedSnapshot<T> = {
+  websiteId: string;
+  value: T;
+  visualDocument: unknown | null;
+};
+
+function scopedEntry<T>(websiteId: string, value: T, visualDocument?: unknown): ScopedSnapshot<T> {
+  return { websiteId, value, visualDocument: visualDocument === undefined ? null : visualDocument };
+}
+
+/** Version 3 history stays a value snapshot. A visual edit also stores that document. */
+export function rememberScoped<T>(history: History<ScopedSnapshot<T>>, websiteId: string, current: T, visualDocument?: unknown): History<ScopedSnapshot<T>> {
+  return remember(history, scopedEntry(websiteId, current, visualDocument));
+}
+
+/** Restores the previous snapshot for this website. Another website's entry is left in place. */
+export function undoScoped<T>(
+  history: History<ScopedSnapshot<T>>,
+  websiteId: string,
+  current: T,
+  visualDocument?: unknown,
+): { value: T; visualDocument: unknown | null; history: History<ScopedSnapshot<T>> } | null {
+  const top = history.past[history.past.length - 1];
+  if (!top || top.websiteId !== websiteId) return null;
+  const step = undoStep(history, scopedEntry(websiteId, current, visualDocument));
+  if (!step) return null;
+  return { value: step.state.value, visualDocument: step.state.visualDocument, history: step.history };
+}
+
+export function redoScoped<T>(
+  history: History<ScopedSnapshot<T>>,
+  websiteId: string,
+  current: T,
+  visualDocument?: unknown,
+): { value: T; visualDocument: unknown | null; history: History<ScopedSnapshot<T>> } | null {
+  const top = history.future[0];
+  if (!top || top.websiteId !== websiteId) return null;
+  const step = redoStep(history, scopedEntry(websiteId, current, visualDocument));
+  if (!step) return null;
+  return { value: step.state.value, visualDocument: step.state.visualDocument, history: step.history };
+}
