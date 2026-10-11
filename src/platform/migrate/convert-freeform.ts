@@ -82,7 +82,7 @@ function itemNode(item: Record<string, unknown>, adapter: FreeformAdapter, warni
     locked: { locked: item.locked === true },
     metadata: failed ? { legacyId: item.id, unmapped: structuredClone(item) } : { legacyId: item.id },
     ...(desktop ? { box: desktop } : {}),
-    source: { origin: "migration", providerManaged: failed },
+    source: { origin: "migration", providerManaged: Boolean(failed) },
   };
 }
 

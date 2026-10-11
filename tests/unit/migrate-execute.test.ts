@@ -21,7 +21,6 @@ const adapter = { migrateText, migrateButton, migrateSection, breakpointWidth };
 class Rollback extends Error {}
 
 test("execution stores a visual document beside version 3 and rolls the fixture back", async () => {
-  const { Prisma } = await import("../../src/generated/prisma/client.ts");
   const { prisma } = await import("../../src/lib/prisma.ts");
   const { draftChecksum } = await import("../../src/platform/migrate/checksum.ts");
   const { validateDocument } = await import("../../src/platform/document/document.ts");
@@ -40,7 +39,7 @@ test("execution stores a visual document beside version 3 and rolls the fixture 
           id: "draft_exec_ok",
           websiteId: "web_quantum_age",
           userId: "user_admin",
-          draftData: redactedDraftV3 as unknown as Prisma.InputJsonValue,
+          draftData: redactedDraftV3 as never,
         },
       });
       await tx.workspaceDraft.create({
@@ -69,7 +68,7 @@ test("execution stores a visual document beside version 3 and rolls the fixture 
       assert.equal(skipped?.visualDocument, null);
       assert.deepEqual(skipped?.draftData, { hello: true });
 
-      await tx.workspaceDraft.update({ where: { id: "draft_exec_ok" }, data: { draftData: stored!.draftData as Prisma.InputJsonValue } });
+      await tx.workspaceDraft.update({ where: { id: "draft_exec_ok" }, data: { draftData: stored!.draftData as never } });
       const saved = await tx.workspaceDraft.findUnique({ where: { id: "draft_exec_ok" } });
       assert.equal((saved?.visualDocument as { version?: number } | null)?.version, 1);
 

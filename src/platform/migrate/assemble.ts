@@ -291,7 +291,10 @@ export function assembleDraft(value: unknown, adapter: AssembleAdapter, hook: Va
         },
       };
     });
-    if (parsed.value.chrome && pages[0]) pages[0].root.metadata = { ...pages[0].root.metadata, chrome: structuredClone(parsed.value.chrome) };
+    if (parsed.value.chrome && pages[0]) {
+      const metadata: { legacyId: string; chrome?: unknown } = { ...pages[0].root.metadata, chrome: structuredClone(parsed.value.chrome) };
+      pages[0].root.metadata = metadata;
+    }
     return finish(
       { version: 1, pages },
       parsed.value,

@@ -42,6 +42,7 @@ import { activeSiteContext, createSiteState } from "@/components/editor/state/si
 import { breakpointWidth, previewRadioLabel, type BreakpointId } from "@/components/editor/state/breakpoint";
 import { emptyDirty, markChanged, markSaved, shouldWarnBeforeUnload, switchWebsite } from "@/components/editor/state/dirty";
 import { dismissEditorError, editorErrorFromSave, type EditorError } from "@/components/editor/state/errors";
+import { mountEditorStore, unmountEditorStore } from "@/components/editor/state/store";
 import { persistExperience, readExperience, type ExperienceMode } from "@/components/editor/state/experience";
 import { emptySelection, type EditorApi, type MediaItem, type Publication, type RailPanel, type SaveState, type Selection, type Snapshot, type Viewport } from "@/components/editor/types";
 import type { SiteContext } from "@/platform/context";
@@ -94,6 +95,10 @@ export function EditorShell(props: {
   useEffect(() => {
     setExperience(readExperience(window.localStorage, props.websiteId, props.canAdminister));
   }, [props.websiteId, props.canAdminister]);
+  useEffect(() => {
+    mountEditorStore(props.websiteId);
+    return () => unmountEditorStore(props.websiteId, window.sessionStorage);
+  }, [props.websiteId]);
   const [zoom, setZoom] = useState<Zoom>("fit");
   const [scale, setScale] = useState(1);
   const [site, setSite] = useState(props.initialSite);

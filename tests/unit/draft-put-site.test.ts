@@ -35,7 +35,6 @@ test("a mismatched website id is rejected and a version 3 body leaves the visual
 });
 
 test("a version 3 save does not clear the stored visual document", async () => {
-  const { Prisma } = await import("../../src/generated/prisma/client.ts");
   const { prisma } = await import("../../src/lib/prisma.ts");
   class Rollback extends Error {}
   const row = await prisma.workspaceDraft.findUnique({ where: { id: "draft_0ddb6f7c7f7a" } });
@@ -48,7 +47,7 @@ test("a version 3 save does not clear the stored visual document", async () => {
       if (!version3.ok) return;
       await tx.workspaceDraft.update({
         where: { id: row.id },
-        data: version3.visualDocument === undefined ? { draftData: version3.site as Prisma.InputJsonValue } : { draftData: version3.site as Prisma.InputJsonValue, visualDocument: version3.visualDocument as Prisma.InputJsonValue },
+        data: version3.visualDocument === undefined ? { draftData: version3.site as never } : { draftData: version3.site as never, visualDocument: version3.visualDocument as never },
       });
       const kept = await tx.workspaceDraft.findUnique({ where: { id: row.id } });
       assert.equal(JSON.stringify(kept?.visualDocument), before);
@@ -57,7 +56,7 @@ test("a version 3 save does not clear the stored visual document", async () => {
       if (!both.ok || both.visualDocument === undefined) return;
       await tx.workspaceDraft.update({
         where: { id: row.id },
-        data: { draftData: both.site as Prisma.InputJsonValue, visualDocument: both.visualDocument as Prisma.InputJsonValue },
+        data: { draftData: both.site as never, visualDocument: both.visualDocument as never },
       });
       const written = await tx.workspaceDraft.findUnique({ where: { id: row.id } });
       assert.equal((written?.visualDocument as { version?: number } | null)?.version, 1);

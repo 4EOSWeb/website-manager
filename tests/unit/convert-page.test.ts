@@ -17,7 +17,7 @@ test("every version 3 page becomes one visual page with SEO and pending sections
   );
   assert.equal(converted.warnings.length, 0);
   for (const [index, page] of converted.pages.entries()) {
-    const source = parsed.value.pages[index]!;
+    const source: { id: string; title: string; seoTitle?: string; metaDescription?: string; shareImage?: string } = parsed.value.pages[index]!;
     assert.equal(page.id, source.id);
     assert.equal(page.title, source.title);
     assert.equal(page.metadata.seoTitle, source.seoTitle);

@@ -1,12 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { canRedoScoped, emptyHistory, redoScoped, rememberScoped, undoScoped } from "../../src/lib/history.ts";
+import { canRedoScoped, emptyHistory, redoScoped, rememberScoped, undoScoped, type ScopedSnapshot } from "../../src/lib/history.ts";
 
 const before = { version: 1, pages: [{ id: "page_home", title: "Home" }] };
 const edited = { version: 1, pages: [{ id: "page_home", title: "Edited" }] };
 
 test("undo restores the previous visual document", () => {
-  const history = rememberScoped(emptyHistory<{ text: string }>(), "web_quantum_age", { text: "Home" }, before);
+  const history = rememberScoped(emptyHistory<ScopedSnapshot<{ text: string }>>(), "web_quantum_age", { text: "Home" }, before);
   const undone = undoScoped(history, "web_quantum_age", { text: "Edited" }, edited);
   assert.ok(undone);
   assert.deepEqual(undone.visualDocument, before);
@@ -15,7 +15,7 @@ test("undo restores the previous visual document", () => {
 });
 
 test("undo does not cross websites", () => {
-  const history = rememberScoped(emptyHistory<{ text: string }>(), "web_quantum_age", { text: "Home" }, before);
+  const history = rememberScoped(emptyHistory<ScopedSnapshot<{ text: string }>>(), "web_quantum_age", { text: "Home" }, before);
   const undone = undoScoped(history, "web_other", { text: "Edited" }, edited);
   assert.equal(undone, null);
   assert.equal(history.past.length, 1);
@@ -23,7 +23,7 @@ test("undo does not cross websites", () => {
 });
 
 test("redo returns the edited visual document and a new edit drops it", () => {
-  const history = rememberScoped(emptyHistory<{ text: string }>(), "web_quantum_age", { text: "Home" }, before);
+  const history = rememberScoped(emptyHistory<ScopedSnapshot<{ text: string }>>(), "web_quantum_age", { text: "Home" }, before);
   const undone = undoScoped(history, "web_quantum_age", { text: "Edited" }, edited);
   assert.ok(undone);
   assert.equal(canRedoScoped(undone.history, "web_quantum_age"), true);
@@ -40,7 +40,7 @@ test("redo returns the edited visual document and a new edit drops it", () => {
 });
 
 test("a version 3 edit keeps a value snapshot without a visual document", () => {
-  const history = rememberScoped(emptyHistory<{ text: string }>(), "web_quantum_age", { text: "Home" });
+  const history = rememberScoped(emptyHistory<ScopedSnapshot<{ text: string }>>(), "web_quantum_age", { text: "Home" });
   const undone = undoScoped(history, "web_quantum_age", { text: "Edited" });
   assert.ok(undone);
   assert.equal(undone.value.text, "Home");

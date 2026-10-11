@@ -69,18 +69,18 @@ export function convertPages(draft: { pages: Version3PageInput[] }): { pages: Co
       root: {
         id: rootId(page.id),
         type: "section" as const,
-        componentId: "section",
+        componentId: "section" as const,
         props: {},
         styles: {},
         responsive: {},
         children: [] as [],
-        visibility: { hidden: false, hideOn: [] as [] },
-        locked: { locked: false },
+        visibility: { hidden: false as const, hideOn: [] as [] },
+        locked: { locked: false as const },
         metadata: { pending: "sections" as const },
         layout: { mode: "flow" as const, direction: "vertical" as const, gap: 16 },
         source: { origin: "migration" as const, providerManaged: false },
       },
-    };
+    } as ConvertedPage;
   });
   return { pages, warnings };
 }
