@@ -594,6 +594,33 @@ Routes on the version 3 draft: `/`, `/about`, `/approach`, `/contact`, `/insight
 - Migration risk: Overwriting `draft_data` before backups exist would lose edits. The older row must not be treated as a version 3 site.
 - Test required: `tests/unit/migrate-qa-draft.test.ts` on a copy, not on this database. `updated_at` was not changed by this read. Opening the editor earlier in the audit did move the timestamp; the payload still matched the e2e snapshot.
 
+## Platform sweep
+
+Command, run after step 6.25:
+
+`rg -i "quantum|insights|heroimage|brand-mark|formula|plum|RESERVED" src/platform`
+
+The command prints two generic contract identifiers:
+
+- `src/platform/adapter/page-rules.ts` field `reservedRoutes`
+- `src/platform/adapter/articles.ts` value `html-preserved`, which contains the letters of “reserved”
+
+Neither line names a website, a route, a color, or a component. They are not ban comments, so they were left as the contract words. A search for `quantum`, `insights`, `heroImage`, `brand-mark`, `formula`, and `plum` under `src/platform` is empty.
+
+Hub files that still contain those words, and the step that removes each:
+
+- `src/lib/flow-seed.ts` re-exports the site seed. Remove in step 19.25.
+- `src/lib/publish.ts` and `src/lib/publish-git.ts` keep the Insights page paths inside the fallback file list. Remove in step 19.25.
+- `src/lib/content-schema.ts` keeps version 3 fields (`heroImage`, `brand-mark`, `plum`, `formula`, Insights copy, and the built-in route list). Remove in step 19.25.
+- `src/lib/page-documents.ts` and `src/lib/editor-ops.ts` still read those version 3 fields, including `heroImage` and `RESERVED`. Route checks move in step 14.10. The version 3 readers move in step 19.25.
+- `src/lib/manifest.ts` still requires an Insights collection. The compatibility reader stays until step 19.25.
+- `src/lib/library.ts` still lists “Insights summary” and “Search pages and Insights”. The summary entry leaves in step 14.1. Registered custom items leave in step 9.27.
+- `src/lib/workspace.ts` still clones `quantum-age` and points at `overlays/quantum-age`. Repository isolation is step 16.12. The connection flow replaces the fixed overlay in step 17.8.
+- `src/components/editor-shell.tsx` still matches `/insights/`. That check leaves in steps 8.3 and 14.19. `heroImage` reads stay until step 19.25.
+- `src/components/editor/dialogs.tsx` still offers “Insights landing page”. That option leaves in step 14.8.
+- `src/components/editor/panels.tsx` still labels Insights drafts, `brand-mark`, and the plum token. Article labels leave in step 14.19. Color tokens are isolated in step 16.2. The version 3 kind labels leave in step 19.25.
+- `src/components/editor/inspector/index.tsx`, `page.tsx`, and `shared.tsx` still label Insights posts, `brand-mark`, and plum. Those labels leave with the version 3 inspector in step 19.25. Provider-managed page copy is step 14.19.
+
 ## Temporary compatibility
 
 These re-exports keep current callers working until step 19.25. They are not platform behavior.
