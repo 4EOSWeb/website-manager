@@ -2,6 +2,7 @@ import { quantumAgeBreakpoints } from "./breakpoints";
 import { quantumAgeCommands } from "./commands";
 import { quantumAgeFooter } from "./components/footer";
 import { quantumAgeHeader } from "./components/header";
+import { quantumAgeHero } from "./components/hero";
 import { quantumAgeFonts } from "./fonts";
 import { quantumAgeMetadata } from "./metadata";
 import { quantumAgeNavigation } from "./navigation";
@@ -21,7 +22,7 @@ const adapter = {
   fonts: quantumAgeFonts,
   breakpoints: quantumAgeBreakpoints,
   templates: quantumAgeTemplates,
-  components: { components: [quantumAgeHeader, quantumAgeFooter] },
+  components: { components: [quantumAgeHeader, quantumAgeFooter, quantumAgeHero] },
 };
 
 export default adapter;
