@@ -599,6 +599,7 @@ Routes on the version 3 draft: `/`, `/about`, `/approach`, `/contact`, `/insight
 These re-exports keep current callers working until step 19.25. They are not platform behavior.
 
 - `src/lib/flow-seed.ts` re-exports `defaultChrome`, `defaultSiteDocument`, `homeSections`, `marketingSections`, and `upgradeDraft` from `adapters/quantum-age/seed.ts`. Remove that re-export in step 19.25. Do not run the seed against `workspace_drafts`.
+- `src/lib/publish.ts` keeps `ADAPTER_FILES` as a fallback when discovery does not return an allowlist for the website id. `submitForPublish` records a warning and uses that list. Remove the fallback constant in step 19.25. The Quantum Age list lives in `adapters/quantum-age/publish-allowlist.ts`.
 
 ## Synthesis
 

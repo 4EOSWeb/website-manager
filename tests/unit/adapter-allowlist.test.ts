@@ -14,5 +14,5 @@ test("allowlist prefixes stay on a directory boundary", () => {
   assert.equal(source.includes("insights"), false);
   const publish = readFileSync(new URL("../../src/lib/publish.ts", import.meta.url), "utf8");
   assert.equal(publish.includes("export const ADAPTER_FILES") || publish.includes("ADAPTER_FILES"), true);
-  assert.equal(publish.includes("assertAllowed"), false);
+  assert.equal(publish.includes("step 19.25"), true);
 });

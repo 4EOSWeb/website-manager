@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import fs from "node:fs";
+import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { recordAudit } from "@/lib/audit";
 import type { BlogDraft, SiteDraft } from "@/lib/content-schema";
@@ -11,9 +12,14 @@ import { mediaRoot } from "@/lib/media";
 import { prisma } from "@/lib/prisma";
 import { commitAllowedChanges, openPullRequest } from "@/lib/publish-git";
 import { ensureWorkspace, writePreviewContent } from "@/lib/workspace";
+import { assertAllowed } from "@/platform/adapter/allowlist";
+import { discoverAdapters } from "@/platform/discover-adapters";
+import { adapterNotFound } from "@/platform/errors";
+import { err, ok, type Result } from "@/platform/result";
 import type { User, Website } from "@/generated/prisma/client";
 
-const ADAPTER_FILES = [
+/** Temporary fallback until step 19.25 deletes this constant. */
+export const ADAPTER_FILES = [
   "4eos.editor.config.json",
   "4eos.editor.config.ts",
   "src/middleware.ts",
@@ -46,6 +52,93 @@ const ADAPTER_FILES = [
   "src/app/[slug]/page.tsx",
   "src/content/editor/site.json",
 ];
+
+const FALLBACK_WARNING = "No adapter allowlist was loaded. The fallback file list stays until step 19.25.";
+
+export function fallbackPublishAllowlist() {
+  return [...ADAPTER_FILES, "src/content/pages/home.json", "src/content/blog/", "public/media/"];
+}
+
+export function filesForReview(allowlist: string[], candidates: string[]): Result<string[]> {
+  const files: string[] = [];
+  for (const candidate of candidates) {
+    const allowed = assertAllowed(candidate, allowlist);
+    if (!allowed.ok) return allowed;
+    files.push(allowed.value);
+  }
+  return ok(files);
+}
+
+export async function allowlistFromDiscovery(
+  websiteId: string,
+  discovered: Result<string[]>,
+  readAllowlist: (id: string) => Promise<string[] | null>,
+): Promise<{ allowlist: string[]; warning?: string }> {
+  if (!discovered.ok || !discovered.value.includes(websiteId)) {
+    console.warn(FALLBACK_WARNING);
+    return { allowlist: fallbackPublishAllowlist(), warning: FALLBACK_WARNING };
+  }
+  const list = await readAllowlist(websiteId);
+  if (!list || list.length === 0) {
+    console.warn(FALLBACK_WARNING);
+    return { allowlist: fallbackPublishAllowlist(), warning: FALLBACK_WARNING };
+  }
+  return { allowlist: list };
+}
+
+function readMetadataId(folder: string) {
+  const file = path.join(folder, "metadata.ts");
+  if (!fs.existsSync(file)) return null;
+  return fs.readFileSync(file, "utf8").match(/\bid:\s*"([^"]+)"/)?.[1] ?? null;
+}
+
+function readPublishAllowlistFile(file: string) {
+  if (!fs.existsSync(file)) return null;
+  const match = fs.readFileSync(file, "utf8").match(/export const publishAllowlist = (\[[\s\S]*?\n\]);/);
+  if (!match?.[1]) return null;
+  try {
+    const parsed = JSON.parse(match[1]) as unknown;
+    return Array.isArray(parsed) && parsed.every((item) => typeof item === "string") ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+async function readAdapterAllowlist(websiteId: string): Promise<string[] | null> {
+  const root = path.join(process.cwd(), "adapters");
+  if (!fs.existsSync(root)) return null;
+  const entries = await readdir(root, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const folder = path.join(root, entry.name);
+    if (readMetadataId(folder) !== websiteId) continue;
+    return readPublishAllowlistFile(path.join(folder, "publish-allowlist.ts"));
+  }
+  return null;
+}
+
+async function idsFromMetadata(root: string) {
+  const ids: string[] = [];
+  const entries = await readdir(root, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const id = readMetadataId(path.join(root, entry.name));
+    if (id) ids.push(id);
+  }
+  return ids;
+}
+
+export async function resolvePublishAllowlist(websiteId: string) {
+  const root = path.join(process.cwd(), "adapters");
+  if (!fs.existsSync(root)) return allowlistFromDiscovery(websiteId, err(adapterNotFound()), readAdapterAllowlist);
+  let discovered: Result<string[]>;
+  try {
+    discovered = await discoverAdapters(root);
+  } catch {
+    discovered = ok(await idsFromMetadata(root));
+  }
+  return allowlistFromDiscovery(websiteId, discovered, readAdapterAllowlist);
+}
 
 function mediaFiles(websiteId: string, names: Set<string>) {
   const files: { relativePath: string; contents: string | Buffer }[] = [];
@@ -92,12 +185,16 @@ export async function submitForPublish(options: {
   const branch = `editor/${slug}/${randomBytes(4).toString("hex")}`;
   const mediaNames = collectMedia(options.site);
   for (const post of options.posts) collectMedia(post, mediaNames);
-  const files = [
+  const resolved = await resolvePublishAllowlist(options.website.id);
+  const candidates = [
     ...ADAPTER_FILES,
     "src/content/pages/home.json",
     ...options.posts.map((post) => `src/content/blog/${post.slug}.json`),
     ...[...mediaNames].filter((filename) => fs.existsSync(path.join(dir, "public", "media", filename))).map((filename) => `public/media/${filename}`),
   ];
+  const reviewed = filesForReview(resolved.allowlist, candidates);
+  if (!reviewed.ok) throw new Error(reviewed.error.message);
+  const files = reviewed.value;
   const committed = await commitAllowedChanges({
     cwd: dir,
     branch,
