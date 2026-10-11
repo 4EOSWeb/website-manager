@@ -36,7 +36,9 @@ import {
 } from "@/lib/editor-ops";
 import { blockFitsInZone, createId } from "@/lib/page-documents";
 import { entryById, recommendedFor, sectionForEntry, type LibraryEntry } from "@/lib/library";
+import { activeSiteContext, createSiteState } from "@/components/editor/state/site";
 import { emptySelection, VIEWPORTS, type EditorApi, type MediaItem, type Publication, type RailPanel, type SaveState, type Selection, type Snapshot, type Viewport } from "@/components/editor/types";
+import type { SiteContext } from "@/platform/context";
 import { StatusBar, ToolRail, TopBar, type Zoom } from "@/components/editor/chrome";
 import { Canvas } from "@/components/editor/canvas";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
@@ -55,6 +57,7 @@ const READY_TIMEOUT = 20000;
 
 export function EditorShell(props: {
   websiteId: string;
+  siteContext: SiteContext;
   adapterId: string | null;
   adapter: Record<string, unknown> | null;
   websiteName: string;
@@ -69,6 +72,7 @@ export function EditorShell(props: {
   previewAccess: string;
   publications: Publication[];
 }) {
+  const [siteState] = useState(() => createSiteState(props.siteContext));
   const [adapterId] = useState(props.adapterId);
   const [adapter] = useState(props.adapter);
   const [path, setPath] = useState("/");
@@ -865,6 +869,7 @@ export function EditorShell(props: {
   const mediaWithUse = media.map((item) => ({ ...item, usedBy: imageUsage(site, posts, item.filename) }));
   const api: EditorApi = {
     websiteId: props.websiteId,
+    siteContext: activeSiteContext(siteState.site, props.websiteId),
     adapterId,
     adapter,
     site,

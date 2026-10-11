@@ -1,4 +1,5 @@
 import type { BlogDraft, PageDocument, SiteDraft } from "@/lib/content-schema";
+import type { SiteContext } from "@/platform/context";
 
 export type MediaItem = {
   src: string;
@@ -41,6 +42,7 @@ export const VIEWPORTS: { id: Viewport; label: string; width: number }[] = [
 
 export type EditorApi = {
   websiteId: string;
+  siteContext: SiteContext;
   adapterId: string | null;
   adapter: Record<string, unknown> | null;
   site: SiteDraft;
