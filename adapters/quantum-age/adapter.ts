@@ -13,6 +13,7 @@ import { quantumAgeFonts } from "./fonts";
 import { quantumAgeMedia } from "./media";
 import { quantumAgeMetadata } from "./metadata";
 import { quantumAgeNavigation } from "./navigation";
+import { quantumAgePageCapabilities } from "./page-capabilities";
 import { quantumAgePageRules } from "./page-rules";
 import { quantumAgeRoutes } from "./routes";
 import { quantumAgeTemplates } from "./templates";
@@ -24,6 +25,7 @@ const adapter = {
   commands: quantumAgeCommands,
   routes: quantumAgeRoutes,
   pageRules: quantumAgePageRules,
+  pageCapabilities: quantumAgePageCapabilities,
   navigation: quantumAgeNavigation,
   theme: quantumAgeTheme,
   fonts: quantumAgeFonts,
