@@ -4,9 +4,11 @@ import { breakpointWidth, migrateButton, migrateSection, migrateText } from "../
 import { validateDocumentHook } from "../adapters/quantum-age/validate.ts";
 import type { SiteContext } from "../src/platform/context.ts";
 import { assembleDraft, type AssembleReport } from "../src/platform/migrate/assemble.ts";
+import { draftChecksum } from "../src/platform/migrate/checksum.ts";
 
 const websiteId = "web_quantum_age";
 const backup = process.argv.includes("--backup");
+const execute = process.argv.includes("--execute");
 
 if (!process.env.DATABASE_URL) {
   try {
@@ -43,9 +45,46 @@ const rows = await client.query<{ id: string; draft_data: unknown }>(
   [websiteId],
 );
 
+function refuseCopy(body: string) {
+  for (const row of rows.rows) {
+    const data = row.draft_data;
+    if (!data || typeof data !== "object") continue;
+    const record = data as Record<string, unknown>;
+    for (const key of ["tagline", "positioning"] as const) {
+      const value = record[key];
+      if (typeof value === "string" && value.length > 12 && body.includes(value)) return true;
+    }
+  }
+  return false;
+}
+
+if (execute) {
+  const dryRun = JSON.parse(readFileSync(new URL("../docs/migration/dry-run.json", import.meta.url), "utf8"));
+  const { executeMigration } = await import("../src/platform/migrate/execute.ts");
+  const result = await executeMigration({
+    websiteId,
+    dryRun,
+    rows: rows.rows.map((row) => ({ id: row.id, draftData: row.draft_data })),
+    adapter,
+    hook: validateDocumentHook,
+    context,
+  });
+  await client.end();
+  const body = JSON.stringify({ websiteId, ok: result.ok, refused: result.refused, drafts: result.drafts }, null, 2);
+  if (refuseCopy(body)) {
+    console.error("Execute report contains source copy. It was not written.");
+    process.exit(1);
+  }
+  mkdirSync(new URL("../docs/migration/", import.meta.url), { recursive: true });
+  writeFileSync(new URL("../docs/migration/execute.json", import.meta.url), `${body}\n`);
+  for (const draft of result.drafts) console.log(`${draft.id} status=${draft.status}`);
+  if (!result.ok) process.exit(1);
+  process.exit(0);
+}
+
 const drafts = rows.rows.map((row) => {
   const report = assembleDraft(row.draft_data, adapter, validateDocumentHook, context);
-  return { id: row.id, ...publishable(report) };
+  return { id: row.id, checksum: draftChecksum(row.draft_data), ...publishable(report) };
 });
 
 if (backup) {
@@ -56,17 +95,9 @@ if (backup) {
 await client.end();
 
 const body = JSON.stringify({ websiteId, drafts }, null, 2);
-for (const row of rows.rows) {
-  const data = row.draft_data;
-  if (!data || typeof data !== "object") continue;
-  const record = data as Record<string, unknown>;
-  for (const key of ["tagline", "positioning"] as const) {
-    const value = record[key];
-    if (typeof value === "string" && value.length > 12 && body.includes(value)) {
-      console.error("Dry-run report contains source copy. It was not written.");
-      process.exit(1);
-    }
-  }
+if (refuseCopy(body)) {
+  console.error("Dry-run report contains source copy. It was not written.");
+  process.exit(1);
 }
 
 mkdirSync(new URL("../docs/migration/", import.meta.url), { recursive: true });

@@ -3,6 +3,7 @@
   "drafts": [
     {
       "id": "draft_0ddb6f7c7f7a",
+      "checksum": "ad34a98cea9677d4da2b6d1a56d18074907e5ddafcb955fe950d21fd04308742",
       "ok": true,
       "detected": "3",
       "shape": "site",
@@ -1418,6 +1419,7 @@
     },
     {
       "id": "draft_de7f110716c9",
+      "checksum": "4624b449525b051458a633a137013e10872847e881c98bc590f117d8ee7d3d8a",
       "ok": true,
       "detected": "unknown",
       "shape": "home",

@@ -33,6 +33,7 @@ export async function PUT(request: Request, { params }: Params) {
         pageId: home?.id,
         draftData: site,
       },
+      // A version 3 save replaces draft_data only. visual_document stays until step 19.25.
       update: { draftData: site },
     });
     for (const page of site.pages) {
