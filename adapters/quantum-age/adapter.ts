@@ -10,6 +10,7 @@ import { quantumAgeHeader } from "./components/header";
 import { quantumAgeLogo } from "./components/logo";
 import { quantumAgeHero } from "./components/hero";
 import { quantumAgeFonts } from "./fonts";
+import { quantumAgeMedia } from "./media";
 import { quantumAgeMetadata } from "./metadata";
 import { quantumAgeNavigation } from "./navigation";
 import { quantumAgePageRules } from "./page-rules";
@@ -30,6 +31,7 @@ const adapter = {
   templates: quantumAgeTemplates,
   components: { components: [quantumAgeHeader, quantumAgeFooter, quantumAgeHero, quantumAgeButton, quantumAgeCard, quantumAgeForm, quantumAgeInsightsSummary, quantumAgeLogo] },
   articles: quantumAgeArticles,
+  media: quantumAgeMedia,
 };
 
 export default adapter;
