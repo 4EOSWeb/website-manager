@@ -627,6 +627,7 @@ These re-exports keep current callers working until step 19.25. They are not pla
 
 - `src/lib/flow-seed.ts` re-exports `defaultChrome`, `defaultSiteDocument`, `homeSections`, `marketingSections`, and `upgradeDraft` from `adapters/quantum-age/seed.ts`. Remove that re-export in step 19.25. Do not run the seed against `workspace_drafts`.
 - `src/lib/publish.ts` keeps `ADAPTER_FILES` as a fallback when discovery does not return an allowlist for the website id. `submitForPublish` records a warning and uses that list. Remove the fallback constant in step 19.25. The Quantum Age list lives in `adapters/quantum-age/publish-allowlist.ts`.
+- `src/platform/migrate/parse-v3.ts` imports `siteDraftSchema` from `src/lib/content-schema.ts`. That import is allowed only in `src/platform/migrate`, and the file header says it is removed in step 19.25. `src/platform/document` does not import the version 3 schema. The parser returns schema issues and does not convert the value.
 
 ## Synthesis
 
