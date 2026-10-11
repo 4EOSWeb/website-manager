@@ -594,6 +594,12 @@ Routes on the version 3 draft: `/`, `/about`, `/approach`, `/contact`, `/insight
 - Migration risk: Overwriting `draft_data` before backups exist would lose edits. The older row must not be treated as a version 3 site.
 - Test required: `tests/unit/migrate-qa-draft.test.ts` on a copy, not on this database. `updated_at` was not changed by this read. Opening the editor earlier in the audit did move the timestamp; the payload still matched the e2e snapshot.
 
+## Temporary compatibility
+
+These re-exports keep current callers working until step 19.25. They are not platform behavior.
+
+- `src/lib/flow-seed.ts` re-exports `defaultChrome`, `defaultSiteDocument`, `homeSections`, `marketingSections`, and `upgradeDraft` from `adapters/quantum-age/seed.ts`. Remove that re-export in step 19.25. Do not run the seed against `workspace_drafts`.
+
 ## Synthesis
 
 ### Platform modules
