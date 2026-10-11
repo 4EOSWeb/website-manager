@@ -23,7 +23,7 @@ test("quantum age metadata matches the editor config", () => {
   assert.deepEqual(quantumAgeMetadata.repository, { owner: config.github.owner, name: config.github.repository });
   assert.equal(quantumAgeMetadata.defaultBranch, config.defaultBranch);
   assert.deepEqual(quantumAgeAdapter.site, quantumAgeMetadata);
-  assert.equal("version" in quantumAgeAdapter, false);
+  assert.equal(quantumAgeAdapter.version, 1);
   const scan = spawnSync("rg", ["-n", "adapters/quantum-age", "src/platform", "src/components"], { encoding: "utf8" });
   assert.equal(scan.stdout, "");
   assert.equal(scan.status, 1);

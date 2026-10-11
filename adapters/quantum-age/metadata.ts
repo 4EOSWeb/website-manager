@@ -1,4 +1,4 @@
-/** Site identity copied from the editor config. The full adapter parse waits for step 6.25. */
+/** Site identity copied from the editor config. */
 
 export const quantumAgeMetadata = {
   id: "web_quantum_age",
