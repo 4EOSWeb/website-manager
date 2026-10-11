@@ -13,7 +13,8 @@ test("quantum age article behavior stays out of the platform", () => {
   assert.equal(quantumAgeArticles.body, "html-preserved");
   assert.equal(componentDefinitionSchema.safeParse(quantumAgeInsightsSummary).success, true);
   const shell = readFileSync(new URL("../../src/components/editor-shell.tsx", import.meta.url), "utf8");
-  assert.equal(shell.includes("/insights/"), true);
+  assert.equal(shell.includes("/insights/"), false);
+  assert.equal(shell.includes("articlePatternFrom"), true);
   const scan = spawnSync("rg", ["insights", "src/platform"], { encoding: "utf8" });
   assert.equal(scan.stdout, "");
   assert.equal(scan.status, 1);

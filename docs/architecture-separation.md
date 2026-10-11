@@ -616,7 +616,7 @@ Hub files that still contain those words, and the step that removes each:
 - `src/lib/manifest.ts` still requires an Insights collection. The compatibility reader stays until step 19.25.
 - `src/lib/library.ts` still lists “Insights summary” and “Search pages and Insights”. The summary entry leaves in step 14.1. Registered custom items leave in step 9.27.
 - `src/lib/workspace.ts` still clones `quantum-age` and points at `overlays/quantum-age`. Repository isolation is step 16.12. The connection flow replaces the fixed overlay in step 17.8.
-- `src/components/editor-shell.tsx` still matches `/insights/`. That check leaves in steps 8.3 and 14.19. `heroImage` reads stay until step 19.25.
+- `src/components/editor-shell.tsx` opens articles from the adapter route pattern. The page list in `panels.tsx` still matches `/insights/` until step 14.19. `heroImage` reads stay until step 19.25.
 - `src/components/editor/dialogs.tsx` still offers “Insights landing page”. That option leaves in step 14.8.
 - `src/components/editor/panels.tsx` still labels Insights drafts, `brand-mark`, and the plum token. Article labels leave in step 14.19. Color tokens are isolated in step 16.2. The version 3 kind labels leave in step 19.25.
 - `src/components/editor/inspector/index.tsx`, `page.tsx`, and `shared.tsx` still label Insights posts, `brand-mark`, and plum. Those labels leave with the version 3 inspector in step 19.25. Provider-managed page copy is step 14.19.

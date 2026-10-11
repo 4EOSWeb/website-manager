@@ -63,6 +63,7 @@ export default async function EditorPage({ params }: { params: Promise<{ website
       siteContext={siteContext}
       adapterId={adapter?.id ?? null}
       adapter={adapter?.fields ?? null}
+      visualDocument={ownedDraft?.visualDocument ?? null}
       websiteName={actor.website.name}
       initialSite={site}
       initialPosts={posts.length > 0 ? posts : []}

@@ -36,6 +36,7 @@ import {
 } from "@/lib/editor-ops";
 import { blockFitsInZone, createId } from "@/lib/page-documents";
 import { entryById, recommendedFor, sectionForEntry, type LibraryEntry } from "@/lib/library";
+import { articlePatternFrom, articleRouteFor, articleSlug, selectActivePage } from "@/components/editor/state/page";
 import { activeSiteContext, createSiteState } from "@/components/editor/state/site";
 import { emptySelection, VIEWPORTS, type EditorApi, type MediaItem, type Publication, type RailPanel, type SaveState, type Selection, type Snapshot, type Viewport } from "@/components/editor/types";
 import type { SiteContext } from "@/platform/context";
@@ -60,6 +61,7 @@ export function EditorShell(props: {
   siteContext: SiteContext;
   adapterId: string | null;
   adapter: Record<string, unknown> | null;
+  visualDocument: unknown;
   websiteName: string;
   initialSite: SiteDraft;
   initialPosts: BlogDraft[];
@@ -118,7 +120,13 @@ export function EditorShell(props: {
   const toastId = useRef(0);
 
   const page = pageByRoute(site, path);
-  const activePost = posts.find((item) => path === `/insights/${item.slug}`);
+  const articleRoute = articlePatternFrom(adapter);
+  const pageState = selectActivePage(
+    path,
+    props.visualDocument,
+    site.pages.map((item) => ({ id: item.id, route: item.route, title: item.title })),
+  );
+  const activePost = articleRoute ? posts.find((item) => articleSlug(articleRoute, path) === item.slug) : undefined;
   const managedRoute = !page && !activePost;
   const section = page?.sections.find((item) => item.id === selection.sectionId);
 
@@ -544,7 +552,7 @@ export function EditorShell(props: {
     skipPost.current = true;
     setPosts((items) => [post, ...items]);
     setSave("saved");
-    openPage(`/insights/${post.slug}`);
+    if (articleRoute) openPage(articleRouteFor(articleRoute, post.slug));
   }
 
   async function createPageFrom(form: PageForm) {
@@ -894,7 +902,7 @@ export function EditorShell(props: {
   const recommendedHere = recommendedFor(page?.sections ?? [], section?.type === "flow" && !selection.locked);
   const templates = site.sectionTemplates.map((item) => ({ id: item.id, name: item.name }));
   const canPlaceImage = Boolean(selection.sectionId && (selection.kind === "image" || imageSrc(selection.sectionId, selection.itemId)));
-  const pageTitle = page?.title ?? activePost?.title ?? (path === "/" ? "Home" : path);
+  const pageTitle = pageState?.title ?? page?.title ?? activePost?.title ?? (path === "/" ? "Home" : path);
   const statusMessage = !props.canEdit
     ? "You can look around, but this account cannot change the site."
     : managedRoute
