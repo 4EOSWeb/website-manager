@@ -7,6 +7,7 @@ import type { SiteContext } from "../../src/platform/context.ts";
 import { nodeSchema } from "../../src/platform/document/node.ts";
 import { visualDocumentSchema } from "../../src/platform/document/document.ts";
 import { assembleDraft } from "../../src/platform/migrate/assemble.ts";
+import { compareMigration, legacyLocks } from "../../src/platform/migrate/compare.ts";
 import { redactedDraftV3 } from "./fixtures/redacted-draft-v3.ts";
 
 const context: SiteContext = {
@@ -44,6 +45,22 @@ test("a redacted version 3 draft assembles without writing copy into the report"
   const { document, ...published } = report;
   assert.equal(JSON.stringify(published).includes("Redacted"), false);
   assert.equal(document == null, false);
+});
+
+test("detail text and chrome copy stay in the assembled document", () => {
+  const draft = structuredClone(redactedDraftV3) as unknown as {
+    chrome: { cookieText: string; footer: { copyright: string } };
+    pages: Array<{ sections: Array<{ blocks?: Array<Record<string, unknown>> }> }>;
+  };
+  draft.chrome.cookieText = "Unique cookie sentence for migration";
+  draft.chrome.footer.copyright = "Unique copyright sentence for migration";
+  const block = draft.pages[0]?.sections[0]?.blocks?.[0];
+  assert.ok(block);
+  block.detail = { text: "Unique detail sentence for migration", marks: [] };
+  const report = assembleDraft(draft, adapter, validateDocumentHook, context);
+  assert.equal(report.ok, true, JSON.stringify(report.errors));
+  const compared = compareMigration(draft, report.document, legacyLocks(draft));
+  assert.equal(compared.ok, true, JSON.stringify(compared.missing));
 });
 
 test("a home-shaped draft becomes one visual page and an unknown object is rejected", () => {

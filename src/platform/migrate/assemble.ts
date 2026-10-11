@@ -56,7 +56,11 @@ function blockNode(block: Record<string, unknown>, adapter: AssembleAdapter, use
   const text = convertText(block, adapter);
   const button = text ? null : convertButton(block, adapter);
   const base = text ?? button;
-  if (base) return { ...base, id: alloc("node", seed, used), metadata: { ...base.metadata, legacyId } };
+  if (base) {
+    const props = { ...(base.props as Record<string, unknown>) };
+    if (block.detail && typeof block.detail === "object") props.detail = structuredClone(block.detail);
+    return { ...base, props, id: alloc("node", seed, used), metadata: { ...base.metadata, legacyId } };
+  }
   const rich = readText(block);
   const locked = block.locked === true || block.providerLocked === true;
   return {
@@ -287,6 +291,7 @@ export function assembleDraft(value: unknown, adapter: AssembleAdapter, hook: Va
         },
       };
     });
+    if (parsed.value.chrome && pages[0]) pages[0].root.metadata = { ...pages[0].root.metadata, chrome: structuredClone(parsed.value.chrome) };
     return finish(
       { version: 1, pages },
       parsed.value,
