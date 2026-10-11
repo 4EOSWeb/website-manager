@@ -19,6 +19,8 @@ test("a missing site id names that field", () => {
   const source = readFileSync(new URL("../../src/platform/adapter/errors.ts", import.meta.url), "utf8");
   assert.equal(/quantum|insights|plum/i.test(source), false);
   const route = readFileSync(new URL("../../src/app/api/sites/[websiteId]/draft/route.ts", import.meta.url), "utf8");
-  assert.equal(route.includes("zodFieldErrors"), true);
-  assert.equal(route.includes("siteDraftSchema"), true);
+  const reader = readFileSync(new URL("../../src/lib/draft-put.ts", import.meta.url), "utf8");
+  assert.equal(route.includes("readDraftPut"), true);
+  assert.equal(reader.includes("zodFieldErrors"), true);
+  assert.equal(reader.includes("siteDraftSchema"), true);
 });

@@ -13,7 +13,9 @@ test("quantum age validation warns on a missing root and does not require a hero
   assert.equal(source.includes('preset: "hero"'), false);
   assert.equal(source.includes("preset"), false);
   const route = readFileSync(new URL("../../src/app/api/sites/[websiteId]/draft/route.ts", import.meta.url), "utf8");
-  assert.equal(route.includes("siteDraftSchema"), true);
+  const reader = readFileSync(new URL("../../src/lib/draft-put.ts", import.meta.url), "utf8");
+  assert.equal(route.includes("readDraftPut"), true);
+  assert.equal(reader.includes("siteDraftSchema"), true);
   assert.equal(route.includes("adapters/quantum-age/validate"), false);
 
   const rooted = validateDocumentHook(stackedPage, fakeContext("web_quantum_age"));

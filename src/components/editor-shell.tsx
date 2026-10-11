@@ -96,6 +96,7 @@ export function EditorShell(props: {
   const [zoom, setZoom] = useState<Zoom>("fit");
   const [scale, setScale] = useState(1);
   const [site, setSite] = useState(props.initialSite);
+  const [visualDocument] = useState<unknown>(props.visualDocument);
   const [posts, setPosts] = useState(props.initialPosts);
   const history = useEditorHistory<Snapshot>(props.websiteId);
   const [media, setMedia] = useState(props.media);
@@ -138,7 +139,7 @@ export function EditorShell(props: {
   const articleRoute = articlePatternFrom(adapter);
   const pageState = selectActivePage(
     path,
-    props.visualDocument,
+    visualDocument,
     site.pages.map((item) => ({ id: item.id, route: item.route, title: item.title })),
   );
   const activePost = articleRoute ? posts.find((item) => articleSlug(articleRoute, path) === item.slug) : undefined;
@@ -222,7 +223,11 @@ export function EditorShell(props: {
         const response = await fetch(`/api/sites/${props.websiteId}/draft`, {
           method: "PUT",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify(next),
+          body: JSON.stringify({
+            websiteId: props.websiteId,
+            draft: next,
+            ...(visualDocument == null ? {} : { visualDocument }),
+          }),
         });
         const body = (await response.json().catch(() => ({}))) as { message?: string };
         if (!response.ok) {
@@ -242,7 +247,7 @@ export function EditorShell(props: {
         return false;
       }
     },
-    [notify, props.websiteId],
+    [notify, props.websiteId, visualDocument],
   );
 
   useEffect(() => {

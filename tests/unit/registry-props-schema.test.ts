@@ -17,6 +17,8 @@ test("strict prop schemas name the extra field", () => {
   }
   assert.equal(validateProps(definition, { label: "Go" }).ok, true);
   const route = readFileSync(new URL("../../src/app/api/sites/[websiteId]/draft/route.ts", import.meta.url), "utf8");
-  assert.equal(route.includes("siteDraftSchema"), true);
-  assert.equal(route.includes("zodFieldErrors"), true);
+  const reader = readFileSync(new URL("../../src/lib/draft-put.ts", import.meta.url), "utf8");
+  assert.equal(route.includes("readDraftPut"), true);
+  assert.equal(reader.includes("siteDraftSchema"), true);
+  assert.equal(reader.includes("zodFieldErrors"), true);
 });

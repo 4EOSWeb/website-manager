@@ -29,8 +29,8 @@ test("execution stores a visual document beside version 3 and rolls the fixture 
   const { parseVersion3 } = await import("../../src/platform/migrate/parse-v3.ts");
   const { restoreDraftBackup } = await import("../../src/platform/migrate/restore.ts");
   const source = readFileSync(new URL("../../src/app/api/sites/[websiteId]/draft/route.ts", import.meta.url), "utf8");
-  assert.match(source, /update: \{ draftData: site \}/);
-  assert.equal(source.includes("visualDocument:"), false);
+  assert.match(source, /\{ draftData: site \}/);
+  assert.equal(/visualDocument:\s*(null|Prisma\.DbNull)/.test(source), false);
   assert.match(source, /visual_document stays until step 19.25/);
 
   try {
