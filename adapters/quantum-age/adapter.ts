@@ -3,6 +3,7 @@ import { quantumAgeCommands } from "./commands";
 import { quantumAgeButton } from "./components/button";
 import { quantumAgeCard } from "./components/card";
 import { quantumAgeFooter } from "./components/footer";
+import { quantumAgeForm } from "./components/form";
 import { quantumAgeHeader } from "./components/header";
 import { quantumAgeHero } from "./components/hero";
 import { quantumAgeFonts } from "./fonts";
@@ -24,7 +25,7 @@ const adapter = {
   fonts: quantumAgeFonts,
   breakpoints: quantumAgeBreakpoints,
   templates: quantumAgeTemplates,
-  components: { components: [quantumAgeHeader, quantumAgeFooter, quantumAgeHero, quantumAgeButton, quantumAgeCard] },
+  components: { components: [quantumAgeHeader, quantumAgeFooter, quantumAgeHero, quantumAgeButton, quantumAgeCard, quantumAgeForm] },
 };
 
 export default adapter;
