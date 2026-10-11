@@ -12,6 +12,7 @@
     "verify": "node --experimental-strip-types scripts/verify-slice.ts",
     "test": "node --experimental-strip-types --no-warnings --import ./tests/unit/resolve-ts.mjs --test tests/unit/*.test.ts",
     "test:e2e": "playwright test",
+    "migrate:dry": "node --experimental-strip-types --no-warnings --import ./tests/unit/resolve-ts.mjs scripts/migrate-drafts.ts",
     "overlay:sync": "node --experimental-strip-types --no-warnings scripts/sync-overlay.ts",
     "routes": "node --experimental-strip-types --no-warnings scripts/route-inventory.ts --write",
     "postinstall": "prisma generate"

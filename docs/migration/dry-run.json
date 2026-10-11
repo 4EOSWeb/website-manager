@@ -1,0 +1,1435 @@
+{
+  "websiteId": "web_quantum_age",
+  "drafts": [
+    {
+      "id": "draft_0ddb6f7c7f7a",
+      "ok": true,
+      "detected": "3",
+      "shape": "site",
+      "errors": [],
+      "warnings": [],
+      "routes": [
+        "/",
+        "/solutions",
+        "/approach",
+        "/about",
+        "/team",
+        "/references",
+        "/insights",
+        "/contact",
+        "/privacy",
+        "/terms"
+      ],
+      "missingMedia": [],
+      "locksOk": true,
+      "validationOk": true,
+      "unmapped": [
+        {
+          "path": "pages.0.root.children.0.children.6.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.0.children.6.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.0.children.6.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.0.children.6.metadata",
+          "key": "editorName",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.0.children.6.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.0.children.6.metadata",
+          "key": "locked",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.1.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.1.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.1.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.1.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.1.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.2.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.2.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.2.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.2.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.2.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.3.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.3.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.3.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.3.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.3.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.4.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.4.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.4.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.4.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.1.children.4.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.4.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.4.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.4.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.4.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.4.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.5.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.5.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.5.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.5.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.5.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.6.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.6.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.6.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.6.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.6.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.7.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.7.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.7.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.7.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.2.children.7.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.3.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.3.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.3.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.3.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.3.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.4.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.4.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.4.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.4.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.4.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.4.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.5.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.5.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.5.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.5.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.5.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.5.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.6.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.6.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.6.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.6.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.6.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.6.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.7.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.7.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.7.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.7.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.7.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.7.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.8.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.8.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.8.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.8.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.8.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.8.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.9.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.9.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.9.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.9.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.9.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.3.children.9.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.1.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.1.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.1.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.1.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.1.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.2.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.2.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.2.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.2.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.2.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.4.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.4.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.4.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.4.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.4.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.5.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.5.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.5.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.5.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.5.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.6.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.6.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.6.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.6.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.4.children.6.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.3.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.3.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.3.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.3.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.3.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.4.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.4.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.4.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.4.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.4.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.5.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.5.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.5.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.5.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.5.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.6.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.6.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.6.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.6.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.6.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.7.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.7.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.7.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.7.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.7.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.8.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.8.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.8.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.8.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.8.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.9.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.9.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.9.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.9.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.9.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.10.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.10.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.10.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.10.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.10.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.11.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.11.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.11.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.11.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.11.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.12.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.12.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.12.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.12.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.5.children.12.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.7.children.1.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.7.children.1.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.7.children.1.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.7.children.1.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.0.root.children.7.children.1.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.1.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.1.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.1.metadata",
+          "key": "type",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.1.metadata",
+          "key": "address",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.3.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.3.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.3.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.3.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.3.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.3.metadata",
+          "key": "target",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.4.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.4.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.4.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.4.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.4.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.4.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.5.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.5.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.5.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.5.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.5.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.5.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.6.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.6.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.6.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.6.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.6.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.6.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.7.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.7.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.7.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.7.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.7.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.7.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.8.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.8.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.8.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.8.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.8.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.8.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.9.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.9.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.9.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.9.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.9.metadata",
+          "key": "detail",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.1.root.children.2.children.9.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.3.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.3.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.3.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.3.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.3.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.4.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.4.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.4.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.4.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.4.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.5.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.5.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.5.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.5.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.5.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.6.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.6.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.6.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.6.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.6.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.7.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.7.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.7.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.7.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.7.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.8.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.8.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.8.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.8.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.8.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.9.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.9.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.9.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.9.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.9.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.10.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.10.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.10.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.10.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.10.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.11.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.11.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.11.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.11.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.11.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.12.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.12.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.12.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.12.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.4.root.children.1.children.12.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.6.root.children.1.children.0.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.6.root.children.1.children.0.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.6.root.children.1.children.0.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.6.root.children.1.children.0.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.6.root.children.1.children.0.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.7.root.children.1.children.0.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.7.root.children.1.children.0.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.7.root.children.1.children.0.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.7.root.children.1.children.0.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.7.root.children.1.children.0.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.7.root.children.1.children.1.metadata",
+          "key": "id",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.7.root.children.1.children.1.metadata",
+          "key": "kind",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.7.root.children.1.children.1.metadata",
+          "key": "hidden",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.7.root.children.1.children.1.metadata",
+          "key": "text",
+          "reason": "The field was not copied."
+        },
+        {
+          "path": "pages.7.root.children.1.children.1.metadata",
+          "key": "href",
+          "reason": "The field was not copied."
+        }
+      ]
+    },
+    {
+      "id": "draft_de7f110716c9",
+      "ok": true,
+      "detected": "unknown",
+      "shape": "home",
+      "errors": [],
+      "warnings": [],
+      "routes": [
+        "/"
+      ],
+      "missingMedia": [],
+      "locksOk": true,
+      "validationOk": true,
+      "unmapped": []
+    }
+  ]
+}
