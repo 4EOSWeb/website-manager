@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { emptyHistory, redoScoped, rememberScoped, undoScoped, type History, type ScopedSnapshot } from "@/lib/history";
+import { canRedoScoped, emptyHistory, redoScoped, rememberScoped, undoScoped, type History, type ScopedSnapshot } from "@/lib/history";
 
 export function useEditorHistory<T>(websiteId = "") {
   const [history, setHistory] = useState<History<ScopedSnapshot<T>>>(emptyHistory);
@@ -19,12 +19,11 @@ export function useEditorHistory<T>(websiteId = "") {
     return step?.value ?? null;
   };
   const previous = history.past[history.past.length - 1];
-  const upcoming = history.future[0];
   return {
     record,
     undo,
     redo,
     canUndo: previous !== undefined && previous.websiteId === websiteId,
-    canRedo: upcoming !== undefined && upcoming.websiteId === websiteId,
+    canRedo: canRedoScoped(history, websiteId),
   };
 }

@@ -53,14 +53,19 @@ export function undoScoped<T>(
   return { value: step.state.value, visualDocument: step.state.visualDocument, history: step.history };
 }
 
+/** Redo is available only when the next snapshot belongs to this website. */
+export function canRedoScoped<T>(history: History<ScopedSnapshot<T>>, websiteId: string): boolean {
+  const next = history.future[0];
+  return next !== undefined && next.websiteId === websiteId;
+}
+
 export function redoScoped<T>(
   history: History<ScopedSnapshot<T>>,
   websiteId: string,
   current: T,
   visualDocument?: unknown,
 ): { value: T; visualDocument: unknown | null; history: History<ScopedSnapshot<T>> } | null {
-  const top = history.future[0];
-  if (!top || top.websiteId !== websiteId) return null;
+  if (!canRedoScoped(history, websiteId)) return null;
   const step = redoStep(history, scopedEntry(websiteId, current, visualDocument));
   if (!step) return null;
   return { value: step.state.value, visualDocument: step.state.visualDocument, history: step.history };
