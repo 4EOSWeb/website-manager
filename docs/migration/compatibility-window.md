@@ -9,6 +9,7 @@ The editor still reads and writes version 3 drafts. The visual document is store
 | Version 3 parser import | `src/platform/migrate/parse-v3.ts` imports `siteDraftSchema` | Step 19.25 |
 | Dual draft store | `draft_data` stays version 3. `visual_document` holds version 1. A version 3 save does not clear `visual_document`. | Step 19.25 |
 | Legacy reorder messages | Page and section move controls still use the version 3 editor messages | Step 11.31 |
+| Preview website id | A preview message with no `websiteId` is treated as the active site in `src/components/editor/use-canvas-messages.ts` | Step 11.31 |
 
 Check: `rg "step 19.25"`.
 

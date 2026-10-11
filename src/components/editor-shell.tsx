@@ -46,7 +46,8 @@ import { Canvas } from "@/components/editor/canvas";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
 import { LibraryBrowser } from "@/components/editor/library";
 import { Inspector } from "@/components/editor/inspector";
-import { previewFrame as frame, readMarks, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
+import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTargetForNode, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
+import { selectNodeId } from "@/components/editor/state/selection";
 import { useEditorHistory } from "@/components/editor/use-editor-history";
 import { AddPageDialog, CropDialog, ImagePickerDialog, InsertDialog, PublishDialog, ShortcutsDialog, TemplateDialog, type PageForm } from "@/components/editor/dialogs";
 
@@ -748,6 +749,20 @@ export function EditorShell(props: {
         setSelection({ sectionId: text("sectionId"), itemId, itemIds, overlay: Boolean(data.overlay), locked: Boolean(data.locked), chrome, navRoute: text("navRoute"), kind: text("kind") });
         break;
       }
+      case "4eos-select-node": {
+        const sections = (page?.sections ?? []).map((section) => ({
+          id: section.id,
+          blocks: section.type === "flow" ? section.blocks : [],
+          items: section.type === "freeform" ? section.items : section.type === "preset" ? section.overlay ?? [] : [],
+        }));
+        const target = selectionTargetForNode(sections, data);
+        if (target) setSelection(selectionFor(target.sectionId, target.itemId));
+        else {
+          const nodeId = nodeIdFromCanvasMessage(data);
+          if (nodeId) setNodeIds(selectNodeId(nodeId).nodeIds);
+        }
+        break;
+      }
       case "4eos-editing":
         setEditing(Boolean(data.active));
         break;
@@ -832,7 +847,7 @@ export function EditorShell(props: {
     undoRef.current = undo;
   });
 
-  useCanvasMessages(onMessage);
+  useCanvasMessages(onMessage, props.websiteId);
 
   useEffect(() => {
     toFrame({ type: "4eos-config", scale, clipboard: Boolean(clipboard) });
