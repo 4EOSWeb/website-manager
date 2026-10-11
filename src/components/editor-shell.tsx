@@ -41,6 +41,7 @@ import { clearNodeSelection, nodeIdsFromLegacy } from "@/components/editor/state
 import { activeSiteContext, createSiteState } from "@/components/editor/state/site";
 import { breakpointWidth, previewRadioLabel, type BreakpointId } from "@/components/editor/state/breakpoint";
 import { emptyDirty, markChanged, markSaved, shouldWarnBeforeUnload, switchWebsite } from "@/components/editor/state/dirty";
+import { dismissEditorError, editorErrorFromSave, type EditorError } from "@/components/editor/state/errors";
 import { persistExperience, readExperience, type ExperienceMode } from "@/components/editor/state/experience";
 import { emptySelection, type EditorApi, type MediaItem, type Publication, type RailPanel, type SaveState, type Selection, type Snapshot, type Viewport } from "@/components/editor/types";
 import type { SiteContext } from "@/platform/context";
@@ -109,6 +110,7 @@ export function EditorShell(props: {
   const [publications, setPublications] = useState(props.publications);
   const [progress, setProgress] = useState<number | null>(null);
   const [save, setSave] = useState<SaveState>("saved");
+  const [editorError, setEditorError] = useState<EditorError | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [editing, setEditing] = useState(false);
@@ -231,19 +233,24 @@ export function EditorShell(props: {
         });
         const body = (await response.json().catch(() => ({}))) as { message?: string };
         if (!response.ok) {
+          const failure = editorErrorFromSave(body);
+          setEditorError(failure);
           setSave("error");
-          notify(body.message ?? "Your last change was not saved. Check your connection and press Retry.", "error");
+          notify(failure.message, "error");
           return false;
         }
         if (seq === saveSeq.current) {
           setSave("saved");
           setSavedAt(Date.now());
+          setEditorError(null);
           setDirtyState((state) => markSaved(state));
         }
         return true;
       } catch {
+        const failure = editorErrorFromSave(null);
+        setEditorError(failure);
         setSave("error");
-        notify("Your last change was not saved. Check your connection and press Retry.", "error");
+        notify(failure.message, "error");
         return false;
       }
     },
@@ -1005,7 +1012,7 @@ export function EditorShell(props: {
   }
 
   return (
-    <div className="ed-root" data-adapter={adapterId ?? undefined} data-experience={experience} data-nodes={nodeIds.join(" ")}>
+    <div className="ed-root" data-adapter={adapterId ?? undefined} data-experience={experience} data-error={editorError?.code} data-nodes={nodeIds.join(" ")}>
       <TopBar
         websiteName={props.websiteName}
         pageTitle={pageTitle}
@@ -1133,7 +1140,7 @@ export function EditorShell(props: {
                 {toast.action.label}
               </button>
             ) : null}
-            <button type="button" className="ed-icon is-small" aria-label="Dismiss" onClick={() => setToasts((items) => items.filter((item) => item.id !== toast.id))}>
+            <button type="button" className="ed-icon is-small" aria-label="Dismiss" onClick={() => { setToasts((items) => items.filter((item) => item.id !== toast.id)); setEditorError(dismissEditorError(site).error); }}>
               <X size={13} aria-hidden="true" />
             </button>
           </div>
