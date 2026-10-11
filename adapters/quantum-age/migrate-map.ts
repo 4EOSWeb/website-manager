@@ -23,6 +23,12 @@ export function migrateText(block: Record<string, unknown>): { type: "heading" |
   return textKinds[block.kind] ?? null;
 }
 
+/** A site button uses the site component. Other buttons stay generic. */
+export function migrateButton(block: Record<string, unknown>): { componentId: string } | null {
+  if (block.kind !== "button") return null;
+  return { componentId: "quantum-age.button" };
+}
+
 /** Maps a version 3 preset section to a site component. Other sections return null. */
 export function migrateSection(section: Record<string, unknown>): { componentId: string } | null {
   if (section.type !== "preset" || typeof section.preset !== "string") return null;
