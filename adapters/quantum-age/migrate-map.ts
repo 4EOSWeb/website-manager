@@ -1,3 +1,5 @@
+import { quantumAgeBreakpoints } from "./breakpoints";
+
 const presetComponents: Record<string, string> = {
   hero: "quantum-age.hero",
   audience: "quantum-age.card",
@@ -21,6 +23,11 @@ const textKinds: Record<string, { type: "heading" | "text" | "richtext"; role?: 
 export function migrateText(block: Record<string, unknown>): { type: "heading" | "text" | "richtext"; role?: string } | null {
   if (typeof block.kind !== "string") return null;
   return textKinds[block.kind] ?? null;
+}
+
+/** Breakpoint width in pixels. Freeform pixel placements divide by this width. */
+export function breakpointWidth(id: "desktop" | "tablet" | "mobile") {
+  return quantumAgeBreakpoints.breakpoints.find((item) => item.id === id)?.width ?? 1;
 }
 
 /** A site button uses the site component. Other buttons stay generic. */
