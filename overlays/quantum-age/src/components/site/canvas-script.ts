@@ -428,7 +428,7 @@ export function canvasScript(origin: string) {
         chip.textContent = labelOf(selected);
         bar.appendChild(chip);
         var tools = [];
-        if (c.move) tools.push(button("grip", c.freeform ? "Drag to move" : "Drag to reorder", "grip", function (node) { node.classList.add("eos-grip"); node.setAttribute("aria-label", (c.freeform ? "Move" : "Reorder") + ". Use Alt and the arrow keys to move with the keyboard"); }));
+        if (c.move) tools.push(button("grip", c.freeform ? "Drag to move" : "Drag to reorder", "grip", function (node) { node.classList.add("eos-grip"); node.setAttribute("data-drag-handle", "true"); node.setAttribute("aria-label", (c.freeform ? "Move" : "Reorder") + ". Use Alt and the arrow keys to move with the keyboard"); }));
         if (c.edit) tools.push(button("edit", "Edit text", "edit"));
         if (c.image) tools.push(button("image", "Replace image", "replace"));
         if (c.open) tools.push(button("open", "Go to this page", "open"));
@@ -668,6 +668,7 @@ export function canvasScript(origin: string) {
 
     function startDrag(p, event) {
       var node = p.node;
+      if (p.kind === "section" || p.kind === "block") post({ type: "4eos-drag-start", kind: p.kind, id: node.getAttribute("data-item-id") || node.getAttribute("data-section-id") || "" });
       window.getSelection().removeAllRanges();
       closeMenu(false);
       bar = removeUi(bar);
