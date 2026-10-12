@@ -142,7 +142,8 @@ function spacerSection(node: NodeDocument) {
 
 type WrappedFlow = { id: string; type: "flow"; hidden: boolean; editorName: string; layout?: "stack" | "grid"; blocks: FlowOut[] };
 type CanvasOut = { id: string; type: "freeform"; hidden: boolean; name: string; items: []; metadata: { sourceNode: string } };
-type ExtraSection = ReturnType<typeof dividerSection> | ReturnType<typeof spacerSection> | WrappedFlow | CanvasOut;
+type CtaOut = { id: string; type: "cta"; hidden: boolean; heading: string; body: string; label: string; href: string };
+type ExtraSection = ReturnType<typeof dividerSection> | ReturnType<typeof spacerSection> | WrappedFlow | CanvasOut | CtaOut;
 
 function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: FlowOut[], videos: Array<ReturnType<typeof videoSection>>, extras: ExtraSection[]) {
   const componentId = node.componentId;
@@ -159,6 +160,21 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
   else if (node.type === "card" && componentId === "generic.card") {
     ownChildren = false;
     blocks.push(flowCard(node));
+  } else if (node.type === "cta" && componentId === "generic.cta") {
+    ownChildren = false;
+    const heading = node.children.find((child) => child.type === "heading");
+    const paragraph = node.children.find((child) => child.type === "text");
+    const button = node.children.find((child) => child.type === "button");
+    const href = button && typeof button.props.href === "string" && validLink(button.props.href) ? button.props.href : "/";
+    extras.push({
+      id: node.id,
+      type: "cta",
+      hidden: node.visibility.hidden === true,
+      heading: heading && typeof heading.props.text === "string" ? heading.props.text : "Heading",
+      body: paragraph && typeof paragraph.props.text === "string" ? paragraph.props.text : "Paragraph",
+      label: button && typeof button.props.label === "string" ? button.props.label : "Continue",
+      href,
+    });
   }
   else if (node.type === "video" && componentId === "generic.video" && acceptVideoUrl(typeof node.props.url === "string" ? node.props.url : "")) videos.push(videoSection(node));
   else if (node.type === "icon" && componentId === "generic.icon") {
