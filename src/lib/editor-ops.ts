@@ -1,6 +1,6 @@
 import type { BlogDraft, FlowBlock, FreeformItem, PageDocument, Placement, Section, SiteDraft } from "@/lib/content-schema";
 import { distributeBoxes, type DistributeAxis } from "@/platform/canvas/distribute";
-import { bringForward } from "@/platform/canvas/z-order";
+import { bringForward, sendBackward } from "@/platform/canvas/z-order";
 import { sanitizeMarks, type RichMark } from "@/lib/rich-text";
 import { clampPlacement, createFreeformItem, createId, createSection, templateSections, type LibraryBlock } from "@/lib/page-documents";
 
@@ -310,6 +310,22 @@ export function bringForwardItems(site: SiteDraft, route: string, sectionId: str
     const source = overlay && section.type === "preset" ? section.overlay ?? [] : section.type === "freeform" ? section.items : null;
     if (!source) return section;
     const ordered = bringForward(source.map((item) => ({ id: item.id, z: item.zIndex, locked: item.locked })), itemId);
+    const byId = new Map(ordered.map((item) => [item.id, item.z]));
+    const items = source.map((item) => {
+      const z = byId.get(item.id);
+      return z === undefined || z === item.zIndex ? item : { ...item, zIndex: z };
+    });
+    if (overlay && section.type === "preset") return { ...section, overlay: items };
+    if (section.type === "freeform") return { ...section, items };
+    return section;
+  });
+}
+
+export function sendBackwardItems(site: SiteDraft, route: string, sectionId: string, itemId: string, overlay = false): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    const source = overlay && section.type === "preset" ? section.overlay ?? [] : section.type === "freeform" ? section.items : null;
+    if (!source) return section;
+    const ordered = sendBackward(source.map((item) => ({ id: item.id, z: item.zIndex, locked: item.locked })), itemId);
     const byId = new Map(ordered.map((item) => [item.id, item.z]));
     const items = source.map((item) => {
       const z = byId.get(item.id);

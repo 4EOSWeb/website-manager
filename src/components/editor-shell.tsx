@@ -19,6 +19,7 @@ import {
   duplicatePage,
   duplicateSection,
   bringForwardItems,
+  sendBackwardItems,
   groupItems,
   ungroupItems,
   imageUsage,
@@ -56,7 +57,7 @@ import { Canvas } from "@/components/editor/canvas";
 import { DragStatus, dragRejectReason, type DragRejectReason } from "@/components/editor/drag-status";
 import { groupCanvas } from "@/platform/canvas/group";
 import { canvasGroupId, ungroupCanvas } from "@/platform/canvas/ungroup";
-import { bringForwardCanvas } from "@/platform/canvas/z-order";
+import { bringForwardCanvas, sendBackwardCanvas } from "@/platform/canvas/z-order";
 import { overflowWarning } from "@/platform/canvas/overflow";
 import { toPercent } from "@/platform/canvas/percent";
 import { placeOnCanvas } from "@/platform/drag/canvas-place";
@@ -796,9 +797,8 @@ export function EditorShell(props: {
         const ordered = bringForwardCanvas(visualDocument, itemId);
         commit(bringForwardItems(site, path, sectionId, itemId, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
       } else if (action === "back") {
-        const items: FreeformItem[] = overlay && target.type === "preset" ? target.overlay ?? [] : target.type === "freeform" ? target.items : [];
-        const item = items.find((entry) => entry.id === itemId);
-        commit(patchItem(site, path, sectionId, itemId, { zIndex: Math.max(0, (item?.zIndex ?? 1) - 1) }, overlay), true);
+        const ordered = sendBackwardCanvas(visualDocument, itemId);
+        commit(sendBackwardItems(site, path, sectionId, itemId, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
       } else if (action === "group") {
         const ids = itemIds.length > 1 ? itemIds : [itemId];
         const grouped = groupCanvas(visualDocument, ids);
