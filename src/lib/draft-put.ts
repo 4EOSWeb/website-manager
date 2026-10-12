@@ -11,6 +11,12 @@ function mismatch(): DraftPutBody {
   return { ok: false, status: 400, message: formatAdapterError(siteMismatch()).message };
 }
 
+/** A drop save stores the version 3 draft and, when present, the visual document beside it. */
+export function dropSaveData(site: SiteDraft, visualDocument: unknown | undefined): { draftData: SiteDraft; visualDocument?: unknown } {
+  if (visualDocument === undefined) return { draftData: site };
+  return { draftData: site, visualDocument };
+}
+
 /** Reads a version 3 draft and an optional visual document. A version 3 body omits the visual document so a save cannot clear it. */
 export function readDraftPut(routeWebsiteId: string, payload: unknown): DraftPutBody {
   if (!payload || typeof payload !== "object") return { ok: false, status: 400, message: "The draft could not be read." };

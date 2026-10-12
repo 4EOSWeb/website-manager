@@ -1,7 +1,7 @@
 import { authorize, authzResponse } from "@/lib/authorize";
 import { recordAudit } from "@/lib/audit";
 import { blogDraftSchema } from "@/lib/content-schema";
-import { readDraftPut } from "@/lib/draft-put";
+import { dropSaveData, readDraftPut } from "@/lib/draft-put";
 import { normalizeSiteDraft, stripEmbeds } from "@/lib/page-documents";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
@@ -22,9 +22,10 @@ export async function PUT(request: Request, { params }: Params) {
     if (!parsed.ok) return Response.json({ message: parsed.message }, { status: parsed.status });
     const site = stripEmbeds(normalizeSiteDraft(parsed.site), canEmbed(actor.platformRole, actor.membershipRole));
     // A version 3 save always writes draft_data. visual_document stays until step 19.25 when this request omits it.
-    const update = parsed.visualDocument === undefined
+    const saved = dropSaveData(site, parsed.visualDocument);
+    const update = saved.visualDocument === undefined
       ? { draftData: site }
-      : { draftData: site, visualDocument: parsed.visualDocument as Prisma.InputJsonValue };
+      : { draftData: site, visualDocument: saved.visualDocument as Prisma.InputJsonValue };
     const home = await prisma.page.findUnique({ where: { websiteId_route: { websiteId, route: "/" } } });
     await prisma.workspaceDraft.upsert({
       where: {
@@ -36,7 +37,7 @@ export async function PUT(request: Request, { params }: Params) {
         userId: actor.user.id,
         pageId: home?.id,
         draftData: site,
-        ...(parsed.visualDocument === undefined ? {} : { visualDocument: parsed.visualDocument as Prisma.InputJsonValue }),
+        ...(saved.visualDocument === undefined ? {} : { visualDocument: saved.visualDocument as Prisma.InputJsonValue }),
       },
       update,
     });

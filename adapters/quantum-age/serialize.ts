@@ -282,6 +282,21 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
   if (ownChildren) node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, blocks, videos, extras));
 }
 
+/** Block ids in the version 3 projection, in walk order. A moved node is listed once. */
+export function projectedBlockIds(files: { path: string; contents: string | Uint8Array }[]): string[] {
+  const site = files.find((file) => file.path === "src/content/editor/site.json");
+  if (!site || typeof site.contents !== "string") return [];
+  const parsed = JSON.parse(site.contents) as { pages?: { sections?: { blocks?: { id?: string }[]; items?: { id?: string }[] }[] }[] };
+  const ids: string[] = [];
+  for (const page of parsed.pages ?? []) {
+    for (const section of page.sections ?? []) {
+      for (const block of section.blocks ?? []) if (block.id) ids.push(block.id);
+      for (const item of section.items ?? []) if (item.id) ids.push(item.id);
+    }
+  }
+  return ids;
+}
+
 export const serializeQuantumAge: SerializeHook = (document) => {
   const validated = validateDocument(document);
   if (!validated.ok) return validated;
