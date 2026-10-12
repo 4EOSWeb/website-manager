@@ -10,13 +10,15 @@ export function useEditorHistory<T>(websiteId = "") {
   }, [websiteId]);
   const undo = (current: T, visualDocument?: unknown) => {
     const step = undoScoped(history, websiteId, current, visualDocument);
-    if (step) setHistory(step.history);
-    return step?.value ?? null;
+    if (!step) return null;
+    setHistory(step.history);
+    return { value: step.value, visualDocument: step.visualDocument };
   };
   const redo = (current: T, visualDocument?: unknown) => {
     const step = redoScoped(history, websiteId, current, visualDocument);
-    if (step) setHistory(step.history);
-    return step?.value ?? null;
+    if (!step) return null;
+    setHistory(step.history);
+    return { value: step.value, visualDocument: step.visualDocument };
   };
   const previous = history.past[history.past.length - 1];
   return {

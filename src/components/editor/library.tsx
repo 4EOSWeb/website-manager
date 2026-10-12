@@ -4,6 +4,20 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { CATEGORIES, LIBRARY, searchLibrary, type LibraryCategory, type LibraryEntry } from "@/lib/library";
 import { Empty } from "@/components/editor/ui";
+import type { NodeDocument } from "@/platform/document/node";
+import { createHeading } from "@/platform/elements/heading";
+
+export const GENERIC_ENTRIES: LibraryEntry[] = [
+  { id: "element:heading", label: "Heading", description: "A heading", category: "Text", keywords: "title heading", thumb: "heading" },
+];
+
+function entryVisible(entry: LibraryEntry, query: string, category: LibraryCategory | "All" | "Saved") {
+  if (category === "Saved") return false;
+  if (category !== "All" && entry.category !== category) return false;
+  const needle = query.trim().toLowerCase();
+  if (!needle) return true;
+  return `${entry.label} ${entry.description} ${entry.keywords} ${entry.category}`.toLowerCase().includes(needle);
+}
 
 export function Thumb({ kind }: { kind: LibraryEntry["thumb"] }) {
   const line = (width: string, strong = false) => <span className={strong ? "t-line is-strong" : "t-line"} style={{ width }} />;
@@ -46,14 +60,20 @@ export function LibraryBrowser(props: {
   recommended: string[];
   templates: { id: string; name: string }[];
   onChoose: (entry: LibraryEntry) => void;
+  onElement?: (node: NodeDocument) => void;
   onTemplate: (id: string) => void;
   autoFocus?: boolean;
   dense?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<LibraryCategory | "All" | "Saved">("All");
-  const results = useMemo(() => (category === "Saved" ? [] : searchLibrary(query, category, props.canEmbed)), [query, category, props.canEmbed]);
-  const recent = props.recent.map((id) => LIBRARY.find((entry) => entry.id === id)).filter((entry): entry is LibraryEntry => Boolean(entry)).slice(0, 4);
+  const results = useMemo(() => {
+    const generic = GENERIC_ENTRIES.filter((entry) => entryVisible(entry, query, category));
+    const library = category === "Saved" ? [] : searchLibrary(query, category, props.canEmbed);
+    return [...generic, ...library];
+  }, [query, category, props.canEmbed]);
+  const catalog = useMemo(() => [...GENERIC_ENTRIES, ...LIBRARY], []);
+  const recent = props.recent.map((id) => catalog.find((entry) => entry.id === id)).filter((entry): entry is LibraryEntry => Boolean(entry)).slice(0, 4);
   const recommended = props.recommended.map((id) => LIBRARY.find((entry) => entry.id === id)).filter((entry): entry is LibraryEntry => Boolean(entry));
   const browsing = !query && category === "All";
   const templates = props.templates.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()));
@@ -69,7 +89,11 @@ export function LibraryBrowser(props: {
             event.dataTransfer.setData("application/x-4eos-library", entry.id);
             event.dataTransfer.effectAllowed = "copy";
           }}
-          onClick={() => props.onChoose(entry)}
+          data-element={entry.id.startsWith("element:") ? entry.id.slice("element:".length) : undefined}
+          onClick={() => {
+            if (entry.id === "element:heading" && props.onElement) props.onElement(createHeading());
+            else props.onChoose(entry);
+          }}
         >
           <Thumb kind={entry.thumb} />
           <span className="ed-lib-label">{entry.label}</span>

@@ -48,13 +48,24 @@ function json(value: unknown) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }) {
+function flowHeading(node: NodeDocument) {
+  const text = typeof node.props.text === "string" ? node.props.text : "";
+  return {
+    id: node.id,
+    kind: "heading" as const,
+    hidden: node.visibility.hidden === true,
+    text: { text, marks: [] as string[] },
+  };
+}
+
+function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, headings: Array<ReturnType<typeof flowHeading>>) {
   const componentId = node.componentId;
   if (componentId === "quantum-age.hero") hero.props = node.props;
+  else if (node.type === "heading" && componentId === "generic.heading") headings.push(flowHeading(node));
   else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
     unmapped.push({ path, id: node.id, type: node.type, componentId });
   }
-  node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero));
+  node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, headings));
 }
 
 export const serializeQuantumAge: SerializeHook = (document) => {
@@ -63,7 +74,11 @@ export const serializeQuantumAge: SerializeHook = (document) => {
   const unmapped: UnmappedNode[] = [];
   const hero: { props: unknown } = { props: null };
   const pages = validated.value.pages.map((page) => {
-    walk(page.root, `pages.${page.route}.root`, unmapped, hero);
+    const headings: Array<ReturnType<typeof flowHeading>> = [];
+    walk(page.root, `pages.${page.route}.root`, unmapped, hero, headings);
+    const sections = headings.length
+      ? [{ id: `sec_${page.id.slice(5, 17)}`, type: "flow", hidden: false, blocks: headings }]
+      : [];
     return {
       id: page.id,
       route: page.route,
@@ -74,7 +89,7 @@ export const serializeQuantumAge: SerializeHook = (document) => {
       metaDescription: page.metadata.metaDescription ?? "",
       archived: false,
       locked: page.route === "/privacy" || page.route === "/terms",
-      sections: [],
+      sections,
     };
   });
   const parsedHero = quantumAgeHeroProps.safeParse(hero.props);

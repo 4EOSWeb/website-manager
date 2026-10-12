@@ -585,6 +585,17 @@ export function addFlowBlock(site: SiteDraft, route: string, sectionId: string, 
   });
 }
 
+/** Inserts a block that was already built, after the selected block or at the end. */
+export function insertFlowBlock(site: SiteDraft, route: string, sectionId: string, block: FlowBlock, afterBlockId?: string): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    if (section.type !== "flow") return section;
+    const blocks = [...section.blocks];
+    const at = afterBlockId ? blocks.findIndex((item) => item.id === afterBlockId) : -1;
+    blocks.splice(at < 0 ? blocks.length : at + 1, 0, block);
+    return { ...section, blocks };
+  });
+}
+
 export function moveFlowBlock(site: SiteDraft, route: string, sectionId: string, from: number, to: number): SiteDraft {
   return mapSection(site, route, sectionId, (section) => {
     if (section.type !== "flow") return section;

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { signOutUser } from "@/app/signin/actions";
-import { defaultBlogDraft, type BlogDraft, type FreeformItem, type Section, type SiteDraft } from "@/lib/content-schema";
+import { defaultBlogDraft, type BlogDraft, type FlowBlock, type FreeformItem, type Section, type SiteDraft } from "@/lib/content-schema";
 import {
   addFlowBlock,
   changePageRoute,
@@ -20,6 +20,7 @@ import {
   duplicateSection,
   groupItems,
   imageUsage,
+  insertFlowBlock,
   insertSection,
   insertSectionCopy,
   moveFlowBlockById,
@@ -53,6 +54,9 @@ import { LibraryBrowser } from "@/components/editor/library";
 import { Inspector } from "@/components/editor/inspector";
 import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTargetForNode, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
 import { selectNodeId } from "@/components/editor/state/selection";
+import type { NodeDocument } from "@/platform/document/node";
+import { insertNode, nodeIdsIn } from "@/platform/elements/create";
+import { createHeading } from "@/platform/elements/heading";
 import { useEditorHistory } from "@/components/editor/use-editor-history";
 import { AddPageDialog, CropDialog, ImagePickerDialog, InsertDialog, PublishDialog, ShortcutsDialog, TemplateDialog, type PageForm } from "@/components/editor/dialogs";
 
@@ -102,7 +106,9 @@ export function EditorShell(props: {
   const [zoom, setZoom] = useState<Zoom>("fit");
   const [scale, setScale] = useState(1);
   const [site, setSite] = useState(props.initialSite);
-  const [visualDocument] = useState<unknown>(props.visualDocument);
+  const [visualDocument, setVisualDocument] = useState<unknown>(props.visualDocument);
+  const [visualNodeIds, setVisualNodeIds] = useState<string[]>([]);
+  const pinnedNode = useRef<string | null>(null);
   const [posts, setPosts] = useState(props.initialPosts);
   const history = useEditorHistory<Snapshot>(props.websiteId);
   const [media, setMedia] = useState(props.media);
@@ -158,6 +164,7 @@ export function EditorShell(props: {
   }, [site]);
 
   useEffect(() => {
+    if (pinnedNode.current) return;
     setNodeIds(nodeIdsFromLegacy(selection).nodeIds);
   }, [selection]);
 
@@ -180,15 +187,16 @@ export function EditorShell(props: {
   }, []);
 
   function rememberHistory() {
-    history.record({ site, posts });
+    history.record({ site, posts }, visualDocument);
   }
 
-  function commit(next: SiteDraft, reload: boolean) {
-    if (!props.canEdit || next === site) return;
+  function commit(next: SiteDraft, reload: boolean, nextVisual?: unknown) {
+    if (!props.canEdit || (next === site && nextVisual === undefined)) return;
     textKey.current = "";
     rememberHistory();
-    setDirtyState((state) => markChanged(state, { version3: next }));
+    setDirtyState((state) => markChanged(state, nextVisual === undefined ? { version3: next } : { version3: next, visualDocument: nextVisual }));
     setSite(next);
+    if (nextVisual !== undefined) setVisualDocument(nextVisual);
     if (reload) reloadAfter.current = true;
   }
 
@@ -204,19 +212,27 @@ export function EditorShell(props: {
   }
 
   function undo() {
-    const previous = history.undo({ site, posts });
+    const previous = history.undo({ site, posts }, visualDocument);
     if (!previous) return;
-    setSite(previous.site);
-    setPosts(previous.posts);
+    pinnedNode.current = null;
+    setSite(previous.value.site);
+    setPosts(previous.value.posts);
+    setVisualDocument(previous.visualDocument);
+    setVisualNodeIds(nodeIdsIn(previous.visualDocument));
+    setNodeIds(nodeIdsFromLegacy(selection).nodeIds);
     reloadAfter.current = true;
     textKey.current = "";
   }
 
   function redo() {
-    const next = history.redo({ site, posts });
+    const next = history.redo({ site, posts }, visualDocument);
     if (!next) return;
-    setSite(next.site);
-    setPosts(next.posts);
+    pinnedNode.current = null;
+    setSite(next.value.site);
+    setPosts(next.value.posts);
+    setVisualDocument(next.visualDocument);
+    setVisualNodeIds(nodeIdsIn(next.visualDocument));
+    setNodeIds(nodeIdsFromLegacy(selection).nodeIds);
     reloadAfter.current = true;
     textKey.current = "";
   }
@@ -705,7 +721,39 @@ export function EditorShell(props: {
     } else if (action === "hide" || action === "show") commit(setSectionHidden(site, path, sectionId, action === "hide"), true);
   }
 
+  function insertCreatedHeading(node: NodeDocument, at?: Insert) {
+    if (!page || !props.canEdit) {
+      notify(managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
+      return;
+    }
+    if (page.locked) {
+      notify("This page is managed for you, so nothing can be added here.");
+      return;
+    }
+    rememberLibrary("element:heading");
+    const parentId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const nextVisual = insertNode(visualDocument, path, parentId, node);
+    const block: FlowBlock = { id: createId("blk"), kind: "heading", hidden: false, text: { text: "Heading", marks: [] } };
+    let next: SiteDraft;
+    if (!at && section?.type === "flow" && !selection.locked) {
+      next = insertFlowBlock(site, path, section.id, block, selection.itemId || undefined);
+    } else {
+      const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Heading", layout: "stack", blocks: [block] };
+      const index = at ? (at.beforeId ? page.sections.findIndex((item) => item.id === at.beforeId) : page.sections.length) : section ? page.sections.findIndex((item) => item.id === section.id) + 1 : page.sections.length;
+      next = insertSection(site, path, index < 0 ? page.sections.length : index, created);
+    }
+    commit(next, true, nextVisual ?? undefined);
+    pinnedNode.current = node.id;
+    setNodeIds(selectNodeId(node.id).nodeIds);
+    setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
+    notify("Heading added.");
+  }
+
   function insertEntry(entry: LibraryEntry, at?: Insert) {
+    if (entry.id === "element:heading") {
+      insertCreatedHeading(createHeading(), at);
+      return;
+    }
     if (!page || !props.canEdit) {
       notify(managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
       return;
@@ -1017,7 +1065,7 @@ export function EditorShell(props: {
   }
 
   return (
-    <div className="ed-root" data-adapter={adapterId ?? undefined} data-experience={experience} data-error={editorError?.code} data-nodes={nodeIds.join(" ")}>
+    <div className="ed-root" data-adapter={adapterId ?? undefined} data-experience={experience} data-error={editorError?.code} data-nodes={nodeIds.join(" ")} data-visual-nodes={visualNodeIds.join(" ")}>
       <TopBar
         websiteName={props.websiteName}
         pageTitle={pageTitle}
@@ -1057,7 +1105,7 @@ export function EditorShell(props: {
                 <div className="ed-panel-head">
                   <h2>Add</h2>
                 </div>
-                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommendedHere} templates={templates} onChoose={(entry) => insertEntry(entry)} onTemplate={(id) => insertTemplate(id)} dense />
+                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommendedHere} templates={templates} onChoose={(entry) => insertEntry(entry)} onElement={(node) => insertCreatedHeading(node)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>
             ) : null}
             {rail === "pages" ? (
