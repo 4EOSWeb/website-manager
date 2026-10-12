@@ -2,15 +2,17 @@
 
 import { ExternalLink } from "lucide-react";
 import type { FreeformItem, Section } from "@/lib/content-schema";
-import { alignItems, applyText, bringForwardItems, bringToFrontItems, distributeItems, patchChrome, patchItem, renameZone, sendBackwardItems, sendToBackItems, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
+import { alignItems, applyText, bringForwardItems, bringToFrontItems, clearItemBreakpoint, distributeItems, patchChrome, patchItem, renameZone, sendBackwardItems, sendToBackItems, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
 import { alignCanvas, type AlignMode } from "@/platform/canvas/align";
 import { distributeCanvas, type DistributeAxis } from "@/platform/canvas/distribute";
 import { alreadyInFront, bringForwardCanvas, bringToFrontCanvas, sendBackwardCanvas, sendToBackCanvas } from "@/platform/canvas/z-order";
+import { resetOverride } from "@/platform/canvas/reset-override";
 import { mixedProps } from "@/platform/canvas/multi-select";
 import { overlapWarning, type OverlapBox } from "@/platform/canvas/overlap";
 import type { EditorApi, Viewport } from "@/components/editor/types";
 import { Field, Group, TextArea, TextInput, Toggle } from "@/components/editor/ui";
 import { InheritanceLabel } from "@/components/editor/inspector/inheritance-label";
+import { inheritanceLabelText } from "@/components/editor/inspector/inheritance-text";
 import { LinkPicker } from "@/components/editor/inspector/shared";
 
 function placedBox(item: FreeformItem, viewport: Viewport): OverlapBox {
@@ -98,18 +100,25 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
     );
   }
   const set = (patch: Partial<FreeformItem>, reload = true) => api.commit(patchItem(api.site, api.path, section.id, item.id, patch, overlay), reload);
+  const node = {
+    box: item.desktop,
+    responsive: {
+      tablet: item.tablet ? { box: item.tablet } : undefined,
+      mobile: item.mobile ? { box: item.mobile } : undefined,
+    },
+  };
+  const label = inheritanceLabelText({ mode: "canvas", breakpoint: api.viewport, node });
   const inheritance = (
-    <InheritanceLabel
-      mode="canvas"
-      breakpoint={api.viewport}
-      node={{
-        box: item.desktop,
-        responsive: {
-          tablet: item.tablet ? { box: item.tablet } : undefined,
-          mobile: item.mobile ? { box: item.mobile } : undefined,
-        },
-      }}
-    />
+    <>
+      <InheritanceLabel mode="canvas" breakpoint={api.viewport} node={node} />
+      {label === "Custom position" ? (
+        <button type="button" className="ed-button" disabled={disabled} onClick={() => {
+          if (api.viewport !== "tablet" && api.viewport !== "mobile") return;
+          const reset = resetOverride(api.visualDocument, item.id, api.viewport);
+          api.commit(clearItemBreakpoint(api.site, api.path, section.id, item.id, api.viewport, overlay), true, reset ?? undefined);
+        }}>Use inherited position</button>
+      ) : null}
+    </>
   );
   const siblings = section.type === "freeform" ? section.items : section.type === "preset" ? section.overlay ?? [] : [];
   const warning = overlapWarning(placedBox(item, api.viewport), siblings.filter((other) => other.id !== item.id).map((other) => placedBox(other, api.viewport)));

@@ -240,6 +240,29 @@ export function placeItems(
   });
 }
 
+/** Drops a tablet or mobile placement so that breakpoint inherits again. The desktop box stays. */
+export function clearItemBreakpoint(
+  site: SiteDraft,
+  route: string,
+  sectionId: string,
+  itemId: string,
+  viewport: "tablet" | "mobile",
+  overlay = false,
+): SiteDraft {
+  const apply = (items: FreeformItem[]) =>
+    items.map((item) => {
+      if (item.id !== itemId) return item;
+      const next = { ...item };
+      delete next[viewport];
+      return next;
+    });
+  return mapSection(site, route, sectionId, (section) => {
+    if (overlay && section.type === "preset") return { ...section, overlay: apply(section.overlay ?? []) };
+    if (section.type !== "freeform") return section;
+    return { ...section, items: apply(section.items) };
+  });
+}
+
 export function alignItems(
   site: SiteDraft,
   route: string,
