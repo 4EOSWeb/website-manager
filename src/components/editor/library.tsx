@@ -8,6 +8,7 @@ import type { NodeDocument } from "@/platform/document/node";
 import { createButton } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createContainer } from "@/platform/elements/container";
+import { createTestimonial } from "@/platform/elements/testimonial";
 import { createCta } from "@/platform/elements/cta";
 import { createCard } from "@/platform/elements/card";
 import { createGroup } from "@/platform/elements/group";
@@ -44,6 +45,7 @@ export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:group", label: "Group", description: "An empty group", category: "Sections", keywords: "group", thumb: "blank" },
   { id: "element:card", label: "Card", description: "A heading and some text", category: "Sections", keywords: "card", thumb: "card" },
   { id: "element:cta", label: "Call to action", description: "A heading, text, and a button", category: "Calls to action", keywords: "cta button", thumb: "cta" },
+  { id: "element:testimonial", label: "Testimonial", description: "A quote, a name, and a role", category: "Testimonials", keywords: "quote review", thumb: "quote" },
 ];
 
 function entryVisible(entry: LibraryEntry, query: string, category: LibraryCategory | "All" | "Saved") {
@@ -157,6 +159,7 @@ export function LibraryBrowser(props: {
             else if (entry.id === "element:group" && props.onElement) props.onElement(createGroup());
             else if (entry.id === "element:card" && props.onElement) props.onElement(createCard());
             else if (entry.id === "element:cta" && props.onElement) props.onElement(createCta());
+            else if (entry.id === "element:testimonial" && props.onElement) props.onElement(createTestimonial());
             else props.onChoose(entry);
           }}
         >

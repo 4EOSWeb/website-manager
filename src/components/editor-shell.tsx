@@ -60,6 +60,7 @@ import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createButton, writeButtonField } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createContainer } from "@/platform/elements/container";
+import { createTestimonial } from "@/platform/elements/testimonial";
 import { createCta } from "@/platform/elements/cta";
 import { createCard } from "@/platform/elements/card";
 import { createGroup } from "@/platform/elements/group";
@@ -877,7 +878,7 @@ export function EditorShell(props: {
     setNodeIds(selectNodeId(node.id).nodeIds);
     setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
     setSelection({ ...emptySelection, sectionId: created.id, kind: created.type });
-    const label = created.type === "video" ? "Video" : created.type === "divider" ? "Divider" : created.type === "spacer" ? "Spacer" : created.type === "freeform" ? created.name : created.type === "cta" ? "Call to action" : created.editorName || "Item";
+    const label = created.type === "video" ? "Video" : created.type === "divider" ? "Divider" : created.type === "spacer" ? "Spacer" : created.type === "freeform" ? created.name : created.type === "cta" ? "Call to action" : created.type === "testimonial" ? "Testimonial" : created.editorName || "Item";
     notify(`${label} added.`);
   }
 
@@ -888,6 +889,15 @@ export function EditorShell(props: {
     const block: FlowBlock = { id: createId("blk"), kind: "image", hidden: false, ...(src ? { src } : {}), alt };
     imageBlocks.current.set(block.id, node.id);
     insertPreviewNode(node, block, "element:image", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
+  function insertCreatedTestimonial(node: NodeDocument) {
+    const quote = typeof node.props.quote === "string" ? node.props.quote : "Quote";
+    const name = typeof node.props.name === "string" ? node.props.name : "Name";
+    const role = typeof node.props.role === "string" ? node.props.role : "Role";
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "testimonial", hidden: false, quote, name, role };
+    insertPreviewSection(node, created, "element:testimonial", insertAfter(visualDocument, path, afterId, node));
   }
 
   function insertCreatedCta(node: NodeDocument) {
@@ -1056,6 +1066,10 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:cta") {
       insertCreatedCta(createCta());
+      return;
+    }
+    if (entry.id === "element:testimonial") {
+      insertCreatedTestimonial(createTestimonial());
       return;
     }
     if (!page || !props.canEdit) {
@@ -1438,6 +1452,7 @@ export function EditorShell(props: {
                   else if (node.componentId === "generic.group") insertCreatedGroup(node);
                   else if (node.componentId === "generic.card") insertCreatedCard(node);
                   else if (node.componentId === "generic.cta") insertCreatedCta(node);
+                  else if (node.componentId === "generic.testimonial") insertCreatedTestimonial(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>

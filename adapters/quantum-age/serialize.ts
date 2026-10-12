@@ -143,7 +143,8 @@ function spacerSection(node: NodeDocument) {
 type WrappedFlow = { id: string; type: "flow"; hidden: boolean; editorName: string; layout?: "stack" | "grid"; blocks: FlowOut[] };
 type CanvasOut = { id: string; type: "freeform"; hidden: boolean; name: string; items: []; metadata: { sourceNode: string } };
 type CtaOut = { id: string; type: "cta"; hidden: boolean; heading: string; body: string; label: string; href: string };
-type ExtraSection = ReturnType<typeof dividerSection> | ReturnType<typeof spacerSection> | WrappedFlow | CanvasOut | CtaOut;
+type TestimonialOut = { id: string; type: "testimonial"; hidden: boolean; quote: string; name: string; role: string };
+type ExtraSection = ReturnType<typeof dividerSection> | ReturnType<typeof spacerSection> | WrappedFlow | CanvasOut | CtaOut | TestimonialOut;
 
 function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: FlowOut[], videos: Array<ReturnType<typeof videoSection>>, extras: ExtraSection[]) {
   const componentId = node.componentId;
@@ -175,6 +176,11 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
       label: button && typeof button.props.label === "string" ? button.props.label : "Continue",
       href,
     });
+  } else if (node.type === "testimonial" && componentId === "generic.testimonial") {
+    const quote = typeof node.props.quote === "string" ? node.props.quote : "Quote";
+    const name = typeof node.props.name === "string" ? node.props.name : "Name";
+    const role = typeof node.props.role === "string" ? node.props.role : "Role";
+    extras.push({ id: node.id, type: "testimonial", hidden: node.visibility.hidden === true, quote, name, role });
   }
   else if (node.type === "video" && componentId === "generic.video" && acceptVideoUrl(typeof node.props.url === "string" ? node.props.url : "")) videos.push(videoSection(node));
   else if (node.type === "icon" && componentId === "generic.icon") {
