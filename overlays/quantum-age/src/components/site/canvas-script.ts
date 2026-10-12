@@ -100,6 +100,7 @@ body.eos-dragging .eos-gap .eos-gap-line{opacity:.18}
 .eos-ghost-label{padding:6px 10px;background:var(--eos-ui);color:#fff;font:600 12px/1.2 ui-sans-serif,system-ui,sans-serif}
 .eos-ghost-body{transform-origin:0 0}
 .eos-guide{position:absolute;z-index:60;background:#ec4899;pointer-events:none}
+.eos-marquee{position:fixed;z-index:70;border:1px solid var(--eos-accent);background:rgba(37,99,235,.16);pointer-events:none}
 .eos-handle{all:unset;position:absolute;z-index:61;width:10px;height:10px;background:#fff;border:2px solid var(--eos-accent);border-radius:2px;box-sizing:border-box}
 .eos-nw{left:-6px;top:-6px;cursor:nwse-resize}.eos-ne{right:-6px;top:-6px;cursor:nesw-resize}.eos-sw{left:-6px;bottom:-6px;cursor:nesw-resize}.eos-se{right:-6px;bottom:-6px;cursor:nwse-resize}
 .eos-lock{position:absolute;top:8px;left:8px;z-index:40;display:inline-flex;align-items:center;gap:6px;height:22px;max-width:22px;padding:0 5px;overflow:hidden;border-radius:999px;background:rgba(31,35,41,.72);color:#fff;font:600 11px/1 ui-sans-serif,system-ui,sans-serif;white-space:nowrap;transition:max-width .16s ease;pointer-events:none}
@@ -392,6 +393,39 @@ export function canvasScript(origin: string) {
       return sectionOf(target);
     }
 
+    function finishMarquee(zone, rect) {
+      var box = rect.getBoundingClientRect();
+      var items = zone.querySelectorAll("[data-item-id]");
+      var hits = [];
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        if (item.getAttribute("data-hidden") === "true") continue;
+        var itemBox = item.getBoundingClientRect();
+        if (itemBox.left < box.right && itemBox.right > box.left && itemBox.top < box.bottom && itemBox.bottom > box.top) hits.push(item);
+      }
+      clearHandles();
+      document.querySelectorAll(".eos-selected").forEach(function (node) { node.classList.remove("eos-selected"); });
+      closeMenu(false);
+      selectedItems = hits;
+      selected = hits[hits.length - 1] || null;
+      hits.forEach(function (node) { node.classList.add("eos-selected"); });
+      if (!selected) { clearSelected(false); return; }
+      if (canvasHandlesFor(selected)) {
+        ["nw", "ne", "sw", "se"].forEach(function (corner) {
+          var handle = document.createElement("button");
+          handle.className = "eos-handle eos-" + corner;
+          handle.type = "button";
+          handle.tabIndex = -1;
+          handle.dataset.corner = corner;
+          handle.setAttribute("aria-label", "Resize");
+          selected.appendChild(handle);
+        });
+      }
+      showBar();
+      markNearGaps();
+      post(Object.assign(payload(selected), { shift: hits.length > 1 }));
+      reportOverflow(selected);
+    }
     function select(node, additive, silent) {
       if (!node) { clearSelected(silent); return; }
       var multi = false;
@@ -1481,6 +1515,13 @@ export function canvasScript(origin: string) {
       });
       if (intent === "resize") { press = { kind: "resize", node: item, corner: handle.dataset.corner, x: event.clientX, y: event.clientY, threshold: 2 }; event.preventDefault(); return; }
       if (intent === "freeform") { press = { kind: "item", node: item, x: event.clientX, y: event.clientY, threshold: 6 }; return; }
+      var canvasZone = zoneOf(target);
+      var textSelection = window.getSelection();
+      var textSelected = !!(textSelection && !textSelection.isCollapsed);
+      if (canvasZone && canvasZone.getAttribute("data-zone-name") === "Canvas" && !item && !handle && !textSelected && !closest(target, "input, textarea, [contenteditable]")) {
+        press = { kind: "marquee", node: canvasZone, x: event.clientX, y: event.clientY, threshold: 4 };
+        return;
+      }
       var lockedNode = selectableFor(target);
       if (lockedNode && isLocked(lockedNode) && !closest(target, "[data-field], input, textarea, [contenteditable]")) {
         press = { kind: "locked", node: lockedNode, x: event.clientX, y: event.clientY, threshold: 4 };
@@ -1492,6 +1533,22 @@ export function canvasScript(origin: string) {
     document.addEventListener("pointermove", function (event) {
       lastPointer = { x: event.clientX, y: event.clientY };
       if (press && !drag && (event.buttons & 1)) {
+        if (press.kind === "marquee") {
+          if (!H.passedThreshold(press.x, press.y, event.clientX, event.clientY, press.threshold)) return;
+          var left = Math.min(press.x, event.clientX);
+          var top = Math.min(press.y, event.clientY);
+          if (!press.rect) {
+            press.rect = document.createElement("div");
+            press.rect.className = "eos-marquee";
+            press.rect.setAttribute("data-marquee", "true");
+            document.body.appendChild(press.rect);
+          }
+          press.rect.style.left = left + "px";
+          press.rect.style.top = top + "px";
+          press.rect.style.width = Math.abs(event.clientX - press.x) + "px";
+          press.rect.style.height = Math.abs(event.clientY - press.y) + "px";
+          return;
+        }
         if (selectionBlocksDrag(press.node, event.target)) { press = null; return; }
         if (H.passedThreshold(press.x, press.y, event.clientX, event.clientY, press.threshold)) {
           if (press.kind === "locked") {
@@ -1517,11 +1574,27 @@ export function canvasScript(origin: string) {
       }
     });
     document.addEventListener("pointerup", function () {
+      if (press && press.kind === "marquee") {
+        var zone = press.node;
+        var rect = press.rect;
+        press = null;
+        if (rect) {
+          finishMarquee(zone, rect);
+          rect.remove();
+          suppressClick = true;
+          setTimeout(function () { suppressClick = false; }, 0);
+        }
+        return;
+      }
       press = null;
       if (dragCanceled) { dragCanceled = false; suppressClick = true; setTimeout(function () { suppressClick = false; }, 0); return; }
       if (drag) { suppressClick = true; endDrag(false); setTimeout(function () { suppressClick = false; }, 0); }
     }, true);
-    document.addEventListener("pointercancel", function () { press = null; if (drag) endDrag(true); });
+    document.addEventListener("pointercancel", function () {
+      if (press && press.rect) press.rect.remove();
+      press = null;
+      if (drag) endDrag(true);
+    });
     document.addEventListener("dragstart", function (event) {
       if (closest(event.target, "[data-item-id], [data-section-id], .eos-ui") && !(editing && editing.contains(event.target))) event.preventDefault();
     });
