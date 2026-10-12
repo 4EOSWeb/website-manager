@@ -59,6 +59,7 @@ import type { NodeDocument } from "@/platform/document/node";
 import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createButton, writeButtonField } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
+import { createImage, writeImage } from "@/platform/elements/image";
 import { createCustom, type CustomDefinition } from "@/platform/elements/custom";
 import { createHeading } from "@/platform/elements/heading";
 import { createLink, writeLinkHref } from "@/platform/elements/link";
@@ -176,6 +177,7 @@ export function EditorShell(props: {
   const richBlocks = useRef(new Map<string, string>());
   const linkBlocks = useRef(new Map<string, string>());
   const buttonBlocks = useRef(new Map<string, string>());
+  const imageBlocks = useRef(new Map<string, string>());
   const toastId = useRef(0);
 
   const page = pageByRoute(site, path);
@@ -545,7 +547,9 @@ export function EditorShell(props: {
       notify("Select an image on the page first.");
       return;
     }
-    commit(setImageSource(site, path, selection.sectionId, item.src, item.alt, selection.itemId || undefined), true);
+    const nodeId = selection.itemId ? imageBlocks.current.get(selection.itemId) : undefined;
+    const nextVisual = nodeId ? writeImage(visualDocument, nodeId, item.src, item.alt) : null;
+    commit(setImageSource(site, path, selection.sectionId, item.src, item.alt, selection.itemId || undefined), true, nextVisual ?? undefined);
   }
 
   async function removeMedia(item: MediaItem) {
@@ -829,7 +833,16 @@ export function EditorShell(props: {
       target: node.props.target === "new" ? "new" : "same",
     };
     buttonBlocks.current.set(block.id, node.id);
-    insertPreviewNode(node, block, "element:button", insertAfter(visualDocument, path, afterId, node), at);
+    insertPreviewNode(node, block, node.componentId === "generic.icon-button" ? "element:icon-button" : "element:button", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
+  function insertCreatedImage(node: NodeDocument, at?: Insert) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const src = typeof node.props.src === "string" ? node.props.src : "";
+    const alt = typeof node.props.alt === "string" ? node.props.alt : "";
+    const block: FlowBlock = { id: createId("blk"), kind: "image", hidden: false, ...(src ? { src } : {}), alt };
+    imageBlocks.current.set(block.id, node.id);
+    insertPreviewNode(node, block, "element:image", insertAfter(visualDocument, path, afterId, node), at);
   }
 
   function insertCreatedCustom(definition: CustomDefinition, at?: Insert) {
@@ -863,6 +876,10 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:icon-button") {
       insertCreatedButton(createIconButton(), at);
+      return;
+    }
+    if (entry.id === "element:image") {
+      insertCreatedImage(createImage(), at);
       return;
     }
     if (!page || !props.canEdit) {
@@ -1233,6 +1250,7 @@ export function EditorShell(props: {
                   else if (node.componentId === "generic.richtext") insertCreatedRichText(node);
                   else if (node.componentId === "generic.link") insertCreatedLink(node);
                   else if (node.componentId === "generic.button" || node.componentId === "generic.icon-button") insertCreatedButton(node);
+                  else if (node.componentId === "generic.image") insertCreatedImage(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>

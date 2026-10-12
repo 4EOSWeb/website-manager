@@ -7,6 +7,7 @@ import { Empty } from "@/components/editor/ui";
 import type { NodeDocument } from "@/platform/document/node";
 import { createButton } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
+import { createImage } from "@/platform/elements/image";
 import { createHeading } from "@/platform/elements/heading";
 import { createLink } from "@/platform/elements/link";
 import { createParagraph } from "@/platform/elements/paragraph";
@@ -20,6 +21,7 @@ export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:link", label: "Link", description: "A text link", category: "Text", keywords: "anchor href", thumb: "text" },
   { id: "element:button", label: "Button", description: "A button", category: "Calls to action", keywords: "button cta", thumb: "button" },
   { id: "element:icon-button", label: "Icon button", description: "A button that is an icon", category: "Calls to action", keywords: "icon aria", thumb: "button" },
+  { id: "element:image", label: "Image", description: "A picture", category: "Media", keywords: "photo picture", thumb: "image" },
 ];
 
 function entryVisible(entry: LibraryEntry, query: string, category: LibraryCategory | "All" | "Saved") {
@@ -119,6 +121,7 @@ export function LibraryBrowser(props: {
               if (node) props.onElement(node);
             } else if (entry.id === "element:button" && props.onElement) props.onElement(createButton());
             else if (entry.id === "element:icon-button" && props.onElement) props.onElement(createIconButton());
+            else if (entry.id === "element:image" && props.onElement) props.onElement(createImage());
             else props.onChoose(entry);
           }}
         >
