@@ -1217,6 +1217,11 @@ export function canvasScript(origin: string) {
       });
       if (intent === "resize") { press = { kind: "resize", node: item, corner: handle.dataset.corner, x: event.clientX, y: event.clientY, threshold: 2 }; event.preventDefault(); return; }
       if (intent === "freeform") { press = { kind: "item", node: item, x: event.clientX, y: event.clientY, threshold: 6 }; return; }
+      var lockedNode = selectableFor(target);
+      if (lockedNode && isLocked(lockedNode) && !closest(target, "[data-field], input, textarea, [contenteditable]")) {
+        press = { kind: "locked", node: lockedNode, x: event.clientX, y: event.clientY, threshold: 4 };
+        return;
+      }
       press = null;
     }, true);
 
@@ -1225,6 +1230,11 @@ export function canvasScript(origin: string) {
       if (press && !drag && (event.buttons & 1)) {
         if (selectionBlocksDrag(press.node, event.target)) { press = null; return; }
         if (H.passedThreshold(press.x, press.y, event.clientX, event.clientY, press.threshold)) {
+          if (press.kind === "locked") {
+            post({ type: "4eos-drag-reject", reason: "locked" });
+            press = null;
+            return;
+          }
           if (press.kind === "item" && selected !== press.node && selectedItems.indexOf(press.node) < 0) select(press.node, false, false);
           var started = press;
           press = null;

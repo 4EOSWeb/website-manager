@@ -50,6 +50,7 @@ import { emptySelection, type EditorApi, type MediaItem, type Publication, type 
 import type { SiteContext } from "@/platform/context";
 import { StatusBar, ToolRail, TopBar, type Zoom } from "@/components/editor/chrome";
 import { Canvas } from "@/components/editor/canvas";
+import { DragStatus, dragRejectReason, type DragRejectReason } from "@/components/editor/drag-status";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
 import { LibraryBrowser } from "@/components/editor/library";
 import { Inspector } from "@/components/editor/inspector";
@@ -190,6 +191,7 @@ export function EditorShell(props: {
   const [publishMessage, setPublishMessage] = useState("");
   const [shortcuts, setShortcuts] = useState(false);
   const [insert, setInsert] = useState<Insert | null>(null);
+  const [dragReason, setDragReason] = useState<DragRejectReason | null>(null);
 
   const skipSite = useRef(true);
   const skipPost = useRef(true);
@@ -1264,6 +1266,12 @@ export function EditorShell(props: {
         const itemIds = Array.isArray(data.itemIds) ? data.itemIds.map((item) => String(item)).filter(Boolean) : itemId ? [itemId] : [];
         const chrome = data.chrome === "header" || data.chrome === "footer" ? data.chrome : "";
         setSelection({ sectionId: text("sectionId"), itemId, itemIds, overlay: Boolean(data.overlay), locked: Boolean(data.locked), chrome, navRoute: text("navRoute"), kind: text("kind") });
+        setDragReason(null);
+        break;
+      }
+      case "4eos-drag-reject": {
+        const reason = dragRejectReason(text("reason"));
+        if (reason) setDragReason(reason);
         break;
       }
       case "4eos-select-node": {
@@ -1614,6 +1622,7 @@ export function EditorShell(props: {
               </button>
             </div>
           ) : null}
+          <DragStatus reason={dragReason} />
           <Canvas
             src={previewSrc}
             width={width}
