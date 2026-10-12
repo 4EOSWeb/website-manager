@@ -267,8 +267,8 @@ export function clampPlacement(placement: Placement): Placement {
   return {
     x: round(placement.x),
     y: round(placement.y),
-    w: Math.min(1, Math.max(0.05, round(placement.w))),
-    h: Math.min(1, Math.max(0.05, round(placement.h))),
+    w: Math.min(1, Math.max(0.02, round(placement.w))),
+    h: Math.min(1, Math.max(0.02, round(placement.h))),
   };
 }
 

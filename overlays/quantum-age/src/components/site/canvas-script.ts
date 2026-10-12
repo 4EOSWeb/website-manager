@@ -817,8 +817,9 @@ export function canvasScript(origin: string) {
       if (drag.kind === "resize") {
         var left = drag.corner.indexOf("w") >= 0;
         var top = drag.corner.indexOf("n") >= 0;
-        next.w = Math.max(0.06, Math.min(1, drag.box.w + (left ? -dx : dx)));
-        next.h = Math.max(0.04, Math.min(1, drag.box.h + (top ? -dy : dy)));
+        var canvasZone = drag.zone && drag.zone.getAttribute && drag.zone.getAttribute("data-zone-name") === "Canvas";
+        next.w = Math.max(canvasZone ? 0.02 : 0.06, Math.min(1, drag.box.w + (left ? -dx : dx)));
+        next.h = Math.max(canvasZone ? 0.02 : 0.04, Math.min(1, drag.box.h + (top ? -dy : dy)));
         if (left) next.x = Math.max(0, drag.box.x + drag.box.w - next.w);
         if (top) next.y = Math.max(0, drag.box.y + drag.box.h - next.h);
       } else {

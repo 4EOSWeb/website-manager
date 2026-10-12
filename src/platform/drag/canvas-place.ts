@@ -1,3 +1,4 @@
+import { enforceMinSize } from "../canvas/min-size";
 import { toPercent } from "../canvas/percent";
 
 type TreeNode = {
@@ -71,11 +72,12 @@ export function placeOnCanvas(
   const copy = structuredClone(document);
   const node = locate(copy, input.nodeId);
   if (!node) return null;
+  const floored = enforceMinSize({ x: input.x, y: input.y, w: input.w, h: input.h });
   const box = {
-    x: clampPercent(input.x),
-    y: clampPercent(input.y),
-    w: clampPercent(input.w),
-    h: clampPercent(input.h),
+    x: clampPercent(floored.x),
+    y: clampPercent(floored.y),
+    w: clampPercent(floored.w),
+    h: clampPercent(floored.h),
   };
   if (input.breakpoint === "tablet" || input.breakpoint === "mobile") {
     const responsive = node.responsive && typeof node.responsive === "object" ? { ...node.responsive } : {};
