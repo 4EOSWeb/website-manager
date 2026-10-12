@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { groupCanvas, ungroupCanvas, type GroupNode } from "../../src/platform/canvas/group.ts";
+import { groupCanvas, type GroupNode } from "../../src/platform/canvas/group.ts";
+import { ungroupCanvas } from "../../src/platform/canvas/ungroup.ts";
 
 const canvas = {
   pages: [{

@@ -501,6 +501,7 @@ export function canvasScript(origin: string) {
         if (c.open) tools.push(button("open", "Go to this page", "open"));
         if (c.duplicate) tools.push(button("duplicate", "Duplicate", "duplicate"));
         if (c.freeform && selectedItems.length > 1 && zoneOf(selected) && zoneOf(selected).getAttribute("data-zone-name") === "Canvas") tools.push(button("plus", "Group", "group"));
+        if (c.freeform && selected.getAttribute("data-group") && zoneOf(selected) && zoneOf(selected).getAttribute("data-zone-name") === "Canvas") tools.push(button("unlink", "Ungroup", "ungroup"));
         if (c.hide) {
           var hidden = selected.getAttribute("data-hidden") === "true";
           tools.push(button(hidden ? "eyeOff" : "eye", hidden ? "Show on the website" : "Hide from the website", hidden ? "show" : "hide"));

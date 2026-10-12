@@ -297,6 +297,24 @@ export function groupItems(site: SiteDraft, route: string, sectionId: string, it
   });
 }
 
+export function ungroupItems(site: SiteDraft, route: string, sectionId: string, itemId: string, overlay = false): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    const apply = (items: FreeformItem[]) => {
+      const groupId = items.find((item) => item.id === itemId)?.groupId;
+      if (!groupId) return items;
+      return items.map((item) => {
+        if (item.groupId !== groupId) return item;
+        const next = { ...item };
+        delete next.groupId;
+        return next;
+      });
+    };
+    if (overlay && section.type === "preset") return { ...section, overlay: apply(section.overlay ?? []) };
+    if (section.type !== "freeform") return section;
+    return { ...section, items: apply(section.items) };
+  });
+}
+
 export function patchItem(site: SiteDraft, route: string, sectionId: string, itemId: string, patch: Partial<FreeformItem>, overlay = false): SiteDraft {
   return mapSection(site, route, sectionId, (section) => {
     const apply = (items: FreeformItem[]) => items.map((item) => (item.id === itemId ? { ...item, ...patch } : item));

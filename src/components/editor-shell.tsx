@@ -19,6 +19,7 @@ import {
   duplicatePage,
   duplicateSection,
   groupItems,
+  ungroupItems,
   imageUsage,
   insertFlowBlock,
   insertSection,
@@ -53,6 +54,7 @@ import { StatusBar, ToolRail, TopBar, type Zoom } from "@/components/editor/chro
 import { Canvas } from "@/components/editor/canvas";
 import { DragStatus, dragRejectReason, type DragRejectReason } from "@/components/editor/drag-status";
 import { groupCanvas } from "@/platform/canvas/group";
+import { canvasGroupId, ungroupCanvas } from "@/platform/canvas/ungroup";
 import { overflowWarning } from "@/platform/canvas/overflow";
 import { toPercent } from "@/platform/canvas/percent";
 import { placeOnCanvas } from "@/platform/drag/canvas-place";
@@ -796,6 +798,11 @@ export function EditorShell(props: {
         const ids = itemIds.length > 1 ? itemIds : [itemId];
         const grouped = groupCanvas(visualDocument, ids);
         commit(groupItems(site, path, sectionId, ids, overlay), true, grouped && grouped.ok ? grouped.document : undefined);
+      } else if (action === "ungroup") {
+        const items: FreeformItem[] = overlay && target.type === "preset" ? target.overlay ?? [] : target.type === "freeform" ? target.items : [];
+        const groupId = canvasGroupId(visualDocument, itemId) || items.find((entry) => entry.id === itemId)?.groupId || "";
+        const released = groupId ? ungroupCanvas(visualDocument, groupId) : null;
+        commit(ungroupItems(site, path, sectionId, itemId, overlay), true, released && released.ok ? released.document : undefined);
       }
       return;
     }

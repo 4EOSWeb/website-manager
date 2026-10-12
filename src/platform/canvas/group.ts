@@ -92,20 +92,3 @@ export function groupCanvas(document: unknown, ids: readonly string[]): GroupOut
   parent.children.splice(first, 0, group);
   return { ok: true, document: next, groupId };
 }
-
-/** Puts the group's children back in its parent and removes the group. */
-export function ungroupCanvas(document: unknown, groupId: string): { ok: true; document: unknown } | { ok: false; reason: "missing" } | null {
-  if (!document || typeof document !== "object") return null;
-  const next = structuredClone(document) as GroupDocument;
-  const located = find(next, groupId);
-  if (!located?.parent || located.node.type !== "group" || !located.node.box) return { ok: false, reason: "missing" };
-  const group = located.node;
-  const restored = (group.children ?? []).map((child) => ({
-    ...child,
-    box: child.box ? boxOutsideGroup(child.box, group.box!) : child.box,
-  }));
-  const siblings = located.parent.children ?? [];
-  siblings.splice(located.index, 1, ...restored);
-  located.parent.children = siblings;
-  return { ok: true, document: next };
-}
