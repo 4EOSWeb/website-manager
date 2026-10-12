@@ -1,3 +1,4 @@
+import { applyAnchor, CANVAS_ANCHORS, type CanvasAnchor } from "../canvas/anchor";
 import { lockAspect } from "../canvas/aspect";
 import { enforceMaxSize } from "../canvas/max-size";
 import { enforceMinSize } from "../canvas/min-size";
@@ -74,17 +75,20 @@ export function placeOnCanvas(
   const copy = structuredClone(document);
   const node = locate(copy, input.nodeId);
   if (!node) return null;
-  const previous = node.box && typeof node.box === "object" ? node.box as { aspect?: unknown } : null;
+  const previous = node.box && typeof node.box === "object" ? node.box as { aspect?: unknown; anchor?: unknown } : null;
   const aspect = typeof previous?.aspect === "number" && Number.isFinite(previous.aspect) && previous.aspect > 0 ? previous.aspect : undefined;
+  const anchor = typeof previous?.anchor === "string" && CANVAS_ANCHORS.includes(previous.anchor as CanvasAnchor) ? previous.anchor as CanvasAnchor : undefined;
   const proposed = { x: input.x, y: input.y, w: input.w, h: input.h };
   const locked = lockAspect(proposed, { ...proposed, h: aspect ? proposed.w / aspect : proposed.h }, { shift: false, aspect, corner: "se" });
-  const sized = enforceMaxSize(enforceMinSize(locked));
+  const limited = enforceMaxSize(enforceMinSize(locked));
+  const anchored = applyAnchor({ ...limited, ...(anchor ? { anchor } : {}) }, { width: 100, height: 100 }, { width: 100, height: 100 });
   const box = {
-    x: clampPercent(sized.x),
-    y: clampPercent(sized.y),
-    w: clampPercent(sized.w),
-    h: clampPercent(sized.h),
+    x: clampPercent(anchored.x),
+    y: clampPercent(anchored.y),
+    w: clampPercent(anchored.w),
+    h: clampPercent(anchored.h),
     ...(aspect ? { aspect } : {}),
+    ...(anchor ? { anchor } : {}),
   };
   if (input.breakpoint === "tablet" || input.breakpoint === "mobile") {
     const responsive = node.responsive && typeof node.responsive === "object" ? { ...node.responsive } : {};
