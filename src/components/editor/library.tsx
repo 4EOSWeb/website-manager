@@ -9,6 +9,7 @@ import { createButton } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createContainer } from "@/platform/elements/container";
 import { createInput } from "@/platform/elements/input";
+import { createTextarea } from "@/platform/elements/textarea";
 import { createForm, formEntryVisible } from "@/platform/elements/form";
 import { createFaq } from "@/platform/elements/faq";
 import { createTestimonial } from "@/platform/elements/testimonial";
@@ -52,6 +53,7 @@ export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:faq", label: "FAQ", description: "A question and an answer", category: "FAQ", keywords: "question answer", thumb: "faq" },
   { id: "element:form", label: "Form", description: "Name, email, and a message", category: "Forms", keywords: "contact", thumb: "form" },
   { id: "element:input", label: "Input", description: "A single field", category: "Forms", keywords: "field text", thumb: "form" },
+  { id: "element:textarea", label: "Text area", description: "A multi-line field", category: "Forms", keywords: "textarea message", thumb: "form" },
 ];
 
 function entryVisible(entry: LibraryEntry, query: string, category: LibraryCategory | "All" | "Saved") {
@@ -169,6 +171,7 @@ export function LibraryBrowser(props: {
             else if (entry.id === "element:faq" && props.onElement) props.onElement(createFaq());
             else if (entry.id === "element:form" && props.onElement && formEntryVisible(props.adapter)) props.onElement(createForm());
             else if (entry.id === "element:input" && props.onElement) props.onElement(createInput());
+            else if (entry.id === "element:textarea" && props.onElement) props.onElement(createTextarea());
             else props.onChoose(entry);
           }}
         >

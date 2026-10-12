@@ -197,11 +197,13 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
     ownChildren = false;
     const text = (key: string, fallback: string) => (typeof node.props[key] === "string" ? node.props[key] : fallback);
     const fields = node.children.flatMap((child) => {
-      if (child.type !== "input" || child.componentId !== "generic.input") return [];
+      const input = child.type === "input" && child.componentId === "generic.input";
+      const textarea = child.type === "textarea" && child.componentId === "generic.textarea";
+      if (!input && !textarea) return [];
       return [{
         id: child.id,
-        label: typeof child.props.label === "string" ? child.props.label : "Label",
-        kind: "text" as const,
+        label: typeof child.props.label === "string" ? child.props.label : textarea ? "Message" : "Label",
+        kind: textarea ? "textarea" as const : "text" as const,
         required: child.props.required === true,
       }];
     });
