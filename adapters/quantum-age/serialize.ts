@@ -72,7 +72,28 @@ function flowLink(node: NodeDocument) {
   };
 }
 
-type FlowOut = ReturnType<typeof flowText> | ReturnType<typeof flowLink>;
+function flowButton(node: NodeDocument) {
+  const label = typeof node.props.label === "string" ? node.props.label : "";
+  const href = typeof node.props.href === "string" && validLink(node.props.href) ? node.props.href.trim() : "/";
+  const icon = node.props.icon === "arrow" || node.props.icon === "external" || node.props.icon === "mail" || node.props.icon === "phone" ? node.props.icon : "none";
+  const variant = node.props.variant === "outline" || node.props.variant === "text" || node.props.variant === "icon" ? node.props.variant : "filled";
+  const size = node.props.size === "s" || node.props.size === "l" ? node.props.size : "m";
+  const align = node.props.align === "center" || node.props.align === "end" ? node.props.align : "start";
+  return {
+    id: node.id,
+    kind: "button" as const,
+    hidden: node.visibility.hidden === true,
+    text: { text: label, marks: [] as RichMark[] },
+    href,
+    icon,
+    variant,
+    size,
+    align,
+    target: node.props.target === "new" ? ("new" as const) : ("same" as const),
+  };
+}
+
+type FlowOut = ReturnType<typeof flowText> | ReturnType<typeof flowLink> | ReturnType<typeof flowButton>;
 
 function richMarks(node: NodeDocument): RichMark[] {
   return Array.isArray(node.props.marks) ? (node.props.marks as RichMark[]) : [];
@@ -87,7 +108,8 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
   else if (node.type === "link" && componentId === "generic.link") {
     const href = typeof node.props.href === "string" ? node.props.href : "";
     if (validLink(href)) blocks.push(flowLink(node));
-  } else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
+  } else if (node.type === "button" && componentId === "generic.button") blocks.push(flowButton(node));
+  else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
     unmapped.push({ path, id: node.id, type: node.type, componentId });
   }
   node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, blocks));

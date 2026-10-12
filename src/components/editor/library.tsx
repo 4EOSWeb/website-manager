@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { CATEGORIES, LIBRARY, searchLibrary, type LibraryCategory, type LibraryEntry } from "@/lib/library";
 import { Empty } from "@/components/editor/ui";
 import type { NodeDocument } from "@/platform/document/node";
+import { createButton } from "@/platform/elements/button";
 import { createHeading } from "@/platform/elements/heading";
 import { createLink } from "@/platform/elements/link";
 import { createParagraph } from "@/platform/elements/paragraph";
@@ -16,6 +17,7 @@ export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:paragraph", label: "Paragraph", description: "A paragraph", category: "Text", keywords: "body paragraph", thumb: "text" },
   { id: "element:richtext", label: "Rich text", description: "Text you can bold", category: "Text", keywords: "bold italic marks", thumb: "text" },
   { id: "element:link", label: "Link", description: "A text link", category: "Text", keywords: "anchor href", thumb: "text" },
+  { id: "element:button", label: "Button", description: "A button", category: "Calls to action", keywords: "button cta", thumb: "button" },
 ];
 
 function entryVisible(entry: LibraryEntry, query: string, category: LibraryCategory | "All" | "Saved") {
@@ -113,7 +115,8 @@ export function LibraryBrowser(props: {
             else if (entry.id === "element:link" && props.onElement) {
               const node = createLink();
               if (node) props.onElement(node);
-            } else props.onChoose(entry);
+            } else if (entry.id === "element:button" && props.onElement) props.onElement(createButton());
+            else props.onChoose(entry);
           }}
         >
           <Thumb kind={entry.thumb} />

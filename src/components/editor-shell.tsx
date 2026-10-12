@@ -57,6 +57,7 @@ import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTar
 import { selectNodeId } from "@/components/editor/state/selection";
 import type { NodeDocument } from "@/platform/document/node";
 import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
+import { createButton, writeButtonField } from "@/platform/elements/button";
 import { createCustom, type CustomDefinition } from "@/platform/elements/custom";
 import { createHeading } from "@/platform/elements/heading";
 import { createLink, writeLinkHref } from "@/platform/elements/link";
@@ -67,6 +68,16 @@ import { AddPageDialog, CropDialog, ImagePickerDialog, InsertDialog, PublishDial
 
 type Toast = { id: number; message: string; tone: "info" | "error"; action?: { label: string; run: () => void } };
 type Insert = { beforeId: string };
+
+function flowBlockText(site: SiteDraft, route: string, blockId: string) {
+  const page = site.pages.find((item) => item.route === route);
+  for (const section of page?.sections ?? []) {
+    if (section.type !== "flow") continue;
+    const block = section.blocks.find((item) => item.id === blockId);
+    if (block?.text && typeof block.text === "object") return block.text.text;
+  }
+  return "";
+}
 
 function flowBlockHref(site: SiteDraft, route: string, blockId: string) {
   const page = site.pages.find((item) => item.route === route);
@@ -163,6 +174,7 @@ export function EditorShell(props: {
   const readyFor = useRef("");
   const richBlocks = useRef(new Map<string, string>());
   const linkBlocks = useRef(new Map<string, string>());
+  const buttonBlocks = useRef(new Map<string, string>());
   const toastId = useRef(0);
 
   const page = pageByRoute(site, path);
@@ -223,8 +235,13 @@ export function EditorShell(props: {
       textKey.current = key;
       rememberHistory();
     }
-    setDirtyState((state) => markChanged(state, { version3: next }));
+    const blockId = key.split(":")[0] ?? "";
+    const nodeId = buttonBlocks.current.get(blockId);
+    const label = flowBlockText(next, path, blockId);
+    const nextVisual = nodeId ? writeButtonField(visualDocument, nodeId, "label", label) : null;
+    setDirtyState((state) => markChanged(state, nextVisual ? { version3: next, visualDocument: nextVisual } : { version3: next }));
     setSite(next);
+    if (nextVisual) setVisualDocument(nextVisual);
     if (reload) reloadAfter.current = true;
   }
 
@@ -793,6 +810,27 @@ export function EditorShell(props: {
     insertPreviewNode(node, block, "element:link", insertAfter(visualDocument, path, afterId, node), at);
   }
 
+  function insertCreatedButton(node: NodeDocument, at?: Insert) {
+    const href = typeof node.props.href === "string" && validLink(node.props.href) ? node.props.href : "/";
+    const label = typeof node.props.label === "string" ? node.props.label : "Button";
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const icon = node.props.icon === "arrow" || node.props.icon === "external" || node.props.icon === "mail" || node.props.icon === "phone" ? node.props.icon : "none";
+    const block: FlowBlock = {
+      id: createId("blk"),
+      kind: "button",
+      hidden: false,
+      text: { text: label, marks: [] },
+      href,
+      icon,
+      variant: node.props.variant === "outline" || node.props.variant === "text" ? node.props.variant : "filled",
+      size: node.props.size === "s" || node.props.size === "l" ? node.props.size : "m",
+      align: node.props.align === "center" || node.props.align === "end" ? node.props.align : "start",
+      target: node.props.target === "new" ? "new" : "same",
+    };
+    buttonBlocks.current.set(block.id, node.id);
+    insertPreviewNode(node, block, "element:button", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
   function insertCreatedCustom(definition: CustomDefinition, at?: Insert) {
     const node = createCustom(definition);
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
@@ -816,6 +854,10 @@ export function EditorShell(props: {
     if (entry.id === "element:link") {
       const node = createLink();
       if (node) insertCreatedLink(node, at);
+      return;
+    }
+    if (entry.id === "element:button") {
+      insertCreatedButton(createButton(), at);
       return;
     }
     if (!page || !props.canEdit) {
@@ -1069,9 +1111,10 @@ export function EditorShell(props: {
     commit: (next, reload) => {
       const blockId = selection.itemId;
       const nodeId = blockId ? linkBlocks.current.get(blockId) : undefined;
+      const buttonId = blockId ? buttonBlocks.current.get(blockId) : undefined;
       const href = blockId ? flowBlockHref(next, path, blockId) : "";
       const previous = blockId ? flowBlockHref(site, path, blockId) : "";
-      const updated = nodeId && href !== previous ? writeLinkHref(visualDocument, nodeId, href) : null;
+      const updated = nodeId && href !== previous ? writeLinkHref(visualDocument, nodeId, href) : buttonId && href !== previous ? writeButtonField(visualDocument, buttonId, "href", href) : null;
       commit(next, reload, updated ?? undefined);
     },
     commitText,
@@ -1184,6 +1227,7 @@ export function EditorShell(props: {
                   if (node.componentId === "generic.text") insertCreatedParagraph(node);
                   else if (node.componentId === "generic.richtext") insertCreatedRichText(node);
                   else if (node.componentId === "generic.link") insertCreatedLink(node);
+                  else if (node.componentId === "generic.button") insertCreatedButton(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>
