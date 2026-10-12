@@ -2,8 +2,9 @@
 
 import { ExternalLink } from "lucide-react";
 import type { FreeformItem, Section } from "@/lib/content-schema";
-import { alignItems, applyText, patchChrome, patchItem, renameZone, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
+import { alignItems, applyText, distributeItems, patchChrome, patchItem, renameZone, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
 import { alignCanvas, type AlignMode } from "@/platform/canvas/align";
+import { distributeCanvas, type DistributeAxis } from "@/platform/canvas/distribute";
 import { mixedProps } from "@/platform/canvas/multi-select";
 import { overlapWarning, type OverlapBox } from "@/platform/canvas/overlap";
 import type { EditorApi, Viewport } from "@/components/editor/types";
@@ -116,6 +117,16 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
                 api.commit(alignItems(api.site, api.path, section.id, ids, api.viewport, mode, overlay), true, aligned && aligned.ok ? aligned.document : undefined);
               }}>
                 {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </button>
+            ))}
+          </div>
+          <div className="ed-row">
+            {(["horizontal", "vertical"] as const satisfies readonly DistributeAxis[]).map((axis) => (
+              <button key={axis} type="button" className="ed-button" disabled={disabled || ids.length < 3} onClick={() => {
+                const distributed = distributeCanvas(api.visualDocument, ids, axis);
+                api.commit(distributeItems(api.site, api.path, section.id, ids, api.viewport, axis, overlay), true, distributed && distributed.ok ? distributed.document : undefined);
+              }}>
+                {axis === "horizontal" ? "Distribute horizontally" : "Distribute vertically"}
               </button>
             ))}
           </div>

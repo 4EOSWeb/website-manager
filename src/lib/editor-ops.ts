@@ -1,4 +1,5 @@
 import type { BlogDraft, FlowBlock, FreeformItem, PageDocument, Placement, Section, SiteDraft } from "@/lib/content-schema";
+import { distributeBoxes, type DistributeAxis } from "@/platform/canvas/distribute";
 import { sanitizeMarks, type RichMark } from "@/lib/rich-text";
 import { clampPlacement, createFreeformItem, createId, createSection, templateSections, type LibraryBlock } from "@/lib/page-documents";
 
@@ -269,6 +270,33 @@ export function alignItems(
       if (mode === "middle") box.y = midY - box.h / 2;
       if (mode === "bottom") box.y = (boxes.length === 1 ? 1 : maxBottom) - box.h;
       return { ...item, [viewport]: clampPlacement(box) };
+    });
+    if (overlay && section.type === "preset") return { ...section, overlay: items };
+    if (section.type === "freeform") return { ...section, items };
+    return section;
+  });
+}
+
+export function distributeItems(
+  site: SiteDraft,
+  route: string,
+  sectionId: string,
+  itemIds: string[],
+  viewport: "desktop" | "tablet" | "mobile",
+  axis: DistributeAxis,
+  overlay = false,
+): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    const source = overlay && section.type === "preset" ? section.overlay ?? [] : section.type === "freeform" ? section.items : null;
+    if (!source || itemIds.length < 3) return section;
+    const chosen = source.filter((item) => itemIds.includes(item.id));
+    if (chosen.length < 3) return section;
+    const nextBoxes = distributeBoxes(chosen.map((item) => item[viewport] ?? item.desktop), axis);
+    const byId = new Map(chosen.map((item, index) => [item.id, nextBoxes[index]]));
+    const items = source.map((item) => {
+      const box = byId.get(item.id);
+      if (!box) return item;
+      return { ...item, [viewport]: clampPlacement({ ...(item[viewport] ?? item.desktop), x: box.x, y: box.y }) };
     });
     if (overlay && section.type === "preset") return { ...section, overlay: items };
     if (section.type === "freeform") return { ...section, items };
