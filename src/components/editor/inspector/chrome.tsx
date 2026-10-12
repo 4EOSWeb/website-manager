@@ -3,9 +3,15 @@
 import { ExternalLink } from "lucide-react";
 import type { FreeformItem, Section } from "@/lib/content-schema";
 import { alignItems, applyText, patchChrome, patchItem, renameZone, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
-import type { EditorApi } from "@/components/editor/types";
+import { overlapWarning, type OverlapBox } from "@/platform/canvas/overlap";
+import type { EditorApi, Viewport } from "@/components/editor/types";
 import { Field, Group, TextArea, TextInput, Toggle } from "@/components/editor/ui";
 import { LinkPicker } from "@/components/editor/inspector/shared";
+
+function placedBox(item: FreeformItem, viewport: Viewport): OverlapBox {
+  const box = viewport === "tablet" ? item.tablet ?? item.desktop : viewport === "mobile" ? item.mobile ?? item.desktop : item.desktop;
+  return { x: box.x * 100, y: box.y * 100, w: box.w * 100, h: box.h * 100, locked: item.locked, hidden: item.hidden };
+}
 
 export function HeaderInspector({ api }: { api: EditorApi }) {
   const chrome = api.site.chrome;
@@ -87,10 +93,14 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
     );
   }
   const set = (patch: Partial<FreeformItem>, reload = true) => api.commit(patchItem(api.site, api.path, section.id, item.id, patch, overlay), reload);
+  const siblings = section.type === "freeform" ? section.items : section.type === "preset" ? section.overlay ?? [] : [];
+  const warning = overlapWarning(placedBox(item, api.viewport), siblings.filter((other) => other.id !== item.id).map((other) => placedBox(other, api.viewport)));
+  const notice = warning ? <p className="ed-callout" role="status">{warning}</p> : null;
   if (tab === "arrange") {
     const ids = api.selection.itemIds.length ? api.selection.itemIds : [item.id];
     return (
       <>
+        {notice}
         <Group title="Align">
           <div className="ed-row">
             {(["left", "center", "right", "top", "middle"] as const).map((mode) => (
@@ -113,6 +123,8 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
     );
   }
   return (
+    <>
+    {notice}
     <Group title="Content">
       {item.kind === "image" || item.kind === "graphic" ? (
         <>
@@ -128,5 +140,6 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
       )}
       {item.kind === "button" ? <LinkPicker key={item.id} site={api.site} value={item.href ?? ""} disabled={disabled} onChange={(href) => set({ href })} /> : null}
     </Group>
+    </>
   );
 }
