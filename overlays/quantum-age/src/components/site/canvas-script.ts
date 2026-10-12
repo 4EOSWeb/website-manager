@@ -724,6 +724,54 @@ export function canvasScript(origin: string) {
       }, 16);
       updateDrag(event.clientX, event.clientY, event.shiftKey, event.altKey);
     }
+    function canvasSiblingGuides(zone, box, node) {
+      var snapped = { x: false, y: false };
+      if (!zone || !node) return snapped;
+      var seen = {};
+      var items = zone.querySelectorAll("[data-item-id]");
+      for (var i = 0; i < items.length; i++) {
+        var other = items[i];
+        if (other === node || other.getAttribute("data-hidden") === "true") continue;
+        var there = readBox(other);
+        var pairs = [
+          ["x", box.x, there.x],
+          ["x", box.x + box.w / 2, there.x + there.w / 2],
+          ["x", box.x + box.w, there.x + there.w],
+          ["y", box.y, there.y],
+          ["y", box.y + box.h / 2, there.y + there.h / 2],
+          ["y", box.y + box.h, there.y + there.h],
+        ];
+        for (var p = 0; p < pairs.length; p++) {
+          var axis = pairs[p][0];
+          var self = pairs[p][1];
+          var target = pairs[p][2];
+          if (Math.abs(self - target) > 0.01) continue;
+          var key = axis + ":" + Math.round(target * 1000);
+          if (!seen[key]) {
+            seen[key] = true;
+            var guide = document.createElement("div");
+            guide.className = "eos-guide";
+            guide.setAttribute("data-guide", axis === "x" ? "sibling-x" : "sibling-y");
+            if (axis === "x") {
+              guide.style.left = (target * 100) + "%";
+              guide.style.top = "0";
+              guide.style.bottom = "0";
+              guide.style.width = "1px";
+            } else {
+              guide.style.top = (target * 100) + "%";
+              guide.style.left = "0";
+              guide.style.right = "0";
+              guide.style.height = "1px";
+            }
+            zone.appendChild(guide);
+          }
+          if (drag.alt === true) continue;
+          if (axis === "x" && !snapped.x) { box.x = box.x + (target - self); snapped.x = true; }
+          if (axis === "y" && !snapped.y) { box.y = box.y + (target - self); snapped.y = true; }
+        }
+      }
+      return snapped;
+    }
     function canvasEdgeGuides(zone, box) {
       if (!zone || zone.getAttribute("data-section-type") === "flow") return;
       function line(name, horizontal, atStart) {
@@ -923,11 +971,16 @@ export function canvasScript(origin: string) {
         if (drag.canvas) {
           next.x = Math.max(0, Math.min(1 - next.w, next.x));
           next.y = Math.max(0, Math.min(1 - next.h, next.y));
+          var sibling = canvasSiblingGuides(drag.zone, next, drag.node);
           if (drag.alt !== true) {
-            next.x = snapShare(next.x);
-            next.y = snapShare(next.y);
-            next.x = Math.max(0, Math.min(1 - next.w, next.x));
-            next.y = Math.max(0, Math.min(1 - next.h, next.y));
+            if (!sibling.x) {
+              next.x = snapShare(next.x);
+              next.x = Math.max(0, Math.min(1 - next.w, next.x));
+            }
+            if (!sibling.y) {
+              next.y = snapShare(next.y);
+              next.y = Math.max(0, Math.min(1 - next.h, next.y));
+            }
           }
           canvasCenterGuides(drag.zone, next);
           canvasEdgeGuides(drag.zone, next);
