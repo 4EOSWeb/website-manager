@@ -55,8 +55,9 @@ import { Inspector } from "@/components/editor/inspector";
 import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTargetForNode, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
 import { selectNodeId } from "@/components/editor/state/selection";
 import type { NodeDocument } from "@/platform/document/node";
-import { insertNode, nodeIdsIn } from "@/platform/elements/create";
+import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createHeading } from "@/platform/elements/heading";
+import { createParagraph } from "@/platform/elements/paragraph";
 import { useEditorHistory } from "@/components/editor/use-editor-history";
 import { AddPageDialog, CropDialog, ImagePickerDialog, InsertDialog, PublishDialog, ShortcutsDialog, TemplateDialog, type PageForm } from "@/components/editor/dialogs";
 
@@ -721,7 +722,7 @@ export function EditorShell(props: {
     } else if (action === "hide" || action === "show") commit(setSectionHidden(site, path, sectionId, action === "hide"), true);
   }
 
-  function insertCreatedHeading(node: NodeDocument, at?: Insert) {
+  function insertPreviewNode(node: NodeDocument, block: FlowBlock, libraryId: string, nextVisual: unknown | null, at?: Insert) {
     if (!page || !props.canEdit) {
       notify(managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
       return;
@@ -730,15 +731,13 @@ export function EditorShell(props: {
       notify("This page is managed for you, so nothing can be added here.");
       return;
     }
-    rememberLibrary("element:heading");
-    const parentId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
-    const nextVisual = insertNode(visualDocument, path, parentId, node);
-    const block: FlowBlock = { id: createId("blk"), kind: "heading", hidden: false, text: { text: "Heading", marks: [] } };
+    rememberLibrary(libraryId);
+    const label = block.text?.text ?? "Item";
     let next: SiteDraft;
     if (!at && section?.type === "flow" && !selection.locked) {
       next = insertFlowBlock(site, path, section.id, block, selection.itemId || undefined);
     } else {
-      const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Heading", layout: "stack", blocks: [block] };
+      const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: label, layout: "stack", blocks: [block] };
       const index = at ? (at.beforeId ? page.sections.findIndex((item) => item.id === at.beforeId) : page.sections.length) : section ? page.sections.findIndex((item) => item.id === section.id) + 1 : page.sections.length;
       next = insertSection(site, path, index < 0 ? page.sections.length : index, created);
     }
@@ -746,12 +745,28 @@ export function EditorShell(props: {
     pinnedNode.current = node.id;
     setNodeIds(selectNodeId(node.id).nodeIds);
     setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
-    notify("Heading added.");
+    notify(`${label} added.`);
+  }
+
+  function insertCreatedHeading(node: NodeDocument, at?: Insert) {
+    const parentId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const block: FlowBlock = { id: createId("blk"), kind: "heading", hidden: false, text: { text: "Heading", marks: [] } };
+    insertPreviewNode(node, block, "element:heading", insertNode(visualDocument, path, parentId, node), at);
+  }
+
+  function insertCreatedParagraph(node: NodeDocument, at?: Insert) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const block: FlowBlock = { id: createId("blk"), kind: "paragraph", hidden: false, text: { text: "Paragraph", marks: [] } };
+    insertPreviewNode(node, block, "element:paragraph", insertAfter(visualDocument, path, afterId, node), at);
   }
 
   function insertEntry(entry: LibraryEntry, at?: Insert) {
     if (entry.id === "element:heading") {
       insertCreatedHeading(createHeading(), at);
+      return;
+    }
+    if (entry.id === "element:paragraph") {
+      insertCreatedParagraph(createParagraph(), at);
       return;
     }
     if (!page || !props.canEdit) {
@@ -1105,7 +1120,7 @@ export function EditorShell(props: {
                 <div className="ed-panel-head">
                   <h2>Add</h2>
                 </div>
-                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommendedHere} templates={templates} onChoose={(entry) => insertEntry(entry)} onElement={(node) => insertCreatedHeading(node)} onTemplate={(id) => insertTemplate(id)} dense />
+                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommendedHere} templates={templates} onChoose={(entry) => insertEntry(entry)} onElement={(node) => (node.componentId === "generic.text" ? insertCreatedParagraph(node) : insertCreatedHeading(node))} onTemplate={(id) => insertTemplate(id)} dense />
               </div>
             ) : null}
             {rail === "pages" ? (

@@ -6,9 +6,11 @@ import { CATEGORIES, LIBRARY, searchLibrary, type LibraryCategory, type LibraryE
 import { Empty } from "@/components/editor/ui";
 import type { NodeDocument } from "@/platform/document/node";
 import { createHeading } from "@/platform/elements/heading";
+import { createParagraph } from "@/platform/elements/paragraph";
 
 export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:heading", label: "Heading", description: "A heading", category: "Text", keywords: "title heading", thumb: "heading" },
+  { id: "element:paragraph", label: "Paragraph", description: "A paragraph", category: "Text", keywords: "body paragraph", thumb: "text" },
 ];
 
 function entryVisible(entry: LibraryEntry, query: string, category: LibraryCategory | "All" | "Saved") {
@@ -92,6 +94,7 @@ export function LibraryBrowser(props: {
           data-element={entry.id.startsWith("element:") ? entry.id.slice("element:".length) : undefined}
           onClick={() => {
             if (entry.id === "element:heading" && props.onElement) props.onElement(createHeading());
+            else if (entry.id === "element:paragraph" && props.onElement) props.onElement(createParagraph());
             else props.onChoose(entry);
           }}
         >

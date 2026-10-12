@@ -71,3 +71,31 @@ export function insertNode(document: unknown, route: string, parentId: string | 
   target.children = [...target.children, node as unknown as TreeNode];
   return copy;
 }
+
+function findParent(node: TreeNode, id: string): { parent: TreeNode; index: number } | null {
+  const index = (node.children ?? []).findIndex((child) => child.id === id);
+  if (index >= 0) return { parent: node, index };
+  for (const child of node.children ?? []) {
+    const found = findParent(child, id);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** Places a node after the selected sibling, or at the end of the page root. */
+export function insertAfter(document: unknown, route: string, afterId: string | null, node: NodeDocument): unknown | null {
+  if (!document || typeof document !== "object") return null;
+  const copy = structuredClone(document) as { pages?: Array<{ route?: string; root?: TreeNode }> };
+  const page = copy.pages?.find((item) => item.route === route);
+  if (!page?.root || !Array.isArray(page.root.children)) return null;
+  const found = afterId ? findParent(page.root, afterId) : null;
+  if (found && found.parent.locked?.locked !== true) {
+    const children = [...found.parent.children];
+    children.splice(found.index + 1, 0, node as unknown as TreeNode);
+    found.parent.children = children;
+    return copy;
+  }
+  if (page.root.locked?.locked === true) return null;
+  page.root.children = [...page.root.children, node as unknown as TreeNode];
+  return copy;
+}

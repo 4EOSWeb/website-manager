@@ -48,24 +48,25 @@ function json(value: unknown) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-function flowHeading(node: NodeDocument) {
+function flowText(node: NodeDocument, kind: "heading" | "paragraph") {
   const text = typeof node.props.text === "string" ? node.props.text : "";
   return {
     id: node.id,
-    kind: "heading" as const,
+    kind,
     hidden: node.visibility.hidden === true,
     text: { text, marks: [] as string[] },
   };
 }
 
-function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, headings: Array<ReturnType<typeof flowHeading>>) {
+function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: Array<ReturnType<typeof flowText>>) {
   const componentId = node.componentId;
   if (componentId === "quantum-age.hero") hero.props = node.props;
-  else if (node.type === "heading" && componentId === "generic.heading") headings.push(flowHeading(node));
+  else if (node.type === "heading" && componentId === "generic.heading") blocks.push(flowText(node, "heading"));
+  else if (node.type === "text" && componentId === "generic.text") blocks.push(flowText(node, "paragraph"));
   else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
     unmapped.push({ path, id: node.id, type: node.type, componentId });
   }
-  node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, headings));
+  node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, blocks));
 }
 
 export const serializeQuantumAge: SerializeHook = (document) => {
@@ -74,10 +75,10 @@ export const serializeQuantumAge: SerializeHook = (document) => {
   const unmapped: UnmappedNode[] = [];
   const hero: { props: unknown } = { props: null };
   const pages = validated.value.pages.map((page) => {
-    const headings: Array<ReturnType<typeof flowHeading>> = [];
-    walk(page.root, `pages.${page.route}.root`, unmapped, hero, headings);
-    const sections = headings.length
-      ? [{ id: `sec_${page.id.slice(5, 17)}`, type: "flow", hidden: false, blocks: headings }]
+    const blocks: Array<ReturnType<typeof flowText>> = [];
+    walk(page.root, `pages.${page.route}.root`, unmapped, hero, blocks);
+    const sections = blocks.length
+      ? [{ id: `sec_${page.id.slice(5, 17)}`, type: "flow", hidden: false, blocks }]
       : [];
     return {
       id: page.id,
