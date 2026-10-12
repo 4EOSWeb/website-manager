@@ -145,7 +145,7 @@ type CanvasOut = { id: string; type: "freeform"; hidden: boolean; name: string; 
 type CtaOut = { id: string; type: "cta"; hidden: boolean; heading: string; body: string; label: string; href: string };
 type TestimonialOut = { id: string; type: "testimonial"; hidden: boolean; quote: string; name: string; role: string };
 type FaqOut = { id: string; type: "faq"; hidden: boolean; heading: string; items: Array<{ q: string; a: string }> };
-type FormFieldOut = { id: string; label: string; kind: "text" | "email" | "textarea"; required: boolean };
+type FormFieldOut = { id: string; label: string; kind: "text" | "email" | "textarea" | "select"; required: boolean; options?: string[] };
 type FormOut = { id: string; type: "form"; hidden: boolean; nameLabel: string; emailLabel: string; messageLabel: string; buttonLabel: string; recipient: string; fields?: FormFieldOut[] };
 type ExtraSection = ReturnType<typeof dividerSection> | ReturnType<typeof spacerSection> | WrappedFlow | CanvasOut | CtaOut | TestimonialOut | FaqOut | FormOut;
 
@@ -199,12 +199,15 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
     const fields = node.children.flatMap((child) => {
       const input = child.type === "input" && child.componentId === "generic.input";
       const textarea = child.type === "textarea" && child.componentId === "generic.textarea";
-      if (!input && !textarea) return [];
+      const select = child.type === "select" && child.componentId === "generic.select";
+      if (!input && !textarea && !select) return [];
+      const options = select && Array.isArray(child.props.options) ? child.props.options.flatMap((item) => (typeof item === "string" ? [item] : [])) : [];
       return [{
         id: child.id,
-        label: typeof child.props.label === "string" ? child.props.label : textarea ? "Message" : "Label",
-        kind: textarea ? "textarea" as const : "text" as const,
+        label: typeof child.props.label === "string" ? child.props.label : select ? "Choose" : textarea ? "Message" : "Label",
+        kind: select ? "select" as const : textarea ? "textarea" as const : "text" as const,
         required: child.props.required === true,
+        ...(select ? { options: options.length ? options : ["First", "Second"] } : {}),
       }];
     });
     extras.push({

@@ -62,6 +62,7 @@ import { createIconButton } from "@/platform/elements/icon-button";
 import { createContainer } from "@/platform/elements/container";
 import { createInput } from "@/platform/elements/input";
 import { createTextarea } from "@/platform/elements/textarea";
+import { createSelect } from "@/platform/elements/select";
 import { createForm } from "@/platform/elements/form";
 import { createFaq } from "@/platform/elements/faq";
 import { createTestimonial } from "@/platform/elements/testimonial";
@@ -905,10 +906,11 @@ export function EditorShell(props: {
       notify("Add this inside a form.");
       return;
     }
-    const textarea = node.type === "textarea";
-    const label = typeof node.props.label === "string" ? node.props.label : textarea ? "Message" : "Label";
+    const kind = node.type === "select" ? "select" as const : node.type === "textarea" ? "textarea" as const : "text" as const;
+    const label = typeof node.props.label === "string" ? node.props.label : kind === "select" ? "Choose" : kind === "textarea" ? "Message" : "Label";
     const required = node.props.required === true;
-    const field = { id: createId("fld"), label, kind: textarea ? "textarea" as const : "text" as const, required };
+    const options = kind === "select" ? (Array.isArray(node.props.options) ? node.props.options.filter((item): item is string => typeof item === "string") : ["First", "Second"]) : undefined;
+    const field = { id: createId("fld"), label, kind, required, ...(options?.length ? { options } : {}) };
     const fields = current.fields?.length
       ? current.fields
       : [
@@ -927,7 +929,7 @@ export function EditorShell(props: {
     setNodeIds(selectNodeId(node.id).nodeIds);
     setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
     setSelection({ ...emptySelection, sectionId: formId, kind: "form" });
-    notify(textarea ? "Text area added." : "Input added.");
+    notify(kind === "select" ? "Select added." : kind === "textarea" ? "Text area added." : "Input added.");
   }
 
   function insertCreatedForm(node: NodeDocument) {
@@ -1153,6 +1155,10 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:textarea") {
       insertCreatedInput(createTextarea());
+      return;
+    }
+    if (entry.id === "element:select") {
+      insertCreatedInput(createSelect());
       return;
     }
     if (!page || !props.canEdit) {
@@ -1538,7 +1544,7 @@ export function EditorShell(props: {
                   else if (node.componentId === "generic.testimonial") insertCreatedTestimonial(node);
                   else if (node.componentId === "generic.faq") insertCreatedFaq(node);
                   else if (node.componentId === "generic.form") insertCreatedForm(node);
-                  else if (node.componentId === "generic.input" || node.componentId === "generic.textarea") insertCreatedInput(node);
+                  else if (node.componentId === "generic.input" || node.componentId === "generic.textarea" || node.componentId === "generic.select") insertCreatedInput(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>

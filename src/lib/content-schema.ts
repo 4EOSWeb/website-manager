@@ -431,8 +431,9 @@ export const sectionSchema = z.discriminatedUnion("type", [
             .object({
               id: blockId,
               label: z.string().max(80),
-              kind: z.enum(["text", "email", "textarea"]),
+              kind: z.enum(["text", "email", "textarea", "select"]),
               required: z.boolean(),
+              options: z.array(z.string().max(80)).max(12).optional(),
             })
             .strict(),
         )
