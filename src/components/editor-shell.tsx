@@ -54,6 +54,7 @@ import { Canvas } from "@/components/editor/canvas";
 import { DragStatus, dragRejectReason, type DragRejectReason } from "@/components/editor/drag-status";
 import { placeOnCanvas } from "@/platform/drag/canvas-place";
 import { flowReorder } from "@/platform/drag/flow-insert";
+import { groupEnter } from "@/platform/drag/group-enter";
 import { reparent } from "@/platform/drag/reparent";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
 import { LibraryBrowser } from "@/components/editor/library";
@@ -1337,7 +1338,7 @@ export function EditorShell(props: {
       }
       case "4eos-reparent": {
         const next = moveBlockToSection(site, path, text("sectionId"), text("targetSectionId"), text("itemId"), text("targetId"), Boolean(data.after));
-        const result = reparent(visualDocument, {
+        const drop = {
           nodeId: text("itemId"),
           parentId: text("targetSectionId"),
           targetId: text("targetId"),
@@ -1347,7 +1348,13 @@ export function EditorShell(props: {
           childParents: { allowedParents: ["section", "container", "stack", "grid", "group", "card"] },
           parentType: "section",
           parentChildren: { acceptsChildren: true },
-        });
+        };
+        const entered = groupEnter(visualDocument, drop);
+        if (entered && entered.ok === false) {
+          setDragReason(entered.reason);
+          break;
+        }
+        const result = entered && entered.ok ? entered : reparent(visualDocument, drop);
         if (result && result.ok === false) {
           setDragReason(result.reason);
           break;

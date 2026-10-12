@@ -240,7 +240,7 @@ export function FlowSection({ section }: { section: EditorSection }) {
       data-editor-name={previewMode ? section.editorName || undefined : undefined}
       data-hidden={section.hidden ? "true" : undefined}
       className={`relative ${tone} ${hideClass(section)} ${section.hidden ? "opacity-60" : ""}`}
-      style={styleFor(section)}
+      style={{ ...(section.style ? styleFor(section) : {}), ...(section.blocks.length === 0 ? { minHeight: "4rem" } : {}) }}
     >
       {section.layout === "hero" ? <HeroLayout section={section} /> : null}
       {section.layout === "band" ? (
