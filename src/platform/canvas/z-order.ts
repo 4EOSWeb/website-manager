@@ -94,6 +94,22 @@ export function bringForwardCanvas(document: unknown, id: string): { ok: true; d
   return { ok: true, document: next };
 }
 
+export const alreadyInFront = "This item is already at the front.";
+
+/** Sets z to one above the highest sibling. At 200, the node stays put. */
+export function bringToFront<T extends StackNode>(nodes: readonly T[], id: string): { nodes: T[]; refused: boolean } {
+  const index = nodes.findIndex((node) => node.id === id);
+  const current = index >= 0 ? nodes[index] : undefined;
+  if (!current || current.locked) return { nodes: copy(nodes), refused: false };
+  const others = nodes.filter((node) => node.id !== id);
+  const maxZ = others.length === 0 ? -1 : Math.max(...others.map((node) => node.z));
+  if (current.z > maxZ) return { nodes: copy(nodes), refused: true };
+  if (maxZ + 1 > CANVAS_Z_MAX) return { nodes: copy(nodes), refused: true };
+  const raised = copy(nodes);
+  raised[index] = { ...current, z: maxZ + 1 };
+  return { nodes: raised, refused: false };
+}
+
 /** Swaps canvas `metadata.z` with the next lower sibling, or decrements across a gap. */
 export function sendBackwardCanvas(document: unknown, id: string): { ok: true; document: unknown } | { ok: false; reason: "missing" } | null {
   if (!document || typeof document !== "object" || !id) return null;
@@ -114,4 +130,28 @@ export function sendBackwardCanvas(document: unknown, id: string): { ok: true; d
     node.metadata = updated.metadata;
   });
   return { ok: true, document: next };
+}
+
+/** Puts the node one step above every sibling, unless z would pass 200. */
+export function bringToFrontCanvas(document: unknown, id: string): { ok: true; document: unknown; refused: boolean } | { ok: false; reason: "missing" } | null {
+  if (!document || typeof document !== "object" || !id) return null;
+  const next = structuredClone(document) as VisualDocument;
+  let located: { parent: VisualNode | null; node: VisualNode } | null = null;
+  for (const page of next.pages ?? []) {
+    if (!page.root) continue;
+    located = locate(page.root, id);
+    if (located) break;
+  }
+  const siblings = located?.parent?.children;
+  if (!located || !siblings) return { ok: false, reason: "missing" };
+  const ordered = bringToFront(siblings.map((node) => ({ id: node.id, z: canvasZ(node.metadata), locked: locked(node) })), id);
+  if (!ordered.refused) {
+    siblings.forEach((node, index) => {
+      const z = ordered.nodes[index]?.z;
+      if (z === undefined || z === canvasZ(node.metadata)) return;
+      const updated = setCanvasZ(node, z);
+      node.metadata = updated.metadata;
+    });
+  }
+  return { ok: true, document: next, refused: ordered.refused };
 }
