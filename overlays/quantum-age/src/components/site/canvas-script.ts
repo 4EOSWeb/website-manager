@@ -1176,6 +1176,16 @@ export function canvasScript(origin: string) {
       void event;
     }
 
+    function selectionBlocksDrag(node, target) {
+      var element = target && target.nodeType === 1 ? target : target && target.parentElement;
+      if (!element || !element.closest) return false;
+      var selection = window.getSelection();
+      if (selection && !selection.isCollapsed && node && selection.anchorNode && node.contains(selection.anchorNode)) return true;
+      if (element.closest("[data-act='grip']")) return false;
+      if (element.closest("input, textarea, button, a, [contenteditable]")) return true;
+      return false;
+    }
+
     document.addEventListener("pointerdown", function (event) {
       var target = event.target;
       if (!target || !target.closest) return;
@@ -1212,6 +1222,7 @@ export function canvasScript(origin: string) {
     document.addEventListener("pointermove", function (event) {
       lastPointer = { x: event.clientX, y: event.clientY };
       if (press && !drag && (event.buttons & 1)) {
+        if (selectionBlocksDrag(press.node, event.target)) { press = null; return; }
         if (H.passedThreshold(press.x, press.y, event.clientX, event.clientY, press.threshold)) {
           if (press.kind === "item" && selected !== press.node && selectedItems.indexOf(press.node) < 0) select(press.node, false, false);
           var started = press;
