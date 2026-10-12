@@ -724,6 +724,44 @@ export function canvasScript(origin: string) {
       }, 16);
       updateDrag(event.clientX, event.clientY, event.shiftKey, event.altKey);
     }
+    function canvasEdgeGuides(zone, box) {
+      if (!zone || zone.getAttribute("data-section-type") === "flow") return;
+      function line(name, horizontal, atStart) {
+        var guide = document.createElement("div");
+        guide.className = "eos-guide";
+        guide.setAttribute("data-guide", name);
+        if (horizontal) {
+          guide.style.left = "0";
+          guide.style.right = "0";
+          guide.style.height = "1px";
+          guide.style.top = atStart ? "0" : "auto";
+          guide.style.bottom = atStart ? "auto" : "0";
+        } else {
+          guide.style.top = "0";
+          guide.style.bottom = "0";
+          guide.style.width = "1px";
+          guide.style.left = atStart ? "0" : "auto";
+          guide.style.right = atStart ? "auto" : "0";
+        }
+        zone.appendChild(guide);
+      }
+      if (Math.abs(box.x) <= 0.01) {
+        line("edge-left", false, true);
+        if (drag.alt !== true) box.x = 0;
+      }
+      if (Math.abs(box.x + box.w - 1) <= 0.01) {
+        line("edge-right", false, false);
+        if (drag.alt !== true) box.x = 1 - box.w;
+      }
+      if (Math.abs(box.y) <= 0.01) {
+        line("edge-top", true, true);
+        if (drag.alt !== true) box.y = 0;
+      }
+      if (Math.abs(box.y + box.h - 1) <= 0.01) {
+        line("edge-bottom", true, false);
+        if (drag.alt !== true) box.y = 1 - box.h;
+      }
+    }
     function canvasCenterGuides(zone, box) {
       if (!zone) return;
       var centerX = box.x + box.w / 2;
@@ -878,7 +916,7 @@ export function canvasScript(origin: string) {
           next.w = Math.max(0.02, snapShare(next.w));
           next.h = Math.max(0.02, snapShare(next.h));
         }
-        if (canvasZone) canvasCenterGuides(drag.zone, next);
+        if (canvasZone) { canvasCenterGuides(drag.zone, next); canvasEdgeGuides(drag.zone, next); }
       } else {
         next.x = drag.box.x + dx;
         next.y = drag.box.y + dy;
@@ -892,6 +930,7 @@ export function canvasScript(origin: string) {
             next.y = Math.max(0, Math.min(1 - next.h, next.y));
           }
           canvasCenterGuides(drag.zone, next);
+          canvasEdgeGuides(drag.zone, next);
           if (drag.ghost) {
             drag.ghost.style.left = (zoneRect.left + next.x * zoneRect.width) + "px";
             drag.ghost.style.top = (zoneRect.top + next.y * zoneRect.height) + "px";
