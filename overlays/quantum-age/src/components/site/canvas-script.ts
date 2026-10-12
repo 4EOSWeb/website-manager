@@ -726,9 +726,13 @@ export function canvasScript(origin: string) {
         var anchor = spot.index < siblings.length ? siblings[spot.index] : siblings[siblings.length - 1];
         var after = spot.index >= siblings.length;
         var box = anchor.getBoundingClientRect();
+        var section = sectionOf(drag.node);
+        var layout = section && section.getAttribute("data-layout");
+        var lineKind = layout === "cards" ? "vertical" : "horizontal";
         drag.target = { id: anchor.getAttribute("data-item-id"), after: after };
         drag.line.style.display = "block";
-        if (spot.horizontal) {
+        drag.line.setAttribute("data-flow-line", lineKind);
+        if (lineKind === "vertical") {
           drag.line.style.left = (after ? box.right + 4 : box.left - 5) + "px";
           drag.line.style.top = box.top + "px";
           drag.line.style.width = "3px";

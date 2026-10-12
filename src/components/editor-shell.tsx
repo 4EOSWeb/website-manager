@@ -51,6 +51,7 @@ import type { SiteContext } from "@/platform/context";
 import { StatusBar, ToolRail, TopBar, type Zoom } from "@/components/editor/chrome";
 import { Canvas } from "@/components/editor/canvas";
 import { DragStatus, dragRejectReason, type DragRejectReason } from "@/components/editor/drag-status";
+import { flowReorder } from "@/platform/drag/flow-insert";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
 import { LibraryBrowser } from "@/components/editor/library";
 import { Inspector } from "@/components/editor/inspector";
@@ -1320,9 +1321,12 @@ export function EditorShell(props: {
       case "4eos-move":
         commit(moveSectionById(site, path, text("sectionId"), text("beforeId")), true);
         break;
-      case "4eos-reorder-block":
-        commit(moveFlowBlockById(site, path, text("sectionId"), text("itemId"), text("targetId"), Boolean(data.after)), true);
+      case "4eos-reorder-block": {
+        const next = moveFlowBlockById(site, path, text("sectionId"), text("itemId"), text("targetId"), Boolean(data.after));
+        const nextVisual = flowReorder(visualDocument, text("itemId"), text("targetId"), Boolean(data.after));
+        commit(next, true, nextVisual ?? undefined);
         break;
+      }
       case "4eos-insert":
         if (!props.canEdit) return;
         setInsert({ beforeId: text("beforeId") });
