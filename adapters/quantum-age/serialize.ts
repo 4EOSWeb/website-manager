@@ -144,7 +144,8 @@ type WrappedFlow = { id: string; type: "flow"; hidden: boolean; editorName: stri
 type CanvasOut = { id: string; type: "freeform"; hidden: boolean; name: string; items: []; metadata: { sourceNode: string } };
 type CtaOut = { id: string; type: "cta"; hidden: boolean; heading: string; body: string; label: string; href: string };
 type TestimonialOut = { id: string; type: "testimonial"; hidden: boolean; quote: string; name: string; role: string };
-type ExtraSection = ReturnType<typeof dividerSection> | ReturnType<typeof spacerSection> | WrappedFlow | CanvasOut | CtaOut | TestimonialOut;
+type FaqOut = { id: string; type: "faq"; hidden: boolean; heading: string; items: Array<{ q: string; a: string }> };
+type ExtraSection = ReturnType<typeof dividerSection> | ReturnType<typeof spacerSection> | WrappedFlow | CanvasOut | CtaOut | TestimonialOut | FaqOut;
 
 function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: FlowOut[], videos: Array<ReturnType<typeof videoSection>>, extras: ExtraSection[]) {
   const componentId = node.componentId;
@@ -181,6 +182,15 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
     const name = typeof node.props.name === "string" ? node.props.name : "Name";
     const role = typeof node.props.role === "string" ? node.props.role : "Role";
     extras.push({ id: node.id, type: "testimonial", hidden: node.visibility.hidden === true, quote, name, role });
+  } else if (node.type === "faq" && componentId === "generic.faq") {
+    const items = Array.isArray(node.props.items) ? node.props.items.flatMap((item) => {
+      if (!item || typeof item !== "object") return [];
+      const row = item as { q?: unknown; a?: unknown };
+      const q = typeof row.q === "string" ? row.q : "Question";
+      const a = typeof row.a === "string" ? row.a : "Answer";
+      return [{ q, a }];
+    }) : [{ q: "Question", a: "Answer" }];
+    extras.push({ id: node.id, type: "faq", hidden: node.visibility.hidden === true, heading: "", items });
   }
   else if (node.type === "video" && componentId === "generic.video" && acceptVideoUrl(typeof node.props.url === "string" ? node.props.url : "")) videos.push(videoSection(node));
   else if (node.type === "icon" && componentId === "generic.icon") {

@@ -8,6 +8,7 @@ import type { NodeDocument } from "@/platform/document/node";
 import { createButton } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createContainer } from "@/platform/elements/container";
+import { createFaq } from "@/platform/elements/faq";
 import { createTestimonial } from "@/platform/elements/testimonial";
 import { createCta } from "@/platform/elements/cta";
 import { createCard } from "@/platform/elements/card";
@@ -46,6 +47,7 @@ export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:card", label: "Card", description: "A heading and some text", category: "Sections", keywords: "card", thumb: "card" },
   { id: "element:cta", label: "Call to action", description: "A heading, text, and a button", category: "Calls to action", keywords: "cta button", thumb: "cta" },
   { id: "element:testimonial", label: "Testimonial", description: "A quote, a name, and a role", category: "Testimonials", keywords: "quote review", thumb: "quote" },
+  { id: "element:faq", label: "FAQ", description: "A question and an answer", category: "FAQ", keywords: "question answer", thumb: "faq" },
 ];
 
 function entryVisible(entry: LibraryEntry, query: string, category: LibraryCategory | "All" | "Saved") {
@@ -160,6 +162,7 @@ export function LibraryBrowser(props: {
             else if (entry.id === "element:card" && props.onElement) props.onElement(createCard());
             else if (entry.id === "element:cta" && props.onElement) props.onElement(createCta());
             else if (entry.id === "element:testimonial" && props.onElement) props.onElement(createTestimonial());
+            else if (entry.id === "element:faq" && props.onElement) props.onElement(createFaq());
             else props.onChoose(entry);
           }}
         >

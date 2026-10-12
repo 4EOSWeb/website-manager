@@ -60,6 +60,7 @@ import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createButton, writeButtonField } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createContainer } from "@/platform/elements/container";
+import { createFaq } from "@/platform/elements/faq";
 import { createTestimonial } from "@/platform/elements/testimonial";
 import { createCta } from "@/platform/elements/cta";
 import { createCard } from "@/platform/elements/card";
@@ -878,7 +879,7 @@ export function EditorShell(props: {
     setNodeIds(selectNodeId(node.id).nodeIds);
     setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
     setSelection({ ...emptySelection, sectionId: created.id, kind: created.type });
-    const label = created.type === "video" ? "Video" : created.type === "divider" ? "Divider" : created.type === "spacer" ? "Spacer" : created.type === "freeform" ? created.name : created.type === "cta" ? "Call to action" : created.type === "testimonial" ? "Testimonial" : created.editorName || "Item";
+    const label = created.type === "video" ? "Video" : created.type === "divider" ? "Divider" : created.type === "spacer" ? "Spacer" : created.type === "freeform" ? created.name : created.type === "cta" ? "Call to action" : created.type === "testimonial" ? "Testimonial" : created.type === "faq" ? "FAQ" : created.editorName || "Item";
     notify(`${label} added.`);
   }
 
@@ -889,6 +890,17 @@ export function EditorShell(props: {
     const block: FlowBlock = { id: createId("blk"), kind: "image", hidden: false, ...(src ? { src } : {}), alt };
     imageBlocks.current.set(block.id, node.id);
     insertPreviewNode(node, block, "element:image", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
+  function insertCreatedFaq(node: NodeDocument) {
+    const items = Array.isArray(node.props.items) ? node.props.items.flatMap((item) => {
+      if (!item || typeof item !== "object") return [];
+      const row = item as { q?: unknown; a?: unknown };
+      return [{ q: typeof row.q === "string" ? row.q : "Question", a: typeof row.a === "string" ? row.a : "Answer" }];
+    }) : [{ q: "Question", a: "Answer" }];
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "faq", hidden: false, heading: "", items };
+    insertPreviewSection(node, created, "element:faq", insertAfter(visualDocument, path, afterId, node));
   }
 
   function insertCreatedTestimonial(node: NodeDocument) {
@@ -1070,6 +1082,10 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:testimonial") {
       insertCreatedTestimonial(createTestimonial());
+      return;
+    }
+    if (entry.id === "element:faq") {
+      insertCreatedFaq(createFaq());
       return;
     }
     if (!page || !props.canEdit) {
@@ -1453,6 +1469,7 @@ export function EditorShell(props: {
                   else if (node.componentId === "generic.card") insertCreatedCard(node);
                   else if (node.componentId === "generic.cta") insertCreatedCta(node);
                   else if (node.componentId === "generic.testimonial") insertCreatedTestimonial(node);
+                  else if (node.componentId === "generic.faq") insertCreatedFaq(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>
