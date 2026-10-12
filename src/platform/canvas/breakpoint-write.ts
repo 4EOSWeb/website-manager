@@ -13,3 +13,15 @@ export type BreakpointNode = {
 export function writeDesktopBox<T extends BreakpointNode>(node: T, box: BreakpointBox): T {
   return { ...node, box: { ...box } };
 }
+
+/** A tablet move stores a tablet box and marks that node custom. The desktop box and an absent mobile key stay as they were. */
+export function writeTabletBox<T extends BreakpointNode>(node: T, box: BreakpointBox): T {
+  return {
+    ...node,
+    responsive: {
+      ...node.responsive,
+      strategy: "custom",
+      tablet: { ...node.responsive?.tablet, box: { ...box } },
+    },
+  };
+}
