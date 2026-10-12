@@ -126,7 +126,7 @@ function spacerSection(node: NodeDocument) {
   return { id: node.id, type: "spacer" as const, hidden: node.visibility.hidden === true, size };
 }
 
-type WrappedFlow = { id: string; type: "flow"; hidden: boolean; editorName: string; blocks: FlowOut[] };
+type WrappedFlow = { id: string; type: "flow"; hidden: boolean; editorName: string; layout?: "stack" | "grid"; blocks: FlowOut[] };
 type ExtraSection = ReturnType<typeof dividerSection> | ReturnType<typeof spacerSection> | WrappedFlow;
 
 function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: FlowOut[], videos: Array<ReturnType<typeof videoSection>>, extras: ExtraSection[]) {
@@ -157,6 +157,11 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
     const inner: FlowOut[] = [];
     node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, inner, videos, extras));
     extras.push({ id: node.id, type: "flow", hidden: node.visibility.hidden === true, editorName: "Stack", blocks: inner });
+  } else if (node.type === "grid" && componentId === "generic.grid") {
+    ownChildren = false;
+    const inner: FlowOut[] = [];
+    node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, inner, videos, extras));
+    extras.push({ id: node.id, type: "flow", hidden: node.visibility.hidden === true, editorName: "Grid", layout: "grid", blocks: inner });
   }
   else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
     unmapped.push({ path, id: node.id, type: node.type, componentId });

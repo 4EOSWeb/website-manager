@@ -60,6 +60,7 @@ import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createButton, writeButtonField } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createContainer } from "@/platform/elements/container";
+import { createGrid } from "@/platform/elements/grid";
 import { createStack } from "@/platform/elements/stack";
 import { createDivider } from "@/platform/elements/divider";
 import { createIcon } from "@/platform/elements/icon";
@@ -885,6 +886,12 @@ export function EditorShell(props: {
     insertPreviewNode(node, block, "element:image", insertAfter(visualDocument, path, afterId, node), at);
   }
 
+  function insertCreatedGrid(node: NodeDocument) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Grid", layout: "grid", blocks: [] };
+    insertPreviewSection(node, created, "element:grid", insertAfter(visualDocument, path, afterId, node));
+  }
+
   function insertCreatedStack(node: NodeDocument) {
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
     const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Stack", layout: "stack", blocks: [] };
@@ -986,6 +993,10 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:stack") {
       insertCreatedStack(createStack());
+      return;
+    }
+    if (entry.id === "element:grid") {
+      insertCreatedGrid(createGrid());
       return;
     }
     if (!page || !props.canEdit) {
@@ -1363,6 +1374,7 @@ export function EditorShell(props: {
                   else if (node.componentId === "generic.spacer") insertCreatedSpacer(node);
                   else if (node.componentId === "generic.container") insertCreatedContainer(node);
                   else if (node.componentId === "generic.stack") insertCreatedStack(node);
+                  else if (node.componentId === "generic.grid") insertCreatedGrid(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>
