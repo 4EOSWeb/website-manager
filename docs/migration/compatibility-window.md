@@ -10,6 +10,7 @@ The editor still reads and writes version 3 drafts. The visual document is store
 | Dual draft store | `draft_data` stays version 3. `visual_document` holds version 1. A version 3 save does not clear `visual_document`. | Step 19.25 |
 | Legacy reorder messages | Same-section and cross-section block moves use `4eos-reparent`. The hub no longer listens for `4eos-reorder-block`. | Removed in step 11.31 |
 | Preview website id | A preview message must include this website’s id. A missing id is ignored. | Removed in step 11.31 |
+| Version 3 layers list | Layers shows the visual page tree when a visual document is present. The version 3 section list stays as the fallback. | Step 19.25 |
 
 Check: `rg "step 19.25"`.
 

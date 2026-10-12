@@ -7,6 +7,8 @@ import { reorderPages, setBlockHidden, setEditorName, setSectionHidden } from "@
 import type { EditorApi, MediaItem, Viewport } from "@/components/editor/types";
 import { Empty, Field, Group, Segmented, TextInput } from "@/components/editor/ui";
 import { sectionName } from "@/components/editor/inspector/section";
+import { LayerTree } from "@/components/editor/layers/tree";
+import { visualPageRoot } from "@/components/editor/layers/rows";
 
 export function PagesPanel(props: {
   site: SiteDraft;
@@ -97,17 +99,31 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
   const { api } = props;
   const [renaming, setRenaming] = useState("");
   const sections = api.page?.sections ?? [];
+  const visualRoot = visualPageRoot(api.visualDocument, api.path);
   const rename = (sectionId: string, value: string, blockId?: string) => {
     setRenaming("");
     api.commit(setEditorName(api.site, api.path, sectionId, value, blockId), false);
   };
+  if (visualRoot) {
+    return (
+      <div className="ed-panel">
+        <div className="ed-panel-head">
+          <h2>Layers</h2>
+        </div>
+        <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it.</p>
+        <ul className="ed-tree is-layers" role="tree" aria-label="Page layers" data-layer-source="visual">
+          <LayerTree root={visualRoot} />
+        </ul>
+      </div>
+    );
+  }
   return (
     <div className="ed-panel">
       <div className="ed-panel-head">
         <h2>Layers</h2>
       </div>
       <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it.</p>
-      <ul className="ed-tree is-layers" role="tree" aria-label="Page layers">
+      <ul className="ed-tree is-layers" role="tree" aria-label="Page layers" data-layer-source="version3">
         <li role="treeitem" aria-selected={props.chromeFocus === "header"} className={props.chromeFocus === "header" ? "is-active" : ""}>
           <button type="button" className="ed-tree-main" onClick={() => props.onChrome("header")}><PanelTop size={14} aria-hidden="true" /> Header</button>
         </li>
