@@ -59,6 +59,7 @@ import type { NodeDocument } from "@/platform/document/node";
 import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createButton, writeButtonField } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
+import { createIcon } from "@/platform/elements/icon";
 import { createImage, writeImage } from "@/platform/elements/image";
 import { acceptVideoUrl, createVideo, writeVideoUrl } from "@/platform/elements/video";
 import { createCustom, type CustomDefinition } from "@/platform/elements/custom";
@@ -879,6 +880,13 @@ export function EditorShell(props: {
     insertPreviewNode(node, block, "element:image", insertAfter(visualDocument, path, afterId, node), at);
   }
 
+  function insertCreatedIcon(node: NodeDocument, at?: Insert) {
+    const name = typeof node.props.name === "string" && node.props.name ? node.props.name : "arrow";
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const block: FlowBlock = { id: createId("blk"), kind: "paragraph", hidden: false, text: { text: name, marks: [] } };
+    insertPreviewNode(node, block, "element:icon", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
   function insertCreatedVideo(node: NodeDocument) {
     const url = typeof node.props.url === "string" ? node.props.url : "";
     if (!acceptVideoUrl(url)) return;
@@ -928,6 +936,10 @@ export function EditorShell(props: {
     if (entry.id === "element:video") {
       const node = createVideo();
       if (node) insertCreatedVideo(node);
+      return;
+    }
+    if (entry.id === "element:icon") {
+      insertCreatedIcon(createIcon(), at);
       return;
     }
     if (!page || !props.canEdit) {
@@ -1300,6 +1312,7 @@ export function EditorShell(props: {
                   else if (node.componentId === "generic.button" || node.componentId === "generic.icon-button") insertCreatedButton(node);
                   else if (node.componentId === "generic.image") insertCreatedImage(node);
                   else if (node.componentId === "generic.video") insertCreatedVideo(node);
+                  else if (node.componentId === "generic.icon") insertCreatedIcon(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>

@@ -7,6 +7,7 @@ import { Empty } from "@/components/editor/ui";
 import type { NodeDocument } from "@/platform/document/node";
 import { createButton } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
+import { createIcon } from "@/platform/elements/icon";
 import { createImage } from "@/platform/elements/image";
 import { createVideo } from "@/platform/elements/video";
 import { createHeading } from "@/platform/elements/heading";
@@ -24,6 +25,7 @@ export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:icon-button", label: "Icon button", description: "A button that is an icon", category: "Calls to action", keywords: "icon aria", thumb: "button" },
   { id: "element:image", label: "Image", description: "A picture", category: "Media", keywords: "photo picture", thumb: "image" },
   { id: "element:video", label: "Video", description: "A video", category: "Media", keywords: "youtube vimeo", thumb: "video" },
+  { id: "element:icon", label: "Icon", description: "An icon", category: "Media", keywords: "icon arrow", thumb: "social" },
 ];
 
 function entryVisible(entry: LibraryEntry, query: string, category: LibraryCategory | "All" | "Saved") {
@@ -127,7 +129,7 @@ export function LibraryBrowser(props: {
             else if (entry.id === "element:video" && props.onElement) {
               const node = createVideo();
               if (node) props.onElement(node);
-            }
+            } else if (entry.id === "element:icon" && props.onElement) props.onElement(createIcon());
             else props.onChoose(entry);
           }}
         >

@@ -129,6 +129,10 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
   } else if (node.type === "button" && (componentId === "generic.button" || componentId === "generic.icon-button")) blocks.push(flowButton(node));
   else if (node.type === "image" && componentId === "generic.image") blocks.push(flowImage(node));
   else if (node.type === "video" && componentId === "generic.video" && acceptVideoUrl(typeof node.props.url === "string" ? node.props.url : "")) videos.push(videoSection(node));
+  else if (node.type === "icon" && componentId === "generic.icon") {
+    const name = typeof node.props.name === "string" && node.props.name ? node.props.name : "arrow";
+    blocks.push(flowText({ ...node, props: { ...node.props, text: name } }, "paragraph"));
+  }
   else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
     unmapped.push({ path, id: node.id, type: node.type, componentId });
   }
