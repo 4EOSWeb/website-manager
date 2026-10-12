@@ -57,6 +57,7 @@ import { flowReorder } from "@/platform/drag/flow-insert";
 import { groupEnter } from "@/platform/drag/group-enter";
 import { groupExit } from "@/platform/drag/group-exit";
 import { libraryDrop } from "@/platform/drag/library-drop";
+import { cancelDrag } from "@/platform/drag/cancel";
 import { reparent } from "@/platform/drag/reparent";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
 import { LibraryBrowser } from "@/components/editor/library";
@@ -171,6 +172,8 @@ export function EditorShell(props: {
   const [visualNodeIds, setVisualNodeIds] = useState<string[]>([]);
   const pinnedNode = useRef<string | null>(null);
   const libraryFactory = useRef("");
+  const dragActive = useRef(false);
+  const dropIgnored = useRef(false);
   const [posts, setPosts] = useState(props.initialPosts);
   const history = useEditorHistory<Snapshot>(props.websiteId);
   const [media, setMedia] = useState(props.media);
@@ -1287,6 +1290,14 @@ export function EditorShell(props: {
         if (reason) setDragReason(reason);
         break;
       }
+      case "4eos-drag-start":
+        dropIgnored.current = false;
+        dragActive.current = true;
+        break;
+      case "4eos-drag-cancel":
+        dragActive.current = false;
+        setDragReason(null);
+        break;
       case "4eos-select-node": {
         const sections = (page?.sections ?? []).map((section) => ({
           id: section.id,
@@ -1331,15 +1342,21 @@ export function EditorShell(props: {
         break;
       }
       case "4eos-move":
+        if (dropIgnored.current) { dropIgnored.current = false; break; }
+        dragActive.current = false;
         commit(moveSectionById(site, path, text("sectionId"), text("beforeId")), true);
         break;
       case "4eos-reorder-block": {
+        if (dropIgnored.current) { dropIgnored.current = false; break; }
+        dragActive.current = false;
         const next = moveFlowBlockById(site, path, text("sectionId"), text("itemId"), text("targetId"), Boolean(data.after));
         const nextVisual = flowReorder(visualDocument, text("itemId"), text("targetId"), Boolean(data.after));
         commit(next, true, nextVisual ?? undefined);
         break;
       }
       case "4eos-reparent": {
+        if (dropIgnored.current) { dropIgnored.current = false; break; }
+        dragActive.current = false;
         const next = moveBlockToSection(site, path, text("sectionId"), text("targetSectionId"), text("itemId"), text("targetId"), Boolean(data.after));
         const drop = {
           nodeId: text("itemId"),
@@ -1425,6 +1442,8 @@ export function EditorShell(props: {
         break;
       }
       case "4eos-place": {
+        if (dropIgnored.current) { dropIgnored.current = false; break; }
+        dragActive.current = false;
         if (!Array.isArray(data.items)) return;
         const name = data.viewport === "mobile" || data.viewport === "tablet" ? data.viewport : "desktop";
         const items = (data.items as { id: string; placement: { x: number; y: number; w: number; h: number } }[]).filter((item) => item && item.placement);
@@ -1540,8 +1559,17 @@ export function EditorShell(props: {
       } else if (event.key === "?" && !document.querySelector(".ed-dialog")) {
         event.preventDefault();
         setShortcuts(true);
-      } else if (event.key === "Escape" && !document.querySelector(".ed-dialog") && (selection.sectionId || selection.chrome)) {
-        clearSelection();
+      } else if (event.key === "Escape") {
+        const decision = cancelDrag({ dragging: dragActive.current, dialogOpen: Boolean(document.querySelector(".ed-dialog")), key: event.key });
+        if (decision.cancel) {
+          event.preventDefault();
+          dropIgnored.current = true;
+          dragActive.current = false;
+          if (decision.clearStatus) setDragReason(null);
+          toFrame({ type: "4eos-cancel-drag" });
+          return;
+        }
+        if (!document.querySelector(".ed-dialog") && (selection.sectionId || selection.chrome)) clearSelection();
       }
     }
     window.addEventListener("keydown", onKey);

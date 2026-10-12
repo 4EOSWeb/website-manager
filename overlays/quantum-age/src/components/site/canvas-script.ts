@@ -148,6 +148,7 @@ export function canvasScript(origin: string) {
     var hint = null;
     var press = null;
     var drag = null;
+    var dragCanceled = false;
     var hovered = null;
     var suppressClick = false;
     var scale = 1;
@@ -844,6 +845,7 @@ export function canvasScript(origin: string) {
     }
     function endDrag(cancel) {
       if (!drag) return;
+      if (cancel) dragCanceled = true;
       var d = drag;
       drag = null;
       clearInterval(scrollTimer);
@@ -868,7 +870,7 @@ export function canvasScript(origin: string) {
       } else {
         post(placeMessage(d.node, d.fellows));
       }
-      if (cancel) flash("Move canceled");
+      if (cancel) { flash("Move canceled"); post({ type: "4eos-drag-cancel" }); }
       showBar();
       markNearGaps();
     }
@@ -1330,6 +1332,7 @@ export function canvasScript(origin: string) {
     });
     document.addEventListener("pointerup", function () {
       press = null;
+      if (dragCanceled) { dragCanceled = false; suppressClick = true; setTimeout(function () { suppressClick = false; }, 0); return; }
       if (drag) { suppressClick = true; endDrag(false); setTimeout(function () { suppressClick = false; }, 0); }
     }, true);
     document.addEventListener("pointercancel", function () { press = null; if (drag) endDrag(true); });
@@ -1648,6 +1651,7 @@ export function canvasScript(origin: string) {
         }
         placeBar();
       }
+      if (data.type === "4eos-cancel-drag") { if (drag) endDrag(true); return; }
       if (data.type === "4eos-clear") { if (editing) finishEdit(); clearSelected(true); }
       if (data.type === "4eos-edit" && selected) runAct("edit");
       if (data.type === "4eos-select-node") {
