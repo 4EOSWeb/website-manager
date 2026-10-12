@@ -2,6 +2,7 @@ import { applyAnchor, CANVAS_ANCHORS, type CanvasAnchor } from "../canvas/anchor
 import { lockAspect } from "../canvas/aspect";
 import { enforceMaxSize } from "../canvas/max-size";
 import { enforceMinSize } from "../canvas/min-size";
+import { writeDesktopBox, type BreakpointNode } from "../canvas/breakpoint-write";
 import { toPercent } from "../canvas/percent";
 
 type TreeNode = {
@@ -98,7 +99,8 @@ export function placeOnCanvas(
     responsive[input.breakpoint] = previous;
     node.responsive = responsive;
   } else {
-    node.box = box;
+    const written = writeDesktopBox(node as BreakpointNode, box);
+    node.box = written.box;
   }
   return copy;
 }
