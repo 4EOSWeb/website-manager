@@ -35,6 +35,7 @@ import {
   setSectionHidden,
   updatePageMeta,
 } from "@/lib/editor-ops";
+import { validLink } from "@/lib/links";
 import { blockFitsInZone, createId } from "@/lib/page-documents";
 import { entryById, recommendedFor, sectionForEntry, type LibraryEntry } from "@/lib/library";
 import { articlePatternFrom, articleRouteFor, articleSlug, selectActivePage } from "@/components/editor/state/page";
@@ -58,6 +59,7 @@ import type { NodeDocument } from "@/platform/document/node";
 import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createCustom, type CustomDefinition } from "@/platform/elements/custom";
 import { createHeading } from "@/platform/elements/heading";
+import { createLink, writeLinkHref } from "@/platform/elements/link";
 import { createParagraph } from "@/platform/elements/paragraph";
 import { createRichText, writeRichMarks } from "@/platform/elements/richtext";
 import { useEditorHistory } from "@/components/editor/use-editor-history";
@@ -65,6 +67,16 @@ import { AddPageDialog, CropDialog, ImagePickerDialog, InsertDialog, PublishDial
 
 type Toast = { id: number; message: string; tone: "info" | "error"; action?: { label: string; run: () => void } };
 type Insert = { beforeId: string };
+
+function flowBlockHref(site: SiteDraft, route: string, blockId: string) {
+  const page = site.pages.find((item) => item.route === route);
+  for (const section of page?.sections ?? []) {
+    if (section.type !== "flow") continue;
+    const block = section.blocks.find((item) => item.id === blockId);
+    if (block) return block.href ?? "";
+  }
+  return "";
+}
 
 const RECENT_KEY = "4eos-editor-recent-library";
 const TIP_KEY = "4eos-editor-tip-dismissed";
@@ -150,6 +162,7 @@ export function EditorShell(props: {
   const scrollByPath = useRef<Record<string, number>>({});
   const readyFor = useRef("");
   const richBlocks = useRef(new Map<string, string>());
+  const linkBlocks = useRef(new Map<string, string>());
   const toastId = useRef(0);
 
   const page = pageByRoute(site, path);
@@ -770,6 +783,16 @@ export function EditorShell(props: {
     insertPreviewNode(node, block, "element:richtext", insertAfter(visualDocument, path, afterId, node), at);
   }
 
+  function insertCreatedLink(node: NodeDocument, at?: Insert) {
+    const href = typeof node.props.href === "string" ? node.props.href : "";
+    if (!validLink(href)) return;
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const label = typeof node.props.label === "string" ? node.props.label : "Link";
+    const block: FlowBlock = { id: createId("blk"), kind: "link", hidden: false, text: { text: label, marks: [] }, href };
+    linkBlocks.current.set(block.id, node.id);
+    insertPreviewNode(node, block, "element:link", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
   function insertCreatedCustom(definition: CustomDefinition, at?: Insert) {
     const node = createCustom(definition);
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
@@ -788,6 +811,11 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:richtext") {
       insertCreatedRichText(createRichText(), at);
+      return;
+    }
+    if (entry.id === "element:link") {
+      const node = createLink();
+      if (node) insertCreatedLink(node, at);
       return;
     }
     if (!page || !props.canEdit) {
@@ -1038,7 +1066,14 @@ export function EditorShell(props: {
     canEdit: props.canEdit,
     viewport,
     selection,
-    commit,
+    commit: (next, reload) => {
+      const blockId = selection.itemId;
+      const nodeId = blockId ? linkBlocks.current.get(blockId) : undefined;
+      const href = blockId ? flowBlockHref(next, path, blockId) : "";
+      const previous = blockId ? flowBlockHref(site, path, blockId) : "";
+      const updated = nodeId && href !== previous ? writeLinkHref(visualDocument, nodeId, href) : null;
+      commit(next, reload, updated ?? undefined);
+    },
     commitText,
     notify,
     selectNode,
@@ -1148,6 +1183,7 @@ export function EditorShell(props: {
                 <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommendedHere} templates={templates} adapter={adapter} onChoose={(entry) => insertEntry(entry)} onElement={(node) => {
                   if (node.componentId === "generic.text") insertCreatedParagraph(node);
                   else if (node.componentId === "generic.richtext") insertCreatedRichText(node);
+                  else if (node.componentId === "generic.link") insertCreatedLink(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>

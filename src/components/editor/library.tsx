@@ -6,6 +6,7 @@ import { CATEGORIES, LIBRARY, searchLibrary, type LibraryCategory, type LibraryE
 import { Empty } from "@/components/editor/ui";
 import type { NodeDocument } from "@/platform/document/node";
 import { createHeading } from "@/platform/elements/heading";
+import { createLink } from "@/platform/elements/link";
 import { createParagraph } from "@/platform/elements/paragraph";
 import { createRichText } from "@/platform/elements/richtext";
 import { customCatalog, type CustomDefinition } from "@/platform/elements/custom";
@@ -14,6 +15,7 @@ export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:heading", label: "Heading", description: "A heading", category: "Text", keywords: "title heading", thumb: "heading" },
   { id: "element:paragraph", label: "Paragraph", description: "A paragraph", category: "Text", keywords: "body paragraph", thumb: "text" },
   { id: "element:richtext", label: "Rich text", description: "Text you can bold", category: "Text", keywords: "bold italic marks", thumb: "text" },
+  { id: "element:link", label: "Link", description: "A text link", category: "Text", keywords: "anchor href", thumb: "text" },
 ];
 
 function entryVisible(entry: LibraryEntry, query: string, category: LibraryCategory | "All" | "Saved") {
@@ -108,7 +110,10 @@ export function LibraryBrowser(props: {
             if (entry.id === "element:heading" && props.onElement) props.onElement(createHeading());
             else if (entry.id === "element:paragraph" && props.onElement) props.onElement(createParagraph());
             else if (entry.id === "element:richtext" && props.onElement) props.onElement(createRichText());
-            else props.onChoose(entry);
+            else if (entry.id === "element:link" && props.onElement) {
+              const node = createLink();
+              if (node) props.onElement(node);
+            } else props.onChoose(entry);
           }}
         >
           <Thumb kind={entry.thumb} />

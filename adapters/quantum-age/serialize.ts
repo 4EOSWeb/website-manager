@@ -7,6 +7,7 @@ import { writtenFiles } from "../../src/platform/adapter/serialize.ts";
 import { validateDocument } from "../../src/platform/document/document.ts";
 import type { NodeDocument } from "../../src/platform/document/node.ts";
 import { nodeTypes } from "../../src/platform/document/node-type.ts";
+import { validLink } from "../../src/lib/links.ts";
 import { sanitizeMarks, type RichMark } from "../../src/lib/rich-text.ts";
 import { defaultChrome } from "./seed.ts";
 import { quantumAgeHeroProps } from "./components/hero.ts";
@@ -59,17 +60,34 @@ function flowText(node: NodeDocument, kind: "heading" | "paragraph", marks: Rich
   };
 }
 
+function flowLink(node: NodeDocument) {
+  const label = typeof node.props.label === "string" ? node.props.label : "";
+  const href = typeof node.props.href === "string" ? node.props.href.trim() : "";
+  return {
+    id: node.id,
+    kind: "link" as const,
+    hidden: node.visibility.hidden === true,
+    text: { text: label, marks: [] as RichMark[] },
+    href,
+  };
+}
+
+type FlowOut = ReturnType<typeof flowText> | ReturnType<typeof flowLink>;
+
 function richMarks(node: NodeDocument): RichMark[] {
   return Array.isArray(node.props.marks) ? (node.props.marks as RichMark[]) : [];
 }
 
-function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: Array<ReturnType<typeof flowText>>) {
+function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: FlowOut[]) {
   const componentId = node.componentId;
   if (componentId === "quantum-age.hero") hero.props = node.props;
   else if (node.type === "heading" && componentId === "generic.heading") blocks.push(flowText(node, "heading"));
   else if (node.type === "text" && componentId === "generic.text") blocks.push(flowText(node, "paragraph"));
   else if (node.type === "richtext" && componentId === "generic.richtext") blocks.push(flowText(node, "paragraph", richMarks(node)));
-  else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
+  else if (node.type === "link" && componentId === "generic.link") {
+    const href = typeof node.props.href === "string" ? node.props.href : "";
+    if (validLink(href)) blocks.push(flowLink(node));
+  } else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
     unmapped.push({ path, id: node.id, type: node.type, componentId });
   }
   node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, blocks));
@@ -81,7 +99,7 @@ export const serializeQuantumAge: SerializeHook = (document) => {
   const unmapped: UnmappedNode[] = [];
   const hero: { props: unknown } = { props: null };
   const pages = validated.value.pages.map((page) => {
-    const blocks: Array<ReturnType<typeof flowText>> = [];
+    const blocks: FlowOut[] = [];
     walk(page.root, `pages.${page.route}.root`, unmapped, hero, blocks);
     const sections = blocks.length
       ? [{ id: `sec_${page.id.slice(5, 17)}`, type: "flow", hidden: false, blocks }]
