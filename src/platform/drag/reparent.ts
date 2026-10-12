@@ -70,6 +70,15 @@ function countNodes(node: TreeNode, id: string): number {
   }, 0);
 }
 
+/** Parent id and index of a node, used to check that one undo restored the drop. */
+export function nodeSlot(document: unknown, nodeId: string): { parentId: string; index: number } | null {
+  for (const root of pagesOf(document)) {
+    const located = findParent(root, nodeId);
+    if (located && typeof located.parent.id === "string") return { parentId: located.parent.id, index: located.index };
+  }
+  return null;
+}
+
 /**
  * Moves a node from its current parent into a different parent.
  * The same parent is left untouched so a flow reorder can handle that drop.

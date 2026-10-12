@@ -207,7 +207,6 @@ export function EditorShell(props: {
   const skipSite = useRef(true);
   const skipPost = useRef(true);
   const reloadAfter = useRef(false);
-  const textKey = useRef("");
   const saveSeq = useRef(0);
   const siteRef = useRef(site);
   const scrollByPath = useRef<Record<string, number>>({});
@@ -265,7 +264,6 @@ export function EditorShell(props: {
 
   function commit(next: SiteDraft, reload: boolean, nextVisual?: unknown) {
     if (!props.canEdit || (next === site && nextVisual === undefined)) return;
-    textKey.current = "";
     rememberHistory();
     setDirtyState((state) => markChanged(state, nextVisual === undefined ? { version3: next } : { version3: next, visualDocument: nextVisual }));
     setSite(next);
@@ -275,10 +273,7 @@ export function EditorShell(props: {
 
   function commitText(next: SiteDraft, key: string, reload = false) {
     if (!props.canEdit || JSON.stringify(next) === JSON.stringify(site)) return;
-    if (textKey.current !== key) {
-      textKey.current = key;
-      rememberHistory();
-    }
+    history.recordText({ site, posts }, key, visualDocument);
     const blockId = key.split(":")[0] ?? "";
     const field = key.split(":")[1] ?? "";
     const nodeId = buttonBlocks.current.get(blockId);
@@ -305,7 +300,7 @@ export function EditorShell(props: {
     setVisualNodeIds(nodeIdsIn(previous.visualDocument));
     setNodeIds(nodeIdsFromLegacy(selection).nodeIds);
     reloadAfter.current = true;
-    textKey.current = "";
+    history.breakCoalesce();
   }
 
   function redo() {
@@ -318,7 +313,7 @@ export function EditorShell(props: {
     setVisualNodeIds(nodeIdsIn(next.visualDocument));
     setNodeIds(nodeIdsFromLegacy(selection).nodeIds);
     reloadAfter.current = true;
-    textKey.current = "";
+    history.breakCoalesce();
   }
 
   const persistSite = useCallback(
@@ -620,10 +615,7 @@ export function EditorShell(props: {
   function updateBlog(field: string, index: unknown, value: string) {
     if (!activePost) return;
     const key = `blog:${field}:${String(index ?? "")}`;
-    if (textKey.current !== key) {
-      textKey.current = key;
-      rememberHistory();
-    }
+    history.recordText({ site, posts }, key, visualDocument);
     setPosts((items) =>
       items.map((post) => {
         if (post.slug !== activePost.slug) return post;
@@ -664,17 +656,13 @@ export function EditorShell(props: {
   function updatePost(next: BlogDraft) {
     if (!props.canEdit) return;
     const key = `post:${next.slug}`;
-    if (textKey.current !== key) {
-      textKey.current = key;
-      rememberHistory();
-    }
+    history.recordText({ site, posts }, key, visualDocument);
     setPosts((items) => items.map((item) => (item.slug === next.slug ? next : item)));
   }
 
   function addBlogBlock(block: BlogDraft["blocks"][number]) {
     if (!activePost || !props.canEdit) return;
     rememberHistory();
-    textKey.current = "";
     reloadAfter.current = true;
     setPosts((items) => items.map((post) => (post.slug === activePost.slug ? { ...post, blocks: [...post.blocks, block] } : post)));
   }

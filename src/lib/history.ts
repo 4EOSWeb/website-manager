@@ -39,6 +39,22 @@ export function rememberScoped<T>(history: History<ScopedSnapshot<T>>, websiteId
   return remember(history, scopedEntry(websiteId, current, visualDocument));
 }
 
+export type EditTrail<T> = {
+  history: History<ScopedSnapshot<T>>;
+  textKey: string;
+};
+
+/** Repeated edits of the same field stay one step. A different field starts a new step. */
+export function trailText<T>(trail: EditTrail<T>, websiteId: string, current: T, key: string, visualDocument?: unknown): EditTrail<T> {
+  if (trail.textKey === key) return trail;
+  return { history: rememberScoped(trail.history, websiteId, current, visualDocument), textKey: key };
+}
+
+/** A drop is always its own step, even when it follows a text edit of the same field. */
+export function trailDrop<T>(trail: EditTrail<T>, websiteId: string, current: T, visualDocument?: unknown): EditTrail<T> {
+  return { history: rememberScoped(trail.history, websiteId, current, visualDocument), textKey: "" };
+}
+
 /** Restores the previous snapshot for this website. Another website's entry is left in place. */
 export function undoScoped<T>(
   history: History<ScopedSnapshot<T>>,
