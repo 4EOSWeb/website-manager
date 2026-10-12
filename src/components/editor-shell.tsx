@@ -51,6 +51,7 @@ import type { SiteContext } from "@/platform/context";
 import { StatusBar, ToolRail, TopBar, type Zoom } from "@/components/editor/chrome";
 import { Canvas } from "@/components/editor/canvas";
 import { DragStatus, dragRejectReason, type DragRejectReason } from "@/components/editor/drag-status";
+import { placeOnCanvas } from "@/platform/drag/canvas-place";
 import { flowReorder } from "@/platform/drag/flow-insert";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
 import { LibraryBrowser } from "@/components/editor/library";
@@ -854,6 +855,11 @@ export function EditorShell(props: {
   }
 
   function insertCreatedButton(node: NodeDocument, at?: Insert) {
+    if (!at && section?.type === "freeform") {
+      commit(addZoneItem(site, path, section.id, "button", false), true);
+      notify("Button added to the zone.");
+      return;
+    }
     const href = typeof node.props.href === "string" && validLink(node.props.href) ? node.props.href : "/";
     const label = typeof node.props.label === "string" ? node.props.label : "Button";
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
@@ -1355,7 +1361,19 @@ export function EditorShell(props: {
         if (!Array.isArray(data.items)) return;
         const name = data.viewport === "mobile" || data.viewport === "tablet" ? data.viewport : "desktop";
         const items = (data.items as { id: string; placement: { x: number; y: number; w: number; h: number } }[]).filter((item) => item && item.placement);
-        commit(placeItems(site, path, text("sectionId"), name, items, Boolean(data.overlay)), false);
+        let nextVisual: unknown = visualDocument;
+        for (const item of items) {
+          const updated = placeOnCanvas(nextVisual, {
+            nodeId: item.id,
+            breakpoint: name,
+            x: item.placement.x * 100,
+            y: item.placement.y * 100,
+            w: item.placement.w * 100,
+            h: item.placement.h * 100,
+          });
+          if (updated) nextVisual = updated;
+        }
+        commit(placeItems(site, path, text("sectionId"), name, items, Boolean(data.overlay)), false, nextVisual !== visualDocument ? nextVisual : undefined);
         break;
       }
       case "4eos-drop":

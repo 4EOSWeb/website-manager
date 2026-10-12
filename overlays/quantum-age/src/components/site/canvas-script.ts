@@ -703,6 +703,11 @@ export function canvasScript(origin: string) {
         if (group) zone.querySelectorAll('[data-group="' + group + '"]').forEach(function (entry) { if (entry !== node && moving.indexOf(entry) < 0) moving.push(entry); });
         moving.forEach(function (entry) { drag.fellows.push({ node: entry, box: readBox(entry) }); });
         drag.others = Array.prototype.filter.call(zone.querySelectorAll("[data-item-id]"), function (entry) { return entry !== node && moving.indexOf(entry) < 0; }).map(readBox);
+        drag.canvas = !!(zone && zone.getAttribute && zone.getAttribute("data-zone-name") === "Canvas" && p.kind !== "resize");
+        if (drag.canvas) {
+          drag.ghost = ghostFor(node);
+          drag.ghost.setAttribute("data-canvas-ghost", "true");
+        }
       }
       scrollTimer = setInterval(function () {
         if (!drag) return;
@@ -714,7 +719,7 @@ export function canvasScript(origin: string) {
     function clearGuides() { document.querySelectorAll(".eos-guide").forEach(function (node) { node.remove(); }); }
     function updateDrag(x, y) {
       if (!drag) return;
-      if (drag.ghost) { drag.ghost.style.left = x + 14 + "px"; drag.ghost.style.top = y + 14 + "px"; }
+      if (drag.ghost && !drag.canvas) { drag.ghost.style.left = x + 14 + "px"; drag.ghost.style.top = y + 14 + "px"; }
       if (drag.kind === "section") {
         var nodes = Array.prototype.slice.call(document.querySelectorAll(".eos-gap"));
         var gaps = nodes.map(function (node, index) { var rect = node.getBoundingClientRect(); return { index: index, center: rect.top }; });
@@ -774,11 +779,21 @@ export function canvasScript(origin: string) {
       } else {
         next.x = drag.box.x + dx;
         next.y = drag.box.y + dy;
-        var snapped = H.snapBox(next, drag.others, zoneRect.width, zoneRect.height, 6);
-        next = snapped.box;
-        if (window.getComputedStyle(drag.zone).position === "static") drag.zone.style.position = "relative";
-        snapped.guidesX.forEach(function (share) { var line = document.createElement("div"); line.className = "eos-guide"; line.style.left = share * 100 + "%"; line.style.top = "0"; line.style.bottom = "0"; line.style.width = "1px"; drag.zone.appendChild(line); });
-        snapped.guidesY.forEach(function (share) { var line = document.createElement("div"); line.className = "eos-guide"; line.style.top = share * 100 + "%"; line.style.left = "0"; line.style.right = "0"; line.style.height = "1px"; drag.zone.appendChild(line); });
+        if (drag.canvas) {
+          next.x = Math.max(0, Math.min(1 - next.w, next.x));
+          next.y = Math.max(0, Math.min(1 - next.h, next.y));
+          if (drag.ghost) {
+            drag.ghost.style.left = (zoneRect.left + next.x * zoneRect.width) + "px";
+            drag.ghost.style.top = (zoneRect.top + next.y * zoneRect.height) + "px";
+          }
+        } else {
+          var snapped = H.snapBox(next, drag.others, zoneRect.width, zoneRect.height, 6);
+          next = snapped.box;
+          if (window.getComputedStyle(drag.zone).position === "static") drag.zone.style.position = "relative";
+          snapped.guidesX.forEach(function (share) { var line = document.createElement("div"); line.className = "eos-guide"; line.style.left = share * 100 + "%"; line.style.top = "0"; line.style.bottom = "0"; line.style.width = "1px"; drag.zone.appendChild(line); });
+          snapped.guidesY.forEach(function (share) { var line = document.createElement("div"); line.className = "eos-guide"; line.style.top = share * 100 + "%"; line.style.left = "0"; line.style.right = "0"; line.style.height = "1px"; drag.zone.appendChild(line); });
+        }
+        if (drag.canvas && window.getComputedStyle(drag.zone).position === "static") drag.zone.style.position = "relative";
       }
       applyBox(drag.node, next);
       var mx = next.x - drag.box.x;
