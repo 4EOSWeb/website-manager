@@ -60,6 +60,7 @@ import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createButton, writeButtonField } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createContainer } from "@/platform/elements/container";
+import { createGroup } from "@/platform/elements/group";
 import { createCanvas } from "@/platform/elements/canvas";
 import { createGrid } from "@/platform/elements/grid";
 import { createStack } from "@/platform/elements/stack";
@@ -887,6 +888,12 @@ export function EditorShell(props: {
     insertPreviewNode(node, block, "element:image", insertAfter(visualDocument, path, afterId, node), at);
   }
 
+  function insertCreatedGroup(node: NodeDocument) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Group", layout: "stack", blocks: [] };
+    insertPreviewSection(node, created, "element:group", insertAfter(visualDocument, path, afterId, node));
+  }
+
   function insertCreatedCanvas(node: NodeDocument) {
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
     const created: Section = { id: createId("sec"), type: "freeform", hidden: false, name: "Canvas", items: [] };
@@ -1008,6 +1015,10 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:canvas") {
       insertCreatedCanvas(createCanvas());
+      return;
+    }
+    if (entry.id === "element:group") {
+      insertCreatedGroup(createGroup());
       return;
     }
     if (!page || !props.canEdit) {
@@ -1387,6 +1398,7 @@ export function EditorShell(props: {
                   else if (node.componentId === "generic.stack") insertCreatedStack(node);
                   else if (node.componentId === "generic.grid") insertCreatedGrid(node);
                   else if (node.componentId === "generic.canvas") insertCreatedCanvas(node);
+                  else if (node.componentId === "generic.group") insertCreatedGroup(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>

@@ -173,6 +173,11 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
       items: [],
       metadata: { sourceNode: node.id },
     });
+  } else if (node.type === "group" && componentId === "generic.group") {
+    ownChildren = false;
+    const inner: FlowOut[] = [];
+    node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, inner, videos, extras));
+    extras.push({ id: node.id, type: "flow", hidden: node.visibility.hidden === true, editorName: "Group", blocks: inner });
   }
   else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
     unmapped.push({ path, id: node.id, type: node.type, componentId });
