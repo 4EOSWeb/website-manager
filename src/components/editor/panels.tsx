@@ -7,8 +7,8 @@ import { reorderPages, setBlockHidden, setEditorName, setSectionHidden } from "@
 import type { EditorApi, MediaItem, Viewport } from "@/components/editor/types";
 import { Empty, Field, Group, Segmented, TextInput } from "@/components/editor/ui";
 import { sectionName } from "@/components/editor/inspector/section";
-import { LayerTree } from "@/components/editor/layers/tree";
-import { visualPageRoot } from "@/components/editor/layers/rows";
+import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
+import { defaultOpenIds, visualPageRoot } from "@/components/editor/layers/rows";
 
 export function PagesPanel(props: {
   site: SiteDraft;
@@ -100,6 +100,10 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
   const [renaming, setRenaming] = useState("");
   const sections = api.page?.sections ?? [];
   const visualRoot = visualPageRoot(api.visualDocument, api.path);
+  const defaults = visualRoot
+    ? defaultOpenIds(visualRoot)
+    : sections.filter((section) => section.type === "flow" && section.blocks.length > 0).map((section) => section.id);
+  const layers = useLayerOpen(api.websiteId, api.page?.id ?? api.path, defaults);
   const rename = (sectionId: string, value: string, blockId?: string) => {
     setRenaming("");
     api.commit(setEditorName(api.site, api.path, sectionId, value, blockId), false);
@@ -112,7 +116,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
         </div>
         <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it.</p>
         <ul className="ed-tree is-layers" role="tree" aria-label="Page layers" data-layer-source="visual">
-          <LayerTree root={visualRoot} />
+          <LayerTree root={visualRoot} open={layers.open} onToggle={layers.toggle} />
         </ul>
       </div>
     );
@@ -131,7 +135,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
           const activeSection = api.selection.sectionId === section.id && !api.selection.itemId;
           const locked = section.type === "preset" && section.providerLocked;
           return (
-            <li key={section.id} role="treeitem" aria-selected={activeSection} aria-expanded={section.type === "flow" ? true : undefined}>
+            <li key={section.id} role="treeitem" aria-selected={activeSection} aria-expanded={section.type === "flow" && section.blocks.length > 0 ? layers.open.has(section.id) : undefined} data-layer-id={section.id}>
               <div className={activeSection ? "ed-tree-row is-active" : "ed-tree-row"}>
                 {renaming === section.id ? (
                   <input className="ed-input is-inline" autoFocus defaultValue={sectionName(section)} aria-label="Section name" onBlur={(event) => rename(section.id, event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); if (event.key === "Escape") setRenaming(""); }} />
@@ -147,8 +151,13 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
                     {section.hidden ? <EyeOff size={13} aria-hidden="true" /> : <Eye size={13} aria-hidden="true" />}
                   </button>
                 ) : null}
+                {section.type === "flow" && section.blocks.length > 0 ? (
+                  <button type="button" className="ed-icon is-small" aria-label={layers.open.has(section.id) ? "Collapse" : "Expand"} data-layer-toggle={section.id} onClick={() => layers.toggle(section.id)}>
+                    {layers.open.has(section.id) ? "–" : "+"}
+                  </button>
+                ) : null}
               </div>
-              {section.type === "flow" && section.blocks.length ? (
+              {section.type === "flow" && section.blocks.length > 0 && layers.open.has(section.id) ? (
                 <ul role="group">
                   {section.blocks.map((block) => {
                     const active = api.selection.itemId === block.id;

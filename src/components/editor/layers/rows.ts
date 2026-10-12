@@ -42,6 +42,22 @@ export function layerRows(root: LayerNode): LayerRow[] {
   return rows;
 }
 
+/** Root and the next level start open. Deeper nodes start collapsed. */
+export function defaultOpenIds(root: LayerNode): string[] {
+  const open: string[] = [];
+  const visit = (node: LayerNode, depth: number) => {
+    const children = node.children ?? [];
+    if (children.length > 0 && depth < 2) open.push(node.id);
+    for (const child of children) visit(child, depth + 1);
+  };
+  visit(root, 0);
+  return open;
+}
+
+export function layerStorageKey(websiteId: string, pageId: string): string {
+  return `4eos-layers:${websiteId}:${pageId}`;
+}
+
 /** The active page root, or null when this draft has no visual document. */
 export function visualPageRoot(document: unknown, route: string): LayerNode | null {
   if (!document || typeof document !== "object") return null;

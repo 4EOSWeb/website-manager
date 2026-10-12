@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { layerRows, visualPageRoot, type LayerNode } from "../../src/components/editor/layers/rows.ts";
+import { defaultOpenIds, layerRows, layerStorageKey, visualPageRoot, type LayerNode } from "../../src/components/editor/layers/rows.ts";
 
 const managed: LayerNode = {
   id: "node_managed",
@@ -30,6 +30,20 @@ test("every node has a row, including a provider-managed node", () => {
   assert.equal(rows[2]?.providerManaged, true);
   assert.equal(rows[2]?.parentId, "node_root");
   assert.equal(rows[2]?.depth, 1);
+});
+
+test("the root and the next level start open", () => {
+  const deep: LayerNode = {
+    id: "node_root",
+    type: "section",
+    children: [{
+      id: "node_child",
+      type: "section",
+      children: [{ id: "node_deep", type: "text", children: [{ id: "node_leaf", type: "text", children: [] }] }],
+    }],
+  };
+  assert.deepEqual(defaultOpenIds(deep), ["node_root", "node_child"]);
+  assert.equal(layerStorageKey("web_example", "page_home"), "4eos-layers:web_example:page_home");
 });
 
 test("a missing visual document keeps the version 3 list", () => {
