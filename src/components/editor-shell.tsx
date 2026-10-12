@@ -59,6 +59,7 @@ import type { NodeDocument } from "@/platform/document/node";
 import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createButton, writeButtonField } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
+import { createContainer } from "@/platform/elements/container";
 import { createDivider } from "@/platform/elements/divider";
 import { createIcon } from "@/platform/elements/icon";
 import { createSpacer } from "@/platform/elements/spacer";
@@ -870,7 +871,8 @@ export function EditorShell(props: {
     setNodeIds(selectNodeId(node.id).nodeIds);
     setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
     setSelection({ ...emptySelection, sectionId: created.id, kind: created.type });
-    notify(`${created.type === "video" ? "Video" : created.type === "divider" ? "Divider" : created.type === "spacer" ? "Spacer" : "Item"} added.`);
+    const label = created.type === "video" ? "Video" : created.type === "divider" ? "Divider" : created.type === "spacer" ? "Spacer" : created.editorName || "Item";
+    notify(`${label} added.`);
   }
 
   function insertCreatedImage(node: NodeDocument, at?: Insert) {
@@ -880,6 +882,12 @@ export function EditorShell(props: {
     const block: FlowBlock = { id: createId("blk"), kind: "image", hidden: false, ...(src ? { src } : {}), alt };
     imageBlocks.current.set(block.id, node.id);
     insertPreviewNode(node, block, "element:image", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
+  function insertCreatedContainer(node: NodeDocument) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Container", layout: "stack", blocks: [] };
+    insertPreviewSection(node, created, "element:container", insertAfter(visualDocument, path, afterId, node));
   }
 
   function insertCreatedSpacer(node: NodeDocument) {
@@ -963,6 +971,10 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:spacer") {
       insertCreatedSpacer(createSpacer());
+      return;
+    }
+    if (entry.id === "element:container") {
+      insertCreatedContainer(createContainer());
       return;
     }
     if (!page || !props.canEdit) {
@@ -1338,6 +1350,7 @@ export function EditorShell(props: {
                   else if (node.componentId === "generic.icon") insertCreatedIcon(node);
                   else if (node.componentId === "generic.divider") insertCreatedDivider(node);
                   else if (node.componentId === "generic.spacer") insertCreatedSpacer(node);
+                  else if (node.componentId === "generic.container") insertCreatedContainer(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>

@@ -126,10 +126,12 @@ function spacerSection(node: NodeDocument) {
   return { id: node.id, type: "spacer" as const, hidden: node.visibility.hidden === true, size };
 }
 
-type ExtraSection = ReturnType<typeof dividerSection> | ReturnType<typeof spacerSection>;
+type WrappedFlow = { id: string; type: "flow"; hidden: boolean; editorName: string; blocks: FlowOut[] };
+type ExtraSection = ReturnType<typeof dividerSection> | ReturnType<typeof spacerSection> | WrappedFlow;
 
 function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: FlowOut[], videos: Array<ReturnType<typeof videoSection>>, extras: ExtraSection[]) {
   const componentId = node.componentId;
+  let ownChildren = true;
   if (componentId === "quantum-age.hero") hero.props = node.props;
   else if (node.type === "heading" && componentId === "generic.heading") blocks.push(flowText(node, "heading"));
   else if (node.type === "text" && componentId === "generic.text") blocks.push(flowText(node, "paragraph"));
@@ -145,10 +147,16 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
     blocks.push(flowText({ ...node, props: { ...node.props, text: name } }, "paragraph"));
   } else if (node.type === "divider" && componentId === "generic.divider") extras.push(dividerSection(node));
   else if (node.type === "spacer" && componentId === "generic.spacer") extras.push(spacerSection(node));
+  else if (node.type === "container" && componentId === "generic.container") {
+    ownChildren = false;
+    const inner: FlowOut[] = [];
+    node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, inner, videos, extras));
+    extras.push({ id: node.id, type: "flow", hidden: node.visibility.hidden === true, editorName: "Container", blocks: inner });
+  }
   else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
     unmapped.push({ path, id: node.id, type: node.type, componentId });
   }
-  node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, blocks, videos, extras));
+  if (ownChildren) node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, blocks, videos, extras));
 }
 
 export const serializeQuantumAge: SerializeHook = (document) => {
