@@ -1,4 +1,4 @@
-import { autoScrollStep, passedThreshold, pressIntent } from "./canvas/gesture";
+import { autoScrollStep, passedThreshold, pressIntent, previewAutoScroll } from "./canvas/gesture";
 import { insertionIndex, nudgeBox, sectionDropIndex, snapBox } from "./canvas/targets";
 import { placeToolbar } from "./canvas/toolbar-position";
 import { clearMarks, hasMark, marksToHtml, toggleMark, validLink } from "./canvas/marks";
@@ -125,6 +125,7 @@ export function canvasScript(origin: string) {
       pressIntent: ${inline(pressIntent)},
       passedThreshold: ${inline(passedThreshold)},
       autoScrollStep: ${inline(autoScrollStep)},
+      previewAutoScroll: ${inline(previewAutoScroll)},
       sectionDropIndex: ${inline(sectionDropIndex)},
       insertionIndex: ${inline(insertionIndex)},
       snapBox: ${inline(snapBox)},
@@ -711,8 +712,8 @@ export function canvasScript(origin: string) {
       }
       scrollTimer = setInterval(function () {
         if (!drag) return;
-        var step = H.autoScrollStep(lastPointer.y, window.innerHeight, 56, 18);
-        if (step) { window.scrollBy(0, step); updateDrag(lastPointer.x, lastPointer.y); }
+        var step = H.previewAutoScroll(lastPointer, { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight }, true);
+        if (step.x || step.y) { window.scrollBy(step.x, step.y); updateDrag(lastPointer.x, lastPointer.y); }
       }, 16);
       updateDrag(event.clientX, event.clientY);
     }
