@@ -106,7 +106,21 @@ function flowImage(node: NodeDocument) {
   };
 }
 
-type FlowOut = ReturnType<typeof flowText> | ReturnType<typeof flowLink> | ReturnType<typeof flowButton> | ReturnType<typeof flowImage>;
+function flowCard(node: NodeDocument) {
+  const heading = node.children.find((child) => child.type === "heading");
+  const paragraph = node.children.find((child) => child.type === "text");
+  const title = heading && typeof heading.props.text === "string" ? heading.props.text : "Card title";
+  const body = paragraph && typeof paragraph.props.text === "string" ? paragraph.props.text : "Card text";
+  return {
+    id: node.id,
+    kind: "card" as const,
+    hidden: node.visibility.hidden === true,
+    text: { text: title, marks: [] as RichMark[] },
+    detail: { text: body, marks: [] as RichMark[] },
+  };
+}
+
+type FlowOut = ReturnType<typeof flowText> | ReturnType<typeof flowLink> | ReturnType<typeof flowButton> | ReturnType<typeof flowImage> | ReturnType<typeof flowCard>;
 
 function richMarks(node: NodeDocument): RichMark[] {
   return Array.isArray(node.props.marks) ? (node.props.marks as RichMark[]) : [];
@@ -142,6 +156,10 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
     if (validLink(href)) blocks.push(flowLink(node));
   } else if (node.type === "button" && (componentId === "generic.button" || componentId === "generic.icon-button")) blocks.push(flowButton(node));
   else if (node.type === "image" && componentId === "generic.image") blocks.push(flowImage(node));
+  else if (node.type === "card" && componentId === "generic.card") {
+    ownChildren = false;
+    blocks.push(flowCard(node));
+  }
   else if (node.type === "video" && componentId === "generic.video" && acceptVideoUrl(typeof node.props.url === "string" ? node.props.url : "")) videos.push(videoSection(node));
   else if (node.type === "icon" && componentId === "generic.icon") {
     const name = typeof node.props.name === "string" && node.props.name ? node.props.name : "arrow";

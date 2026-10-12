@@ -60,6 +60,7 @@ import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createButton, writeButtonField } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createContainer } from "@/platform/elements/container";
+import { createCard } from "@/platform/elements/card";
 import { createGroup } from "@/platform/elements/group";
 import { createCanvas } from "@/platform/elements/canvas";
 import { createGrid } from "@/platform/elements/grid";
@@ -888,6 +889,16 @@ export function EditorShell(props: {
     insertPreviewNode(node, block, "element:image", insertAfter(visualDocument, path, afterId, node), at);
   }
 
+  function insertCreatedCard(node: NodeDocument, at?: Insert) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const title = node.children.find((child) => child.type === "heading");
+    const body = node.children.find((child) => child.type === "text");
+    const heading = title && typeof title.props.text === "string" ? title.props.text : "Card title";
+    const paragraph = body && typeof body.props.text === "string" ? body.props.text : "Card text";
+    const block: FlowBlock = { id: createId("blk"), kind: "card", hidden: false, text: { text: heading, marks: [] }, detail: { text: paragraph, marks: [] } };
+    insertPreviewNode(node, block, "element:card", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
   function insertCreatedGroup(node: NodeDocument) {
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
     const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Group", layout: "stack", blocks: [] };
@@ -1019,6 +1030,10 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:group") {
       insertCreatedGroup(createGroup());
+      return;
+    }
+    if (entry.id === "element:card") {
+      insertCreatedCard(createCard(), at);
       return;
     }
     if (!page || !props.canEdit) {
@@ -1399,6 +1414,7 @@ export function EditorShell(props: {
                   else if (node.componentId === "generic.grid") insertCreatedGrid(node);
                   else if (node.componentId === "generic.canvas") insertCreatedCanvas(node);
                   else if (node.componentId === "generic.group") insertCreatedGroup(node);
+                  else if (node.componentId === "generic.card") insertCreatedCard(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>

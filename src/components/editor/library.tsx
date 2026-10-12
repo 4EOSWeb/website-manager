@@ -8,6 +8,7 @@ import type { NodeDocument } from "@/platform/document/node";
 import { createButton } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createContainer } from "@/platform/elements/container";
+import { createCard } from "@/platform/elements/card";
 import { createGroup } from "@/platform/elements/group";
 import { createCanvas } from "@/platform/elements/canvas";
 import { createGrid } from "@/platform/elements/grid";
@@ -40,6 +41,7 @@ export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:grid", label: "Grid", description: "A two-column grid", category: "Sections", keywords: "columns", thumb: "cards" },
   { id: "element:canvas", label: "Canvas", description: "A free canvas", category: "Freeform zone", keywords: "canvas", thumb: "zone" },
   { id: "element:group", label: "Group", description: "An empty group", category: "Sections", keywords: "group", thumb: "blank" },
+  { id: "element:card", label: "Card", description: "A heading and some text", category: "Sections", keywords: "card", thumb: "card" },
 ];
 
 function entryVisible(entry: LibraryEntry, query: string, category: LibraryCategory | "All" | "Saved") {
@@ -151,6 +153,7 @@ export function LibraryBrowser(props: {
             else if (entry.id === "element:grid" && props.onElement) props.onElement(createGrid());
             else if (entry.id === "element:canvas" && props.onElement) props.onElement(createCanvas());
             else if (entry.id === "element:group" && props.onElement) props.onElement(createGroup());
+            else if (entry.id === "element:card" && props.onElement) props.onElement(createCard());
             else props.onChoose(entry);
           }}
         >
