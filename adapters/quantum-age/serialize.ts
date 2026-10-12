@@ -7,6 +7,7 @@ import { writtenFiles } from "../../src/platform/adapter/serialize.ts";
 import { validateDocument } from "../../src/platform/document/document.ts";
 import type { NodeDocument } from "../../src/platform/document/node.ts";
 import { nodeTypes } from "../../src/platform/document/node-type.ts";
+import { sanitizeMarks, type RichMark } from "../../src/lib/rich-text.ts";
 import { defaultChrome } from "./seed.ts";
 import { quantumAgeHeroProps } from "./components/hero.ts";
 
@@ -48,14 +49,18 @@ function json(value: unknown) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-function flowText(node: NodeDocument, kind: "heading" | "paragraph") {
+function flowText(node: NodeDocument, kind: "heading" | "paragraph", marks: RichMark[] = []) {
   const text = typeof node.props.text === "string" ? node.props.text : "";
   return {
     id: node.id,
     kind,
     hidden: node.visibility.hidden === true,
-    text: { text, marks: [] as string[] },
+    text: { text, marks: sanitizeMarks(text, marks) },
   };
+}
+
+function richMarks(node: NodeDocument): RichMark[] {
+  return Array.isArray(node.props.marks) ? (node.props.marks as RichMark[]) : [];
 }
 
 function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: Array<ReturnType<typeof flowText>>) {
@@ -63,6 +68,7 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
   if (componentId === "quantum-age.hero") hero.props = node.props;
   else if (node.type === "heading" && componentId === "generic.heading") blocks.push(flowText(node, "heading"));
   else if (node.type === "text" && componentId === "generic.text") blocks.push(flowText(node, "paragraph"));
+  else if (node.type === "richtext" && componentId === "generic.richtext") blocks.push(flowText(node, "paragraph", richMarks(node)));
   else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
     unmapped.push({ path, id: node.id, type: node.type, componentId });
   }

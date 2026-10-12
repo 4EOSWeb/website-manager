@@ -58,6 +58,7 @@ import type { NodeDocument } from "@/platform/document/node";
 import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createHeading } from "@/platform/elements/heading";
 import { createParagraph } from "@/platform/elements/paragraph";
+import { createRichText, writeRichMarks } from "@/platform/elements/richtext";
 import { useEditorHistory } from "@/components/editor/use-editor-history";
 import { AddPageDialog, CropDialog, ImagePickerDialog, InsertDialog, PublishDialog, ShortcutsDialog, TemplateDialog, type PageForm } from "@/components/editor/dialogs";
 
@@ -147,6 +148,7 @@ export function EditorShell(props: {
   const siteRef = useRef(site);
   const scrollByPath = useRef<Record<string, number>>({});
   const readyFor = useRef("");
+  const richBlocks = useRef(new Map<string, string>());
   const toastId = useRef(0);
 
   const page = pageByRoute(site, path);
@@ -760,6 +762,13 @@ export function EditorShell(props: {
     insertPreviewNode(node, block, "element:paragraph", insertAfter(visualDocument, path, afterId, node), at);
   }
 
+  function insertCreatedRichText(node: NodeDocument, at?: Insert) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const block: FlowBlock = { id: createId("blk"), kind: "paragraph", hidden: false, text: { text: "Rich text", marks: [] } };
+    richBlocks.current.set(block.id, node.id);
+    insertPreviewNode(node, block, "element:richtext", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
   function insertEntry(entry: LibraryEntry, at?: Insert) {
     if (entry.id === "element:heading") {
       insertCreatedHeading(createHeading(), at);
@@ -767,6 +776,10 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:paragraph") {
       insertCreatedParagraph(createParagraph(), at);
+      return;
+    }
+    if (entry.id === "element:richtext") {
+      insertCreatedRichText(createRichText(), at);
       return;
     }
     if (!page || !props.canEdit) {
@@ -873,7 +886,11 @@ export function EditorShell(props: {
         break;
       case "4eos-text": {
         const marks = readMarks(data.marks);
-        commitText(applyText(site, path, text("sectionId"), text("field") || "text", text("value"), text("itemId") || undefined, marks), `${text("sectionId")}:${text("itemId")}:${text("field")}`);
+        const itemId = text("itemId");
+        const nodeId = richBlocks.current.get(itemId);
+        const nextVisual = nodeId ? writeRichMarks(visualDocument, nodeId, text("value"), marks ?? []) : null;
+        commitText(applyText(site, path, text("sectionId"), text("field") || "text", text("value"), itemId || undefined, marks), `${text("sectionId")}:${itemId}:${text("field")}`);
+        if (nextVisual) setVisualDocument(nextVisual);
         break;
       }
       case "4eos-nav":
@@ -1120,7 +1137,11 @@ export function EditorShell(props: {
                 <div className="ed-panel-head">
                   <h2>Add</h2>
                 </div>
-                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommendedHere} templates={templates} onChoose={(entry) => insertEntry(entry)} onElement={(node) => (node.componentId === "generic.text" ? insertCreatedParagraph(node) : insertCreatedHeading(node))} onTemplate={(id) => insertTemplate(id)} dense />
+                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommendedHere} templates={templates} onChoose={(entry) => insertEntry(entry)} onElement={(node) => {
+                  if (node.componentId === "generic.text") insertCreatedParagraph(node);
+                  else if (node.componentId === "generic.richtext") insertCreatedRichText(node);
+                  else insertCreatedHeading(node);
+                }} onTemplate={(id) => insertTemplate(id)} dense />
               </div>
             ) : null}
             {rail === "pages" ? (
