@@ -728,9 +728,11 @@ export function canvasScript(origin: string) {
         var box = anchor.getBoundingClientRect();
         var section = sectionOf(drag.node);
         var layout = section && section.getAttribute("data-layout");
-        var lineKind = layout === "cards" ? "vertical" : "horizontal";
+        var flexDirection = layout === "cards" ? "row" : "column";
+        var lineKind = flexDirection === "row" ? "vertical" : "horizontal";
         drag.target = { id: anchor.getAttribute("data-item-id"), after: after };
         drag.line.style.display = "block";
+        drag.line.setAttribute("data-flex-direction", flexDirection);
         drag.line.setAttribute("data-flow-line", lineKind);
         if (lineKind === "vertical") {
           drag.line.style.left = (after ? box.right + 4 : box.left - 5) + "px";
