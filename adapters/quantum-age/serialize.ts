@@ -108,7 +108,7 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
   else if (node.type === "link" && componentId === "generic.link") {
     const href = typeof node.props.href === "string" ? node.props.href : "";
     if (validLink(href)) blocks.push(flowLink(node));
-  } else if (node.type === "button" && componentId === "generic.button") blocks.push(flowButton(node));
+  } else if (node.type === "button" && (componentId === "generic.button" || componentId === "generic.icon-button")) blocks.push(flowButton(node));
   else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
     unmapped.push({ path, id: node.id, type: node.type, componentId });
   }

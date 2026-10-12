@@ -58,6 +58,7 @@ import { selectNodeId } from "@/components/editor/state/selection";
 import type { NodeDocument } from "@/platform/document/node";
 import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createButton, writeButtonField } from "@/platform/elements/button";
+import { createIconButton } from "@/platform/elements/icon-button";
 import { createCustom, type CustomDefinition } from "@/platform/elements/custom";
 import { createHeading } from "@/platform/elements/heading";
 import { createLink, writeLinkHref } from "@/platform/elements/link";
@@ -860,6 +861,10 @@ export function EditorShell(props: {
       insertCreatedButton(createButton(), at);
       return;
     }
+    if (entry.id === "element:icon-button") {
+      insertCreatedButton(createIconButton(), at);
+      return;
+    }
     if (!page || !props.canEdit) {
       notify(managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
       return;
@@ -1227,7 +1232,7 @@ export function EditorShell(props: {
                   if (node.componentId === "generic.text") insertCreatedParagraph(node);
                   else if (node.componentId === "generic.richtext") insertCreatedRichText(node);
                   else if (node.componentId === "generic.link") insertCreatedLink(node);
-                  else if (node.componentId === "generic.button") insertCreatedButton(node);
+                  else if (node.componentId === "generic.button" || node.componentId === "generic.icon-button") insertCreatedButton(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>
