@@ -722,12 +722,20 @@ export function canvasScript(origin: string) {
         var step = H.previewAutoScroll(lastPointer, { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight }, true);
         if (step.x || step.y) { window.scrollBy(step.x, step.y); updateDrag(lastPointer.x, lastPointer.y); }
       }, 16);
-      updateDrag(event.clientX, event.clientY, event.shiftKey);
+      updateDrag(event.clientX, event.clientY, event.shiftKey, event.altKey);
+    }
+    function snapShare(value) {
+      var interval = 0.04;
+      var snapped = Math.round(value / interval) * interval;
+      if (snapped < 0) snapped = 0;
+      if (snapped > 1) snapped = 1;
+      return snapped;
     }
     function clearGuides() { document.querySelectorAll(".eos-guide").forEach(function (node) { node.remove(); }); }
-    function updateDrag(x, y, shift) {
+    function updateDrag(x, y, shift, alt) {
       if (!drag) return;
       if (shift === true || shift === false) drag.shift = shift;
+      if (alt === true || alt === false) drag.alt = alt;
       if (drag.ghost && !drag.canvas) { drag.ghost.style.left = x + 14 + "px"; drag.ghost.style.top = y + 14 + "px"; }
       if (drag.kind === "section") {
         var nodes = Array.prototype.slice.call(document.querySelectorAll(".eos-gap"));
@@ -837,12 +845,24 @@ export function canvasScript(origin: string) {
           if (left) next.x = Math.max(0, drag.box.x + drag.box.w - next.w);
           if (top) next.y = Math.max(0, drag.box.y + drag.box.h - next.h);
         }
+        if (canvasZone && drag.alt !== true) {
+          next.x = snapShare(next.x);
+          next.y = snapShare(next.y);
+          next.w = Math.max(0.02, snapShare(next.w));
+          next.h = Math.max(0.02, snapShare(next.h));
+        }
       } else {
         next.x = drag.box.x + dx;
         next.y = drag.box.y + dy;
         if (drag.canvas) {
           next.x = Math.max(0, Math.min(1 - next.w, next.x));
           next.y = Math.max(0, Math.min(1 - next.h, next.y));
+          if (drag.alt !== true) {
+            next.x = snapShare(next.x);
+            next.y = snapShare(next.y);
+            next.x = Math.max(0, Math.min(1 - next.w, next.x));
+            next.y = Math.max(0, Math.min(1 - next.h, next.y));
+          }
           if (drag.ghost) {
             drag.ghost.style.left = (zoneRect.left + next.x * zoneRect.width) + "px";
             drag.ghost.style.top = (zoneRect.top + next.y * zoneRect.height) + "px";
@@ -1342,7 +1362,7 @@ export function canvasScript(origin: string) {
         }
         return;
       }
-      if (drag) { updateDrag(event.clientX, event.clientY, event.shiftKey); return; }
+      if (drag) { updateDrag(event.clientX, event.clientY, event.shiftKey, event.altKey); return; }
       if (event.buttons) return;
       var next = isUi(event.target) ? null : selectableFor(event.target);
       if (next === selected || (next && next === editing)) next = null;
