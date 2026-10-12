@@ -59,6 +59,7 @@ import type { NodeDocument } from "@/platform/document/node";
 import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createButton, writeButtonField } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
+import { createDivider } from "@/platform/elements/divider";
 import { createIcon } from "@/platform/elements/icon";
 import { createImage, writeImage } from "@/platform/elements/image";
 import { acceptVideoUrl, createVideo, writeVideoUrl } from "@/platform/elements/video";
@@ -868,7 +869,7 @@ export function EditorShell(props: {
     setNodeIds(selectNodeId(node.id).nodeIds);
     setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
     setSelection({ ...emptySelection, sectionId: created.id, kind: created.type });
-    notify(`${created.type === "video" ? "Video" : "Item"} added.`);
+    notify(`${created.type === "video" ? "Video" : created.type === "divider" ? "Divider" : "Item"} added.`);
   }
 
   function insertCreatedImage(node: NodeDocument, at?: Insert) {
@@ -878,6 +879,12 @@ export function EditorShell(props: {
     const block: FlowBlock = { id: createId("blk"), kind: "image", hidden: false, ...(src ? { src } : {}), alt };
     imageBlocks.current.set(block.id, node.id);
     insertPreviewNode(node, block, "element:image", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
+  function insertCreatedDivider(node: NodeDocument) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "divider", hidden: false };
+    insertPreviewSection(node, created, "element:divider", insertAfter(visualDocument, path, afterId, node));
   }
 
   function insertCreatedIcon(node: NodeDocument, at?: Insert) {
@@ -940,6 +947,10 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:icon") {
       insertCreatedIcon(createIcon(), at);
+      return;
+    }
+    if (entry.id === "element:divider") {
+      insertCreatedDivider(createDivider());
       return;
     }
     if (!page || !props.canEdit) {
@@ -1313,6 +1324,7 @@ export function EditorShell(props: {
                   else if (node.componentId === "generic.image") insertCreatedImage(node);
                   else if (node.componentId === "generic.video") insertCreatedVideo(node);
                   else if (node.componentId === "generic.icon") insertCreatedIcon(node);
+                  else if (node.componentId === "generic.divider") insertCreatedDivider(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>

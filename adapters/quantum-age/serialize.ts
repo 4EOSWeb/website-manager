@@ -117,7 +117,11 @@ function videoSection(node: NodeDocument) {
   return { id: node.id, type: "video" as const, hidden: node.visibility.hidden === true, url };
 }
 
-function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: FlowOut[], videos: Array<ReturnType<typeof videoSection>>) {
+function dividerSection(node: NodeDocument) {
+  return { id: node.id, type: "divider" as const, hidden: node.visibility.hidden === true };
+}
+
+function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: FlowOut[], videos: Array<ReturnType<typeof videoSection>>, extras: Array<ReturnType<typeof dividerSection>>) {
   const componentId = node.componentId;
   if (componentId === "quantum-age.hero") hero.props = node.props;
   else if (node.type === "heading" && componentId === "generic.heading") blocks.push(flowText(node, "heading"));
@@ -132,11 +136,11 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
   else if (node.type === "icon" && componentId === "generic.icon") {
     const name = typeof node.props.name === "string" && node.props.name ? node.props.name : "arrow";
     blocks.push(flowText({ ...node, props: { ...node.props, text: name } }, "paragraph"));
-  }
+  } else if (node.type === "divider" && componentId === "generic.divider") extras.push(dividerSection(node));
   else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
     unmapped.push({ path, id: node.id, type: node.type, componentId });
   }
-  node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, blocks, videos));
+  node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, blocks, videos, extras));
 }
 
 export const serializeQuantumAge: SerializeHook = (document) => {
@@ -147,10 +151,12 @@ export const serializeQuantumAge: SerializeHook = (document) => {
   const pages = validated.value.pages.map((page) => {
     const blocks: FlowOut[] = [];
     const videos: Array<ReturnType<typeof videoSection>> = [];
-    walk(page.root, `pages.${page.route}.root`, unmapped, hero, blocks, videos);
+    const extras: Array<ReturnType<typeof dividerSection>> = [];
+    walk(page.root, `pages.${page.route}.root`, unmapped, hero, blocks, videos, extras);
     const sections = [
       ...(blocks.length ? [{ id: `sec_${page.id.slice(5, 17)}`, type: "flow", hidden: false, blocks }] : []),
       ...videos,
+      ...extras,
     ];
     return {
       id: page.id,
