@@ -74,7 +74,7 @@ test("selecting text does not resize", () => {
   for (const word of ["quantum", "heroimage", "tagline", "plum", "insights", "brand-mark"]) {
     assert.equal(source.toLowerCase().includes(word), false, word);
   }
-  const script = readFileSync(new URL("../../overlays/quantum-age/src/components/site/canvas-script.ts", import.meta.url), "utf8");
+  const script = readFileSync(new URL("../../src/platform/canvas/runtime.ts", import.meta.url), "utf8");
   assert.equal(script.includes("function canvasHandlesFor"), true);
   assert.equal(script.includes('node.getAttribute("data-kind") === "image"'), true);
   assert.equal(script.includes('element.closest(".eos-handle")'), true);

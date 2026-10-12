@@ -8,14 +8,15 @@ const sections = [{ id: "who", blocks: [{ id: "blk_who_h" }], items: [] }];
 test("a message for another website id is ignored", () => {
   assert.equal(messageForSite({ websiteId: "web_other" }, "web_quantum_age"), false);
   assert.equal(messageForSite({ websiteId: "web_quantum_age" }, "web_quantum_age"), true);
-  assert.equal(messageForSite({}, "web_quantum_age"), true);
-  assert.equal(messageForSite({ websiteId: "" }, "web_quantum_age"), true);
+  assert.equal(messageForSite({}, "web_quantum_age"), false);
+  assert.equal(messageForSite({ websiteId: "" }, "web_quantum_age"), false);
   const source = readFileSync(new URL("../../src/components/editor/use-canvas-messages.ts", import.meta.url), "utf8");
   assert.equal(source.includes("messageForSite"), true);
-  assert.equal(source.includes("step 11.31"), true);
+  assert.equal(source.includes("step 11.31"), false);
   const shell = readFileSync(new URL("../../src/components/editor-shell.tsx", import.meta.url), "utf8");
   assert.equal(shell.includes('case "4eos-select"'), true);
-  assert.equal(shell.includes('case "4eos-reorder-block"'), true);
+  assert.equal(shell.includes('case "4eos-reorder-block"'), false);
+  assert.equal(shell.includes('case "4eos-reparent"'), true);
 });
 
 test("a node message selects that node", () => {

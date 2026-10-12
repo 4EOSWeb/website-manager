@@ -22,7 +22,7 @@ test("short labels show no overflow warning", () => {
   }
   const shell = readFileSync(new URL("../../src/components/editor-shell.tsx", import.meta.url), "utf8");
   assert.equal(shell.includes("overflowWarning"), true);
-  const script = readFileSync(new URL("../../overlays/quantum-age/src/components/site/canvas-script.ts", import.meta.url), "utf8");
+  const script = readFileSync(new URL("../../src/platform/canvas/runtime.ts", import.meta.url), "utf8");
   const start = script.indexOf("function reportOverflow");
   const slice = script.slice(start, script.indexOf("function clearSelected"));
   assert.equal(slice.includes('type: "4eos-overflow"'), true);

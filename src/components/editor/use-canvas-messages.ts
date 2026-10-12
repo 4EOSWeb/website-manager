@@ -6,13 +6,10 @@ import type { RichMark } from "@/lib/rich-text";
 export type CanvasMessage = Record<string, unknown> & { type: string };
 
 /**
- * A missing website id counts as the active site.
- * The preview does not send one yet. Remove that allowance in step 11.31.
+ * A preview message must name this website.
  */
 export function messageForSite(message: { websiteId?: unknown }, activeWebsiteId: string): boolean {
-  const id = message.websiteId;
-  if (typeof id !== "string" || id.length === 0) return true;
-  return id === activeWebsiteId;
+  return message.websiteId === activeWebsiteId;
 }
 
 export function nodeIdFromCanvasMessage(message: { type?: unknown; nodeId?: unknown; itemId?: unknown; sectionId?: unknown }): string | null {

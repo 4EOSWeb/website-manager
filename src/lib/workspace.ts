@@ -60,6 +60,18 @@ function walk(dir: string): string[] {
   return files;
 }
 
+function syncCanvasRuntime(destination: string) {
+  const source = path.join(process.cwd(), "src", "platform", "canvas");
+  if (!fs.existsSync(source)) return;
+  const target = path.join(destination, "src", "platform", "canvas");
+  for (const file of walk(source)) {
+    const relative = path.relative(source, file);
+    const next = path.join(target, relative);
+    fs.mkdirSync(path.dirname(next), { recursive: true });
+    fs.copyFileSync(file, next);
+  }
+}
+
 export async function ensureWorkspace(websiteId: string) {
   const dir = workspaceDir(websiteId);
   if (!fs.existsSync(path.join(dir, ".git"))) {
@@ -72,6 +84,7 @@ export async function ensureWorkspace(websiteId: string) {
     }
   }
   copyOverlay(dir);
+  syncCanvasRuntime(dir);
   if (!fs.existsSync(path.join(dir, "node_modules", "next"))) {
     await exec("npm", ["ci"], { cwd: dir, env: safeEnv({}) });
   }

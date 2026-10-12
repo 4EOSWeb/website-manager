@@ -13,6 +13,6 @@ test("resize requires a resizable unlocked component on a canvas parent", () => 
   assert.equal(canResize(resizable, unlocked, { mode: "canvas" }), true);
   const source = readFileSync(new URL("../../src/platform/registry/capabilities.ts", import.meta.url), "utf8");
   assert.equal(source.includes("createElement"), false);
-  const script = readFileSync(new URL("../../overlays/quantum-age/src/components/site/canvas-script.ts", import.meta.url), "utf8");
+  const script = readFileSync(new URL("../../src/platform/canvas/runtime.ts", import.meta.url), "utf8");
   assert.equal(script.includes('drag.kind === "resize"'), true);
 });

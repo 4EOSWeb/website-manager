@@ -39,7 +39,7 @@ test("scrolling stops when the drag ends and ignores the hub", () => {
   for (const [pointer, dragging] of samples) {
     assert.deepEqual(previewScroll(pointer, port, dragging), platformScroll(pointer, port, dragging));
   }
-  const script = readFileSync(new URL("../../overlays/quantum-age/src/components/site/canvas-script.ts", import.meta.url), "utf8");
+  const script = readFileSync(new URL("../../src/platform/canvas/runtime.ts", import.meta.url), "utf8");
   assert.equal(script.includes("H.previewAutoScroll"), true);
   assert.equal(script.includes("window.scrollBy(step.x, step.y)"), true);
   assert.equal(script.includes("autoScrollStep(lastPointer.y, window.innerHeight, 56, 18)"), false);

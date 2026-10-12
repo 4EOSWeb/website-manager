@@ -23,7 +23,7 @@ test("alt leaves the raw percent and flow is outside the canvas snap", () => {
   for (const word of ["quantum", "heroimage", "tagline", "plum", "insights", "brand-mark"]) {
     assert.equal(source.toLowerCase().includes(word), false, word);
   }
-  const script = readFileSync(new URL("../../overlays/quantum-age/src/components/site/canvas-script.ts", import.meta.url), "utf8");
+  const script = readFileSync(new URL("../../src/platform/canvas/runtime.ts", import.meta.url), "utf8");
   const drag = script.slice(script.indexOf("function updateDrag"));
   const flowReturn = drag.indexOf('if (drag.kind === "block")');
   const snapCall = drag.indexOf("snapShare(");

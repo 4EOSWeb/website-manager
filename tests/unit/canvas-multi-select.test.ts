@@ -24,7 +24,7 @@ test("text selection still does not become a multi-drag rule", () => {
   const inspector = readFileSync(new URL("../../src/components/editor/inspector/chrome.tsx", import.meta.url), "utf8");
   assert.equal(inspector.includes(">Mixed<"), true);
   assert.equal(inspector.includes("disabled={disabled || mixed}"), true);
-  const script = readFileSync(new URL("../../overlays/quantum-age/src/components/site/canvas-script.ts", import.meta.url), "utf8");
+  const script = readFileSync(new URL("../../src/platform/canvas/runtime.ts", import.meta.url), "utf8");
   assert.equal(script.includes("shift: multi"), true);
   assert.equal(script.includes("function selectionBlocksDrag"), true);
 });

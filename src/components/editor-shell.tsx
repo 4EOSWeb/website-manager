@@ -1434,18 +1434,18 @@ export function EditorShell(props: {
         dragActive.current = false;
         commit(moveSectionById(site, path, text("sectionId"), text("beforeId")), true);
         break;
-      case "4eos-reorder-block": {
-        if (dropIgnored.current) { dropIgnored.current = false; break; }
-        dragActive.current = false;
-        const next = moveFlowBlockById(site, path, text("sectionId"), text("itemId"), text("targetId"), Boolean(data.after));
-        const nextVisual = flowReorder(visualDocument, text("itemId"), text("targetId"), Boolean(data.after));
-        commit(next, true, nextVisual ?? undefined);
-        break;
-      }
       case "4eos-reparent": {
         if (dropIgnored.current) { dropIgnored.current = false; break; }
         dragActive.current = false;
-        const next = moveBlockToSection(site, path, text("sectionId"), text("targetSectionId"), text("itemId"), text("targetId"), Boolean(data.after));
+        const fromSection = text("sectionId");
+        const toSection = text("targetSectionId") || fromSection;
+        if (fromSection === toSection) {
+          const next = moveFlowBlockById(site, path, fromSection, text("itemId"), text("targetId"), Boolean(data.after));
+          const nextVisual = flowReorder(visualDocument, text("itemId"), text("targetId"), Boolean(data.after));
+          commit(next, true, nextVisual ?? undefined);
+          break;
+        }
+        const next = moveBlockToSection(site, path, fromSection, toSection, text("itemId"), text("targetId"), Boolean(data.after));
         const drop = {
           nodeId: text("itemId"),
           parentId: text("targetSectionId"),

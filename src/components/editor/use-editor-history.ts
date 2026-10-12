@@ -7,18 +7,14 @@ export function useEditorHistory<T>(websiteId = "") {
   const [history, setHistory] = useState<History<ScopedSnapshot<T>>>(emptyHistory);
   const textKey = useRef("");
   const record = useCallback((current: T, visualDocument?: unknown) => {
-    setHistory((value) => {
-      const next = trailDrop({ history: value, textKey: textKey.current }, websiteId, current, visualDocument);
-      textKey.current = next.textKey;
-      return next.history;
-    });
+    const previousKey = textKey.current;
+    textKey.current = "";
+    setHistory((value) => trailDrop({ history: value, textKey: previousKey }, websiteId, current, visualDocument).history);
   }, [websiteId]);
   const recordText = useCallback((current: T, key: string, visualDocument?: unknown) => {
-    setHistory((value) => {
-      const next = trailText({ history: value, textKey: textKey.current }, websiteId, current, key, visualDocument);
-      textKey.current = next.textKey;
-      return next.history;
-    });
+    const previousKey = textKey.current;
+    textKey.current = key;
+    setHistory((value) => trailText({ history: value, textKey: previousKey }, websiteId, current, key, visualDocument).history);
   }, [websiteId]);
   const breakCoalesce = useCallback(() => {
     textKey.current = "";

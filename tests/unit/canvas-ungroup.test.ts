@@ -69,7 +69,7 @@ test("a missing group is not removed", () => {
   for (const word of ["quantum", "heroimage", "tagline", "plum", "insights", "brand-mark"]) {
     assert.equal(source.toLowerCase().includes(word), false, word);
   }
-  const script = readFileSync(new URL("../../overlays/quantum-age/src/components/site/canvas-script.ts", import.meta.url), "utf8");
+  const script = readFileSync(new URL("../../src/platform/canvas/runtime.ts", import.meta.url), "utf8");
   assert.equal(script.includes('"Ungroup", "ungroup"'), true);
   assert.equal(script.includes('"Group", "group"'), true);
 });
