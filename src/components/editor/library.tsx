@@ -8,6 +8,7 @@ import type { NodeDocument } from "@/platform/document/node";
 import { createHeading } from "@/platform/elements/heading";
 import { createParagraph } from "@/platform/elements/paragraph";
 import { createRichText } from "@/platform/elements/richtext";
+import { customCatalog, type CustomDefinition } from "@/platform/elements/custom";
 
 export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:heading", label: "Heading", description: "A heading", category: "Text", keywords: "title heading", thumb: "heading" },
@@ -63,17 +64,26 @@ export function LibraryBrowser(props: {
   recent: string[];
   recommended: string[];
   templates: { id: string; name: string }[];
+  adapter?: Record<string, unknown> | null;
   onChoose: (entry: LibraryEntry) => void;
   onElement?: (node: NodeDocument) => void;
+  onCustom?: (definition: CustomDefinition) => void;
   onTemplate: (id: string) => void;
   autoFocus?: boolean;
   dense?: boolean;
 }) {
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<LibraryCategory | "All" | "Saved">("All");
+  const [category, setCategory] = useState<LibraryCategory | "All" | "Saved" | "Custom">("All");
+  const registered = useMemo(() => customCatalog(props.adapter), [props.adapter]);
+  const customItems = useMemo(() => {
+    if (category !== "All" && category !== "Custom") return [];
+    const needle = query.trim().toLowerCase();
+    return registered.filter((item) => !needle || `${item.name} ${item.id} ${item.category}`.toLowerCase().includes(needle));
+  }, [registered, query, category]);
   const results = useMemo(() => {
+    if (category === "Saved" || category === "Custom") return [];
     const generic = GENERIC_ENTRIES.filter((entry) => entryVisible(entry, query, category));
-    const library = category === "Saved" ? [] : searchLibrary(query, category, props.canEmbed);
+    const library = searchLibrary(query, category, props.canEmbed);
     return [...generic, ...library];
   }, [query, category, props.canEmbed]);
   const catalog = useMemo(() => [...GENERIC_ENTRIES, ...LIBRARY], []);
@@ -116,7 +126,7 @@ export function LibraryBrowser(props: {
         <input autoFocus={props.autoFocus} placeholder="Search sections and elements" aria-label="Search sections and elements" value={query} onChange={(event) => setQuery(event.target.value)} />
       </label>
       <div className="ed-chips" role="tablist" aria-label="Categories">
-        {(["All", ...CATEGORIES, ...(props.templates.length ? (["Saved"] as const) : [])] as const).map((name) => (
+        {(["All", ...CATEGORIES, ...(registered.length ? (["Custom"] as const) : []), ...(props.templates.length ? (["Saved"] as const) : [])] as const).map((name) => (
           <button key={name} type="button" role="tab" aria-selected={category === name} onClick={() => setCategory(name)}>
             {name}
           </button>
@@ -150,7 +160,22 @@ export function LibraryBrowser(props: {
           </ul>
         </>
       ) : null}
-      {category !== "Saved" ? (
+      {customItems.length > 0 ? (
+        <>
+          <h3 className="ed-lib-heading">Custom</h3>
+          <ul className="ed-lib-grid">
+            {customItems.map((item) => (
+              <li key={item.id}>
+                <button type="button" className="ed-lib-card" data-element={item.id} onClick={() => props.onCustom?.(item)}>
+                  <Thumb kind="summary" />
+                  <span className="ed-lib-label">{item.name}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+      {category !== "Saved" && category !== "Custom" ? (
         browsing ? (
           CATEGORIES.map((name) => {
             const entries = results.filter((entry) => entry.category === name);
@@ -166,7 +191,7 @@ export function LibraryBrowser(props: {
           <ul className="ed-lib-grid">{results.map(card)}</ul>
         )
       ) : null}
-      {category !== "Saved" && results.length === 0 && templates.length === 0 ? (
+      {category !== "Saved" && results.length === 0 && customItems.length === 0 && templates.length === 0 ? (
         <Empty title="Nothing matches that search">Try a simpler word, such as “image”, “form”, or “quote”.</Empty>
       ) : null}
     </div>

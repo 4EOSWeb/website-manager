@@ -56,6 +56,7 @@ import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTar
 import { selectNodeId } from "@/components/editor/state/selection";
 import type { NodeDocument } from "@/platform/document/node";
 import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
+import { createCustom, type CustomDefinition } from "@/platform/elements/custom";
 import { createHeading } from "@/platform/elements/heading";
 import { createParagraph } from "@/platform/elements/paragraph";
 import { createRichText, writeRichMarks } from "@/platform/elements/richtext";
@@ -769,6 +770,13 @@ export function EditorShell(props: {
     insertPreviewNode(node, block, "element:richtext", insertAfter(visualDocument, path, afterId, node), at);
   }
 
+  function insertCreatedCustom(definition: CustomDefinition, at?: Insert) {
+    const node = createCustom(definition);
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const block: FlowBlock = { id: createId("blk"), kind: "paragraph", hidden: false, text: { text: definition.name, marks: [] } };
+    insertPreviewNode(node, block, `element:${definition.id}`, insertAfter(visualDocument, path, afterId, node), at);
+  }
+
   function insertEntry(entry: LibraryEntry, at?: Insert) {
     if (entry.id === "element:heading") {
       insertCreatedHeading(createHeading(), at);
@@ -1137,11 +1145,11 @@ export function EditorShell(props: {
                 <div className="ed-panel-head">
                   <h2>Add</h2>
                 </div>
-                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommendedHere} templates={templates} onChoose={(entry) => insertEntry(entry)} onElement={(node) => {
+                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommendedHere} templates={templates} adapter={adapter} onChoose={(entry) => insertEntry(entry)} onElement={(node) => {
                   if (node.componentId === "generic.text") insertCreatedParagraph(node);
                   else if (node.componentId === "generic.richtext") insertCreatedRichText(node);
                   else insertCreatedHeading(node);
-                }} onTemplate={(id) => insertTemplate(id)} dense />
+                }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>
             ) : null}
             {rail === "pages" ? (
@@ -1241,8 +1249,13 @@ export function EditorShell(props: {
           recent={recentLibrary}
           recommended={recommended}
           templates={templates}
+          adapter={adapter}
           onChoose={(entry) => {
             insertEntry(entry, insert);
+            setInsert(null);
+          }}
+          onCustom={(definition) => {
+            insertCreatedCustom(definition, insert);
             setInsert(null);
           }}
           onTemplate={(id) => {

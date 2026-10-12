@@ -8,6 +8,7 @@ import type { LibraryEntry } from "@/lib/library";
 import type { MediaItem, Publication } from "@/components/editor/types";
 import { Dialog, Field, Kbd, Select, TextArea, TextInput, Toggle } from "@/components/editor/ui";
 import { LibraryBrowser } from "@/components/editor/library";
+import type { CustomDefinition } from "@/platform/elements/custom";
 
 export type PageForm = { title: string; route: string; template: PageDocument["template"]; navVisible: boolean; seoTitle: string; metaDescription: string };
 
@@ -356,13 +357,15 @@ export function InsertDialog(props: {
   recent: string[];
   recommended: string[];
   templates: { id: string; name: string }[];
+  adapter?: Record<string, unknown> | null;
   onChoose: (entry: LibraryEntry) => void;
+  onCustom?: (definition: CustomDefinition) => void;
   onTemplate: (id: string) => void;
   onClose: () => void;
 }) {
   return (
     <Dialog title="Add a section here" wide onClose={props.onClose}>
-      <LibraryBrowser canEmbed={props.canEmbed} recent={props.recent} recommended={props.recommended} templates={props.templates} onChoose={props.onChoose} onTemplate={props.onTemplate} />
+      <LibraryBrowser canEmbed={props.canEmbed} recent={props.recent} recommended={props.recommended} templates={props.templates} adapter={props.adapter} onChoose={props.onChoose} onCustom={props.onCustom} onTemplate={props.onTemplate} />
     </Dialog>
   );
 }
