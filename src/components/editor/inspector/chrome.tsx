@@ -10,6 +10,7 @@ import { mixedProps } from "@/platform/canvas/multi-select";
 import { overlapWarning, type OverlapBox } from "@/platform/canvas/overlap";
 import type { EditorApi, Viewport } from "@/components/editor/types";
 import { Field, Group, TextArea, TextInput, Toggle } from "@/components/editor/ui";
+import { InheritanceLabel } from "@/components/editor/inspector/inheritance-label";
 import { LinkPicker } from "@/components/editor/inspector/shared";
 
 function placedBox(item: FreeformItem, viewport: Viewport): OverlapBox {
@@ -97,6 +98,19 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
     );
   }
   const set = (patch: Partial<FreeformItem>, reload = true) => api.commit(patchItem(api.site, api.path, section.id, item.id, patch, overlay), reload);
+  const inheritance = (
+    <InheritanceLabel
+      mode="canvas"
+      breakpoint={api.viewport}
+      node={{
+        box: item.desktop,
+        responsive: {
+          tablet: item.tablet ? { box: item.tablet } : undefined,
+          mobile: item.mobile ? { box: item.mobile } : undefined,
+        },
+      }}
+    />
+  );
   const siblings = section.type === "freeform" ? section.items : section.type === "preset" ? section.overlay ?? [] : [];
   const warning = overlapWarning(placedBox(item, api.viewport), siblings.filter((other) => other.id !== item.id).map((other) => placedBox(other, api.viewport)));
   const notice = warning ? <p className="ed-callout" role="status">{warning}</p> : null;
@@ -108,6 +122,7 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
     const ids = api.selection.itemIds.length ? api.selection.itemIds : [item.id];
     return (
       <>
+        {inheritance}
         {notice}
         {mixedNote}
         <Group title="Align">
@@ -165,6 +180,7 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
   }
   return (
     <>
+    {inheritance}
     {notice}
     {mixedNote}
     <Group title="Content">
