@@ -39,6 +39,7 @@ function ZoneItem({ item }: { item: NonNullable<EditorSection["items"]>[number] 
       className={`ff-item${item.tablet ? " has-tablet" : ""}${item.mobile ? " has-mobile" : ""}${item.hidden ? " is-hidden" : ""}`}
       style={style}
       data-item-id={item.id}
+      data-z={item.zIndex}
       data-kind={previewMode ? item.kind : undefined}
       data-group={item.groupId}
       data-item-locked={item.locked ? "true" : undefined}
@@ -119,9 +120,12 @@ export function FreeformZone({
       `}</style>
       {items.length === 0 && overlay && previewMode ? <button type="button" data-zone-hit className="pointer-events-auto absolute bottom-3 left-6 bg-transparent p-0 text-sm text-plum">Click to add content</button> : null}
       {items.length === 0 && !overlay ? <Empty>Click to add content</Empty> : null}
-      {items.map((item) => (
-        <ZoneItem key={item.id} item={item} />
-      ))}
+      {items
+        .map((item, index) => ({ item, index }))
+        .sort((left, right) => left.item.zIndex - right.item.zIndex || left.index - right.index)
+        .map(({ item }) => (
+          <ZoneItem key={item.id} item={item} />
+        ))}
     </div>
   );
 }
