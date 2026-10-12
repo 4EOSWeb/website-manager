@@ -1,3 +1,4 @@
+import { lockAspect } from "../canvas/aspect";
 import { enforceMaxSize } from "../canvas/max-size";
 import { enforceMinSize } from "../canvas/min-size";
 import { toPercent } from "../canvas/percent";
@@ -73,12 +74,17 @@ export function placeOnCanvas(
   const copy = structuredClone(document);
   const node = locate(copy, input.nodeId);
   if (!node) return null;
-  const sized = enforceMaxSize(enforceMinSize({ x: input.x, y: input.y, w: input.w, h: input.h }));
+  const previous = node.box && typeof node.box === "object" ? node.box as { aspect?: unknown } : null;
+  const aspect = typeof previous?.aspect === "number" && Number.isFinite(previous.aspect) && previous.aspect > 0 ? previous.aspect : undefined;
+  const proposed = { x: input.x, y: input.y, w: input.w, h: input.h };
+  const locked = lockAspect(proposed, { ...proposed, h: aspect ? proposed.w / aspect : proposed.h }, { shift: false, aspect, corner: "se" });
+  const sized = enforceMaxSize(enforceMinSize(locked));
   const box = {
     x: clampPercent(sized.x),
     y: clampPercent(sized.y),
     w: clampPercent(sized.w),
     h: clampPercent(sized.h),
+    ...(aspect ? { aspect } : {}),
   };
   if (input.breakpoint === "tablet" || input.breakpoint === "mobile") {
     const responsive = node.responsive && typeof node.responsive === "object" ? { ...node.responsive } : {};

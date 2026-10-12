@@ -722,11 +722,12 @@ export function canvasScript(origin: string) {
         var step = H.previewAutoScroll(lastPointer, { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight }, true);
         if (step.x || step.y) { window.scrollBy(step.x, step.y); updateDrag(lastPointer.x, lastPointer.y); }
       }, 16);
-      updateDrag(event.clientX, event.clientY);
+      updateDrag(event.clientX, event.clientY, event.shiftKey);
     }
     function clearGuides() { document.querySelectorAll(".eos-guide").forEach(function (node) { node.remove(); }); }
-    function updateDrag(x, y) {
+    function updateDrag(x, y, shift) {
       if (!drag) return;
+      if (shift === true || shift === false) drag.shift = shift;
       if (drag.ghost && !drag.canvas) { drag.ghost.style.left = x + 14 + "px"; drag.ghost.style.top = y + 14 + "px"; }
       if (drag.kind === "section") {
         var nodes = Array.prototype.slice.call(document.querySelectorAll(".eos-gap"));
@@ -827,6 +828,14 @@ export function canvasScript(origin: string) {
           if (next.y < 0) next.y = 0;
           if (next.x + next.w > 1) next.w = 1 - next.x;
           if (next.y + next.h > 1) next.h = 1 - next.y;
+        }
+        var storedAspect = Number(drag.node && drag.node.getAttribute ? drag.node.getAttribute("data-aspect") : "");
+        var ratio = drag.shift === true ? drag.box.w / (drag.box.h || 1) : (storedAspect > 0 ? storedAspect : 0);
+        if (ratio > 0) {
+          if (Math.abs(next.w - drag.box.w) >= Math.abs(next.h - drag.box.h)) next.h = next.w / ratio;
+          else next.w = next.h * ratio;
+          if (left) next.x = Math.max(0, drag.box.x + drag.box.w - next.w);
+          if (top) next.y = Math.max(0, drag.box.y + drag.box.h - next.h);
         }
       } else {
         next.x = drag.box.x + dx;
@@ -1333,7 +1342,7 @@ export function canvasScript(origin: string) {
         }
         return;
       }
-      if (drag) { updateDrag(event.clientX, event.clientY); return; }
+      if (drag) { updateDrag(event.clientX, event.clientY, event.shiftKey); return; }
       if (event.buttons) return;
       var next = isUi(event.target) ? null : selectableFor(event.target);
       if (next === selected || (next && next === editing)) next = null;
