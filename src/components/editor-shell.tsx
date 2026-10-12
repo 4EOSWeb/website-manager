@@ -55,6 +55,7 @@ import { DragStatus, dragRejectReason, type DragRejectReason } from "@/component
 import { placeOnCanvas } from "@/platform/drag/canvas-place";
 import { flowReorder } from "@/platform/drag/flow-insert";
 import { groupEnter } from "@/platform/drag/group-enter";
+import { groupExit } from "@/platform/drag/group-exit";
 import { reparent } from "@/platform/drag/reparent";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
 import { LibraryBrowser } from "@/components/editor/library";
@@ -1349,7 +1350,12 @@ export function EditorShell(props: {
           parentType: "section",
           parentChildren: { acceptsChildren: true },
         };
-        const entered = groupEnter(visualDocument, drop);
+        const exited = groupExit(visualDocument, drop);
+        if (exited && exited.ok === false) {
+          setDragReason(exited.reason);
+          break;
+        }
+        const entered = exited && exited.ok ? exited : groupEnter(visualDocument, drop);
         if (entered && entered.ok === false) {
           setDragReason(entered.reason);
           break;
