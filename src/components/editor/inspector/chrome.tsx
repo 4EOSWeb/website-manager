@@ -2,9 +2,10 @@
 
 import { ExternalLink } from "lucide-react";
 import type { FreeformItem, Section } from "@/lib/content-schema";
-import { alignItems, applyText, distributeItems, patchChrome, patchItem, renameZone, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
+import { alignItems, applyText, bringForwardItems, distributeItems, patchChrome, patchItem, renameZone, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
 import { alignCanvas, type AlignMode } from "@/platform/canvas/align";
 import { distributeCanvas, type DistributeAxis } from "@/platform/canvas/distribute";
+import { bringForwardCanvas } from "@/platform/canvas/z-order";
 import { mixedProps } from "@/platform/canvas/multi-select";
 import { overlapWarning, type OverlapBox } from "@/platform/canvas/overlap";
 import type { EditorApi, Viewport } from "@/components/editor/types";
@@ -134,7 +135,10 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
         </Group>
         <Group title="Order and lock">
           <div className="ed-row">
-            <button type="button" className="ed-button" disabled={disabled} onClick={() => set({ zIndex: Math.min(200, item.zIndex + 1) })}>Bring forward</button>
+            <button type="button" className="ed-button" disabled={disabled} onClick={() => {
+              const ordered = bringForwardCanvas(api.visualDocument, item.id);
+              api.commit(bringForwardItems(api.site, api.path, section.id, item.id, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
+            }}>Bring forward</button>
             <button type="button" className="ed-button" disabled={disabled} onClick={() => set({ zIndex: Math.max(0, item.zIndex - 1) })}>Send backward</button>
           </div>
           <Toggle label="Lock position" checked={item.locked} disabled={disabled} onChange={(value) => set({ locked: value })} />
