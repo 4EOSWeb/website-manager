@@ -2,7 +2,7 @@ import type { NodeDocument } from "../document/node";
 import type { NodeType } from "../document/node-type";
 import { createPlatformId } from "../ids";
 
-const containerTypes = new Set(["page", "section", "container", "stack", "grid", "group", "card"]);
+const containerTypes = new Set(["page", "section", "container", "stack", "grid", "group", "card", "form"]);
 
 type TreeNode = {
   id: string;

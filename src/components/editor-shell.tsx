@@ -60,6 +60,7 @@ import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createButton, writeButtonField } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createContainer } from "@/platform/elements/container";
+import { createInput } from "@/platform/elements/input";
 import { createForm } from "@/platform/elements/form";
 import { createFaq } from "@/platform/elements/faq";
 import { createTestimonial } from "@/platform/elements/testimonial";
@@ -894,6 +895,39 @@ export function EditorShell(props: {
     insertPreviewNode(node, block, "element:image", insertAfter(visualDocument, path, afterId, node), at);
   }
 
+  function insertCreatedInput(node: NodeDocument) {
+    if (!page) return;
+    const formId = selection.sectionId;
+    const parentId = formSections.current.get(formId);
+    const current = page.sections.find((item) => item.id === formId);
+    if (!parentId || !current || current.type !== "form") {
+      notify("Add this inside a form.");
+      return;
+    }
+    const label = typeof node.props.label === "string" ? node.props.label : "Label";
+    const required = node.props.required === true;
+    const field = { id: createId("fld"), label, kind: "text" as const, required };
+    const fields = current.fields?.length
+      ? current.fields
+      : [
+          { id: "name", label: current.nameLabel || "Name", kind: "text" as const, required: true },
+          { id: "email", label: current.emailLabel || "Email", kind: "email" as const, required: true },
+          { id: "message", label: current.messageLabel || "Message", kind: "textarea" as const, required: false },
+        ];
+    const created = { ...current, fields: [...fields, field] };
+    const next = {
+      ...site,
+      pages: site.pages.map((item) => (item.route === path ? { ...item, sections: item.sections.map((section) => (section.id === formId ? created : section)) } : item)),
+    };
+    const nextVisual = insertNode(visualDocument, path, parentId, node);
+    commit(next, true, nextVisual ?? undefined);
+    pinnedNode.current = node.id;
+    setNodeIds(selectNodeId(node.id).nodeIds);
+    setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
+    setSelection({ ...emptySelection, sectionId: formId, kind: "form" });
+    notify("Input added.");
+  }
+
   function insertCreatedForm(node: NodeDocument) {
     const text = (key: string, fallback: string) => (typeof node.props[key] === "string" ? node.props[key] : fallback);
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
@@ -1109,6 +1143,10 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:form") {
       insertCreatedForm(createForm());
+      return;
+    }
+    if (entry.id === "element:input") {
+      insertCreatedInput(createInput());
       return;
     }
     if (!page || !props.canEdit) {
@@ -1494,6 +1532,7 @@ export function EditorShell(props: {
                   else if (node.componentId === "generic.testimonial") insertCreatedTestimonial(node);
                   else if (node.componentId === "generic.faq") insertCreatedFaq(node);
                   else if (node.componentId === "generic.form") insertCreatedForm(node);
+                  else if (node.componentId === "generic.input") insertCreatedInput(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>

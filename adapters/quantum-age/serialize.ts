@@ -145,7 +145,8 @@ type CanvasOut = { id: string; type: "freeform"; hidden: boolean; name: string; 
 type CtaOut = { id: string; type: "cta"; hidden: boolean; heading: string; body: string; label: string; href: string };
 type TestimonialOut = { id: string; type: "testimonial"; hidden: boolean; quote: string; name: string; role: string };
 type FaqOut = { id: string; type: "faq"; hidden: boolean; heading: string; items: Array<{ q: string; a: string }> };
-type FormOut = { id: string; type: "form"; hidden: boolean; nameLabel: string; emailLabel: string; messageLabel: string; buttonLabel: string; recipient: string };
+type FormFieldOut = { id: string; label: string; kind: "text" | "email" | "textarea"; required: boolean };
+type FormOut = { id: string; type: "form"; hidden: boolean; nameLabel: string; emailLabel: string; messageLabel: string; buttonLabel: string; recipient: string; fields?: FormFieldOut[] };
 type ExtraSection = ReturnType<typeof dividerSection> | ReturnType<typeof spacerSection> | WrappedFlow | CanvasOut | CtaOut | TestimonialOut | FaqOut | FormOut;
 
 function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: FlowOut[], videos: Array<ReturnType<typeof videoSection>>, extras: ExtraSection[]) {
@@ -193,7 +194,17 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
     }) : [{ q: "Question", a: "Answer" }];
     extras.push({ id: node.id, type: "faq", hidden: node.visibility.hidden === true, heading: "", items });
   } else if (node.type === "form" && componentId === "generic.form") {
+    ownChildren = false;
     const text = (key: string, fallback: string) => (typeof node.props[key] === "string" ? node.props[key] : fallback);
+    const fields = node.children.flatMap((child) => {
+      if (child.type !== "input" || child.componentId !== "generic.input") return [];
+      return [{
+        id: child.id,
+        label: typeof child.props.label === "string" ? child.props.label : "Label",
+        kind: "text" as const,
+        required: child.props.required === true,
+      }];
+    });
     extras.push({
       id: node.id,
       type: "form",
@@ -203,6 +214,7 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
       messageLabel: text("messageLabel", "Message"),
       buttonLabel: text("buttonLabel", "Send"),
       recipient: typeof node.props.recipient === "string" ? node.props.recipient : "",
+      ...(fields.length ? { fields } : {}),
     });
   }
   else if (node.type === "video" && componentId === "generic.video" && acceptVideoUrl(typeof node.props.url === "string" ? node.props.url : "")) videos.push(videoSection(node));
