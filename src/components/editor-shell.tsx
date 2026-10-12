@@ -56,6 +56,7 @@ import { placeOnCanvas } from "@/platform/drag/canvas-place";
 import { flowReorder } from "@/platform/drag/flow-insert";
 import { groupEnter } from "@/platform/drag/group-enter";
 import { groupExit } from "@/platform/drag/group-exit";
+import { libraryDrop } from "@/platform/drag/library-drop";
 import { reparent } from "@/platform/drag/reparent";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
 import { LibraryBrowser } from "@/components/editor/library";
@@ -169,6 +170,7 @@ export function EditorShell(props: {
   const [visualDocument, setVisualDocument] = useState<unknown>(props.visualDocument);
   const [visualNodeIds, setVisualNodeIds] = useState<string[]>([]);
   const pinnedNode = useRef<string | null>(null);
+  const libraryFactory = useRef("");
   const [posts, setPosts] = useState(props.initialPosts);
   const history = useEditorHistory<Snapshot>(props.websiteId);
   const [media, setMedia] = useState(props.media);
@@ -1377,6 +1379,36 @@ export function EditorShell(props: {
         if (entry) insertEntry(entry, { beforeId: text("beforeId") });
         break;
       }
+      case "4eos-library-drop": {
+        const factoryId = text("libraryType") || libraryFactory.current;
+        const raw = data.box;
+        const record = raw && typeof raw === "object" ? raw as { x?: unknown; y?: unknown; w?: unknown; h?: unknown } : null;
+        const fractions = record ? { x: Number(record.x), y: Number(record.y), w: Number(record.w), h: Number(record.h) } : null;
+        const box = fractions && [fractions.x, fractions.y, fractions.w, fractions.h].every(Number.isFinite)
+          ? { x: fractions.x * 100, y: fractions.y * 100, w: fractions.w * 100, h: fractions.h * 100 }
+          : undefined;
+        const result = libraryDrop(visualDocument, {
+          factoryId,
+          parentId: text("sectionId"),
+          parentType: text("parentType") || "section",
+          parentLocked: data.locked === true,
+          box,
+        });
+        if (!result.ok) {
+          setDragReason(result.reason);
+          break;
+        }
+        if (data.canvas === true && factoryId === "element:button" && fractions) {
+          const sectionId = text("sectionId");
+          const added = addZoneItem(site, path, sectionId, "button", false);
+          const created = pageByRoute(added, path)?.sections.find((item) => item.id === sectionId);
+          const item = created && created.type === "freeform" ? created.items[created.items.length - 1] : null;
+          if (!item) break;
+          commit(placeItems(added, path, sectionId, "desktop", [{ id: item.id, placement: fractions }]), true, result.document ?? undefined);
+          notify("Button added to the zone.");
+        }
+        break;
+      }
       case "4eos-action": {
         const ids = Array.isArray(data.itemIds) ? data.itemIds.map((item) => String(item)).filter(Boolean) : [];
         runAction(text("action"), text("sectionId"), text("itemId"), Boolean(data.overlay), ids);
@@ -1434,6 +1466,40 @@ export function EditorShell(props: {
   });
 
   useCanvasMessages(onMessage, props.websiteId);
+
+  useEffect(() => {
+    const node = document.getElementById("site-preview") as HTMLIFrameElement | null;
+    if (!node) return;
+    const point = (event: DragEvent) => {
+      const rect = node.getBoundingClientRect();
+      return {
+        x: (event.clientX - rect.left) / (scale || 1),
+        y: (event.clientY - rect.top) / (scale || 1),
+      };
+    };
+    const libraryDrag = (event: DragEvent) => {
+      const types = [...(event.dataTransfer?.types ?? [])];
+      return types.includes("application/x-4eos-library") || libraryFactory.current.startsWith("element:");
+    };
+    const over = (event: DragEvent) => {
+      if (!libraryDrag(event)) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+      node.contentWindow?.postMessage({ type: "4eos-library-probe", ...point(event), commit: false }, "*");
+    };
+    const drop = (event: DragEvent) => {
+      if (!libraryDrag(event)) return;
+      event.preventDefault();
+      const factoryId = event.dataTransfer?.getData("application/x-4eos-library") || libraryFactory.current;
+      node.contentWindow?.postMessage({ type: "4eos-library-probe", ...point(event), commit: true, libraryType: factoryId }, "*");
+    };
+    node.addEventListener("dragover", over);
+    node.addEventListener("drop", drop);
+    return () => {
+      node.removeEventListener("dragover", over);
+      node.removeEventListener("drop", drop);
+    };
+  }, [scale, version]);
 
   useEffect(() => {
     toFrame({ type: "4eos-config", scale, clipboard: Boolean(clipboard) });
@@ -1609,7 +1675,23 @@ export function EditorShell(props: {
                 <div className="ed-panel-head">
                   <h2>Add</h2>
                 </div>
-                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommendedHere} templates={templates} adapter={adapter} onChoose={(entry) => insertEntry(entry)} onElement={(node) => {
+                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommendedHere} templates={templates} adapter={adapter} onLibraryDrag={(id) => { libraryFactory.current = id; }} onLibraryDrop={(drop) => {
+                  const node = document.getElementById("site-preview") as HTMLIFrameElement | null;
+                  if (!node) return;
+                  const rect = node.getBoundingClientRect();
+                  const inside = drop.x >= rect.left && drop.x <= rect.right && drop.y >= rect.top && drop.y <= rect.bottom;
+                  if (!inside) {
+                    setDragReason("parent_rejected");
+                    return;
+                  }
+                  node.contentWindow?.postMessage({
+                    type: "4eos-library-probe",
+                    x: (drop.x - rect.left) / (scale || 1),
+                    y: (drop.y - rect.top) / (scale || 1),
+                    commit: true,
+                    libraryType: drop.factoryId,
+                  }, "*");
+                }} onChoose={(entry) => insertEntry(entry)} onElement={(node) => {
                   if (node.componentId === "generic.text") insertCreatedParagraph(node);
                   else if (node.componentId === "generic.richtext") insertCreatedRichText(node);
                   else if (node.componentId === "generic.link") insertCreatedLink(node);

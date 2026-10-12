@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { CATEGORIES, LIBRARY, searchLibrary, type LibraryCategory, type LibraryEntry } from "@/lib/library";
 import { Empty } from "@/components/editor/ui";
@@ -112,6 +112,8 @@ export function LibraryBrowser(props: {
   templates: { id: string; name: string }[];
   adapter?: Record<string, unknown> | null;
   onChoose: (entry: LibraryEntry) => void;
+  onLibraryDrag?: (factoryId: string) => void;
+  onLibraryDrop?: (drop: { factoryId: string; x: number; y: number }) => void;
   onElement?: (node: NodeDocument) => void;
   onCustom?: (definition: CustomDefinition) => void;
   onTemplate: (id: string) => void;
@@ -120,6 +122,8 @@ export function LibraryBrowser(props: {
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<LibraryCategory | "All" | "Saved" | "Custom">("All");
+  const dragged = useRef("");
+  const pointer = useRef<{ id: string; x: number; y: number; active: boolean } | null>(null);
   const registered = useMemo(() => customCatalog(props.adapter), [props.adapter]);
   const customItems = useMemo(() => {
     if (category !== "All" && category !== "Custom") return [];
@@ -144,13 +148,31 @@ export function LibraryBrowser(props: {
         <button
           type="button"
           className="ed-lib-card"
-          draggable
-          onDragStart={(event) => {
-            event.dataTransfer.setData("application/x-4eos-library", entry.id);
-            event.dataTransfer.effectAllowed = "copy";
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            pointer.current = { id: entry.id, x: event.clientX, y: event.clientY, active: false };
+          }}
+          onPointerMove={(event) => {
+            const state = pointer.current;
+            if (!state || state.id !== entry.id) return;
+            if (!state.active && Math.hypot(event.clientX - state.x, event.clientY - state.y) < 4) return;
+            state.active = true;
+            dragged.current = entry.id;
+            props.onLibraryDrag?.(entry.id);
+          }}
+          onPointerUp={(event) => {
+            const state = pointer.current;
+            pointer.current = null;
+            if (!state || state.id !== entry.id || !state.active) return;
+            props.onLibraryDrop?.({ factoryId: entry.id, x: event.clientX, y: event.clientY });
           }}
           data-element={entry.id.startsWith("element:") ? entry.id.slice("element:".length) : undefined}
           onClick={() => {
+            if (dragged.current === entry.id) {
+              dragged.current = "";
+              return;
+            }
             if (entry.id === "element:heading" && props.onElement) props.onElement(createHeading());
             else if (entry.id === "element:paragraph" && props.onElement) props.onElement(createParagraph());
             else if (entry.id === "element:richtext" && props.onElement) props.onElement(createRichText());

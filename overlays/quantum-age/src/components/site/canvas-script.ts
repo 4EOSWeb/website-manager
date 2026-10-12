@@ -1503,10 +1503,59 @@ export function canvasScript(origin: string) {
       if ((key === "g" || key === "G") && !mod) document.body.classList.toggle("eos-grid");
     });
 
+    var libraryHover = null;
+    window.addEventListener("message", function (event) {
+      if (event.origin !== origin) return;
+      var data = event.data;
+      if (!data || data.type !== "4eos-library-probe") return;
+      var zone = null;
+      document.querySelectorAll("[data-zone-name='Canvas']").forEach(function (node) {
+        var rect = node.getBoundingClientRect();
+        if (data.x >= rect.left && data.x <= rect.right && data.y >= rect.top && data.y <= rect.bottom) zone = node;
+      });
+      document.querySelectorAll("[data-library-target]").forEach(function (node) { node.removeAttribute("data-library-target"); });
+      if (zone) zone.setAttribute("data-library-target", "true");
+      if (!data.commit) return;
+      if (!zone) {
+        var hit = document.elementFromPoint(data.x, data.y);
+        var locked = hit && hit.closest ? hit.closest("[data-locked=provider]") : null;
+        post({ type: "4eos-library-drop", libraryType: data.libraryType || "", sectionId: "", parentType: "section", canvas: false, locked: !!locked });
+        return;
+      }
+      var rect = zone.getBoundingClientRect();
+      post({
+        type: "4eos-library-drop",
+        libraryType: data.libraryType || "",
+        sectionId: zone.getAttribute("data-freeform") || "",
+        parentType: "section",
+        canvas: true,
+        locked: false,
+        box: {
+          x: Math.max(0, Math.min(1, (data.x - rect.left) / (rect.width || 1))),
+          y: Math.max(0, Math.min(1, (data.y - rect.top) / (rect.height || 1))),
+          w: 0.42,
+          h: 0.28,
+        },
+      });
+    });
     document.addEventListener("dragover", function (event) {
       var types = event.dataTransfer ? Array.prototype.slice.call(event.dataTransfer.types || []) : [];
       if (types.indexOf("application/x-4eos-library") >= 0) {
         event.preventDefault();
+        var canvasZone = closest(event.target, "[data-zone-name='Canvas']");
+        document.querySelectorAll("[data-library-target]").forEach(function (node) { node.removeAttribute("data-library-target"); });
+        if (canvasZone) {
+          canvasZone.setAttribute("data-library-target", "true");
+          libraryHover = { kind: "canvas", zone: canvasZone };
+          document.querySelectorAll(".eos-gap.is-hot").forEach(function (node) { node.classList.remove("is-hot"); });
+          return;
+        }
+        var locked = closest(event.target, "[data-locked=provider]");
+        if (locked) {
+          libraryHover = { kind: "locked", zone: locked };
+          return;
+        }
+        libraryHover = { kind: "gap", zone: null };
         var nodes = Array.prototype.slice.call(document.querySelectorAll(".eos-gap"));
         var best = null;
         nodes.forEach(function (node) {
@@ -1526,10 +1575,28 @@ export function canvasScript(origin: string) {
       var transfer = event.dataTransfer;
       if (!transfer) return;
       var libraryType = transfer.getData("application/x-4eos-library");
+      if (libraryHover && libraryHover.kind === "canvas" && libraryHover.zone) {
+        event.preventDefault();
+        var zone = libraryHover.zone;
+        var rect = zone.getBoundingClientRect();
+        var x = Math.max(0, Math.min(1, (event.clientX - rect.left) / (rect.width || 1)));
+        var y = Math.max(0, Math.min(1, (event.clientY - rect.top) / (rect.height || 1)));
+        zone.removeAttribute("data-library-target");
+        post({ type: "4eos-library-drop", libraryType: libraryType, sectionId: zone.getAttribute("data-freeform") || "", parentType: "section", canvas: true, locked: false, box: { x: x, y: y, w: 0.42, h: 0.28 } });
+        libraryHover = null;
+        return;
+      }
+      if (libraryHover && libraryHover.kind === "locked") {
+        event.preventDefault();
+        post({ type: "4eos-library-drop", libraryType: libraryType, sectionId: "", parentType: "section", canvas: false, locked: true });
+        libraryHover = null;
+        return;
+      }
       if (libraryType) {
         event.preventDefault();
         var hot = document.querySelector(".eos-gap.is-hot");
         document.querySelectorAll(".eos-gap.is-hot").forEach(function (node) { node.classList.remove("is-hot"); });
+        libraryHover = null;
         if (hot) post({ type: "4eos-insert-type", libraryType: libraryType, index: Number(hot.dataset.index), beforeId: hot.dataset.before || "" });
         return;
       }
