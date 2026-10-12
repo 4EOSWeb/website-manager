@@ -152,6 +152,11 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
     const inner: FlowOut[] = [];
     node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, inner, videos, extras));
     extras.push({ id: node.id, type: "flow", hidden: node.visibility.hidden === true, editorName: "Container", blocks: inner });
+  } else if (node.type === "stack" && componentId === "generic.stack") {
+    ownChildren = false;
+    const inner: FlowOut[] = [];
+    node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, inner, videos, extras));
+    extras.push({ id: node.id, type: "flow", hidden: node.visibility.hidden === true, editorName: "Stack", blocks: inner });
   }
   else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
     unmapped.push({ path, id: node.id, type: node.type, componentId });

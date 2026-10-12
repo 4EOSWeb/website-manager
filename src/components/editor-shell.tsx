@@ -60,6 +60,7 @@ import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createButton, writeButtonField } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createContainer } from "@/platform/elements/container";
+import { createStack } from "@/platform/elements/stack";
 import { createDivider } from "@/platform/elements/divider";
 import { createIcon } from "@/platform/elements/icon";
 import { createSpacer } from "@/platform/elements/spacer";
@@ -884,6 +885,12 @@ export function EditorShell(props: {
     insertPreviewNode(node, block, "element:image", insertAfter(visualDocument, path, afterId, node), at);
   }
 
+  function insertCreatedStack(node: NodeDocument) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Stack", layout: "stack", blocks: [] };
+    insertPreviewSection(node, created, "element:stack", insertAfter(visualDocument, path, afterId, node));
+  }
+
   function insertCreatedContainer(node: NodeDocument) {
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
     const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Container", layout: "stack", blocks: [] };
@@ -975,6 +982,10 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:container") {
       insertCreatedContainer(createContainer());
+      return;
+    }
+    if (entry.id === "element:stack") {
+      insertCreatedStack(createStack());
       return;
     }
     if (!page || !props.canEdit) {
@@ -1351,6 +1362,7 @@ export function EditorShell(props: {
                   else if (node.componentId === "generic.divider") insertCreatedDivider(node);
                   else if (node.componentId === "generic.spacer") insertCreatedSpacer(node);
                   else if (node.componentId === "generic.container") insertCreatedContainer(node);
+                  else if (node.componentId === "generic.stack") insertCreatedStack(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>
