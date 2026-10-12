@@ -35,7 +35,7 @@ export type EditorSection = {
   emailLabel?: string;
   messageLabel?: string;
   images?: { src?: string; alt?: string }[];
-  items?: { title?: string; body?: string; q?: string; a?: string; id?: string; kind?: string; hidden?: boolean; locked?: boolean; groupId?: string; zIndex?: number; text?: string; href?: string; src?: string; alt?: string; caption?: string; desktop?: Share; tablet?: Share; mobile?: Share }[];
+  items?: { title?: string; body?: string; q?: string; a?: string; id?: string; kind?: string; hidden?: boolean; locked?: boolean; groupId?: string; zIndex?: number; text?: string; href?: string; src?: string; alt?: string; caption?: string; desktop?: Share; tablet?: Share; mobile?: Share; strategy?: "reflow" | "scale" | "custom" }[];
   overlay?: EditorSection["items"];
   blocks?: {
     id: string;

@@ -330,6 +330,7 @@ export const freeformItemSchema = z
     desktop: placementSchema,
     tablet: placementSchema.optional(),
     mobile: placementSchema.optional(),
+    strategy: z.enum(["reflow", "scale", "custom"]).optional(),
   })
   .strict();
 
