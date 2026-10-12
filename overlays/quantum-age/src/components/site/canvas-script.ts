@@ -95,6 +95,7 @@ body.eos-dragging .eos-gap .eos-add{opacity:0}
 body.eos-dragging .eos-gap .eos-gap-line{opacity:.18}
 .eos-gap.is-hot .eos-gap-line{opacity:1!important;height:3px}
 .eos-insert-line{position:fixed;z-index:2147482999;background:var(--eos-accent);border-radius:2px;pointer-events:none}
+.eos-cell-target{outline:2px solid var(--eos-accent);outline-offset:3px}
 .eos-ghost{position:fixed;z-index:2147483001;pointer-events:none;width:240px;max-height:160px;overflow:hidden;border-radius:8px;background:#fff;box-shadow:0 12px 32px rgba(15,23,42,.3);opacity:.92}
 .eos-ghost-label{padding:6px 10px;background:var(--eos-ui);color:#fff;font:600 12px/1.2 ui-sans-serif,system-ui,sans-serif}
 .eos-ghost-body{transform-origin:0 0}
@@ -665,6 +666,12 @@ export function canvasScript(origin: string) {
     function siblingBlocks(node) {
       return Array.prototype.filter.call(node.parentElement.children, function (entry) { return entry !== node && entry.getAttribute && entry.getAttribute("data-item-id"); });
     }
+    function clearCell() {
+      document.querySelectorAll("[data-grid-cell]").forEach(function (node) {
+        node.removeAttribute("data-grid-cell");
+        node.classList.remove("eos-cell-target");
+      });
+    }
 
     function startDrag(p, event) {
       var node = p.node;
@@ -722,7 +729,7 @@ export function canvasScript(origin: string) {
         var spot = H.insertionIndex(x, y, rects);
         var all = Array.prototype.filter.call(drag.node.parentElement.children, function (entry) { return entry.getAttribute && entry.getAttribute("data-item-id"); });
         var current = all.indexOf(drag.node);
-        if (rects.length === 0 || spot.index === current) { drag.target = null; drag.line.style.display = "none"; return; }
+        if (rects.length === 0 || spot.index === current) { drag.target = null; drag.line.style.display = "none"; clearCell(); return; }
         var anchor = spot.index < siblings.length ? siblings[spot.index] : siblings[siblings.length - 1];
         var after = spot.index >= siblings.length;
         var box = anchor.getBoundingClientRect();
@@ -734,6 +741,11 @@ export function canvasScript(origin: string) {
         drag.line.style.display = "block";
         drag.line.setAttribute("data-flex-direction", flexDirection);
         drag.line.setAttribute("data-flow-line", lineKind);
+        clearCell();
+        if (layout === "cards" || layout === "split") {
+          anchor.setAttribute("data-grid-cell", "true");
+          anchor.classList.add("eos-cell-target");
+        }
         if (lineKind === "vertical") {
           drag.line.style.left = (after ? box.right + 4 : box.left - 5) + "px";
           drag.line.style.top = box.top + "px";
@@ -785,6 +797,7 @@ export function canvasScript(origin: string) {
       document.body.classList.remove("eos-dragging");
       if (d.ghost) removeUi(d.ghost);
       if (d.line) removeUi(d.line);
+      clearCell();
       clearGuides();
       if (d.node) d.node.classList.remove("eos-drag-source");
       document.querySelectorAll(".eos-gap.is-hot").forEach(function (node) { node.classList.remove("is-hot"); });
