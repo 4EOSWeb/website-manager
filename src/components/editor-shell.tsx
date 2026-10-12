@@ -56,6 +56,7 @@ import { placeOnCanvas } from "@/platform/drag/canvas-place";
 import { flowReorder } from "@/platform/drag/flow-insert";
 import { groupEnter } from "@/platform/drag/group-enter";
 import { groupExit } from "@/platform/drag/group-exit";
+import { keyboardMove, keyboardStep } from "@/platform/drag/keyboard";
 import { libraryDrop } from "@/platform/drag/library-drop";
 import { cancelDrag } from "@/platform/drag/cancel";
 import { reparent } from "@/platform/drag/reparent";
@@ -203,6 +204,7 @@ export function EditorShell(props: {
   const [shortcuts, setShortcuts] = useState(false);
   const [insert, setInsert] = useState<Insert | null>(null);
   const [dragReason, setDragReason] = useState<DragRejectReason | null>(null);
+  const [keyboardStatus, setKeyboardStatus] = useState("");
 
   const skipSite = useRef(true);
   const skipPost = useRef(true);
@@ -1286,6 +1288,40 @@ export function EditorShell(props: {
         dragActive.current = false;
         setDragReason(null);
         break;
+      case "4eos-keyboard": {
+        const decision = keyboardStep({
+          key: text("key"),
+          alt: data.alt !== false,
+          shift: data.shift === true,
+          index: Number(data.index),
+          count: Number(data.count),
+          neighbor: text("neighbor"),
+          locked: data.locked === true,
+          row: data.row === true,
+        });
+        if (!decision) break;
+        setKeyboardStatus(decision.announcement);
+        if (!decision.ok) break;
+        const sectionId = text("sectionId");
+        const itemId = text("itemId");
+        const visual = keyboardMove(visualDocument, {
+          nodeId: itemId,
+          key: text("key"),
+          alt: true,
+          shift: data.shift === true,
+          childType: "text",
+          childParents: { allowedParents: ["section", "container", "stack", "grid", "group", "card"] },
+        });
+        const nextVisual = visual && visual.ok ? visual.document ?? undefined : undefined;
+        if (data.shift === true) {
+          const targetSectionId = text("targetSectionId");
+          if (!targetSectionId) break;
+          commit(moveBlockToSection(site, path, sectionId, targetSectionId, itemId, text("targetId"), false), true, nextVisual);
+          break;
+        }
+        commit(moveFlowBlockById(site, path, sectionId, itemId, text("neighborId"), decision.delta > 0), true, nextVisual);
+        break;
+      }
       case "4eos-select-node": {
         const sections = (page?.sections ?? []).map((section) => ({
           id: section.id,
@@ -1778,6 +1814,7 @@ export function EditorShell(props: {
             </div>
           ) : null}
           <DragStatus reason={dragReason} />
+          {keyboardStatus ? <p className="ed-keyboard-status" role="status" aria-live="polite">{keyboardStatus}</p> : null}
           <Canvas
             src={previewSrc}
             width={width}

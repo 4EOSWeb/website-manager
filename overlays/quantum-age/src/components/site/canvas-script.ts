@@ -1483,10 +1483,44 @@ export function canvasScript(origin: string) {
       if ((key === "Delete" || key === "Backspace") && c.remove) { event.preventDefault(); runAct("delete"); return; }
       if (mod && (key === "d" || key === "D") && c.duplicate) { event.preventDefault(); runAct("duplicate"); return; }
       if (key === "Enter" && c.edit) { event.preventDefault(); runAct("edit"); return; }
-      if (event.altKey && (key === "ArrowUp" || key === "ArrowDown")) {
+      if (event.altKey && key.indexOf("Arrow") === 0) {
         event.preventDefault();
-        if (isSection(selected)) moveSectionBy(key === "ArrowUp" ? -1 : 1);
-        else if (c.reorder) moveBlockBy(key === "ArrowUp" ? -1 : 1);
+        if (isSection(selected) && !event.shiftKey && (key === "ArrowUp" || key === "ArrowDown")) { moveSectionBy(key === "ArrowUp" ? -1 : 1); return; }
+        if (!isFlowBlock(selected)) return;
+        var siblings = Array.prototype.filter.call(selected.parentElement ? selected.parentElement.children : [], function (entry) { return entry.getAttribute && entry.getAttribute("data-item-id"); });
+        var at = siblings.indexOf(selected);
+        var flow = sectionOf(selected);
+        var row = !!(flow && flow.getAttribute("data-layout") === "cards");
+        var delta = row ? (key === "ArrowLeft" ? -1 : key === "ArrowRight" ? 1 : 0) : (key === "ArrowUp" ? -1 : key === "ArrowDown" ? 1 : 0);
+        var neighborNode = !event.shiftKey && delta ? siblings[at + delta] : null;
+        var targetSectionId = "";
+        var targetId = "";
+        if (event.shiftKey && delta > 0 && flow) {
+          var flows = Array.prototype.slice.call(document.querySelectorAll("[data-section-type='flow']"));
+          var destination = flows[flows.indexOf(flow) + 1];
+          if (destination && destination.getAttribute("data-locked") !== "provider") {
+            neighborNode = destination;
+            targetSectionId = destination.getAttribute("data-section-id") || "";
+            var first = destination.querySelector("[data-item-id]");
+            targetId = first && sectionOf(first) === destination ? first.getAttribute("data-item-id") || "" : "";
+          }
+        }
+        post({
+          type: "4eos-keyboard",
+          key: key,
+          alt: true,
+          shift: !!event.shiftKey,
+          sectionId: flow ? flow.getAttribute("data-section-id") : "",
+          itemId: selected.getAttribute("data-item-id") || "",
+          neighborId: neighborNode && neighborNode.getAttribute ? neighborNode.getAttribute("data-item-id") || "" : "",
+          neighbor: neighborNode ? labelOf(neighborNode) : "",
+          index: at,
+          count: siblings.length,
+          locked: isLocked(selected) || !c.reorder,
+          row: row,
+          targetSectionId: targetSectionId,
+          targetId: targetId
+        });
         return;
       }
       if (c.freeform && key.indexOf("Arrow") === 0) {
