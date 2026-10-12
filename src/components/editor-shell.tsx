@@ -77,6 +77,7 @@ import { createDivider } from "@/platform/elements/divider";
 import { createIcon } from "@/platform/elements/icon";
 import { createSpacer } from "@/platform/elements/spacer";
 import { createImage, writeImage } from "@/platform/elements/image";
+import { createGallery, writeGallery } from "@/platform/elements/gallery";
 import { acceptVideoUrl, createVideo, writeVideoUrl } from "@/platform/elements/video";
 import { createCustom, type CustomDefinition } from "@/platform/elements/custom";
 import { createHeading } from "@/platform/elements/heading";
@@ -203,6 +204,7 @@ export function EditorShell(props: {
   const buttonBlocks = useRef(new Map<string, string>());
   const imageBlocks = useRef(new Map<string, string>());
   const formSections = useRef(new Map<string, string>());
+  const gallerySections = useRef(new Map<string, string>());
   const videoSections = useRef(new Map<string, string>());
   const toastId = useRef(0);
 
@@ -579,9 +581,10 @@ export function EditorShell(props: {
       notify("Select an image on the page first.");
       return;
     }
+    const galleryNodeId = selection.itemId ? undefined : gallerySections.current.get(selection.sectionId);
     const nodeId = selection.itemId ? imageBlocks.current.get(selection.itemId) : undefined;
-    const nextVisual = nodeId ? writeImage(visualDocument, nodeId, item.src, item.alt) : null;
-    commit(setImageSource(site, path, selection.sectionId, item.src, item.alt, selection.itemId || undefined), true, nextVisual ?? undefined);
+    const nextVisual = galleryNodeId ? writeGallery(visualDocument, galleryNodeId, item.src, item.alt) : nodeId ? writeImage(visualDocument, nodeId, item.src, item.alt) : null;
+    commit(setImageSource(site, path, selection.sectionId, item.src, item.alt, galleryNodeId ? undefined : selection.itemId || undefined), true, nextVisual ?? undefined);
   }
 
   async function removeMedia(item: MediaItem) {
@@ -885,7 +888,7 @@ export function EditorShell(props: {
     setNodeIds(selectNodeId(node.id).nodeIds);
     setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
     setSelection({ ...emptySelection, sectionId: created.id, kind: created.type });
-    const label = created.type === "video" ? "Video" : created.type === "divider" ? "Divider" : created.type === "spacer" ? "Spacer" : created.type === "freeform" ? created.name : created.type === "cta" ? "Call to action" : created.type === "testimonial" ? "Testimonial" : created.type === "faq" ? "FAQ" : created.type === "form" ? "Form" : created.editorName || "Item";
+    const label = created.type === "video" ? "Video" : created.type === "divider" ? "Divider" : created.type === "spacer" ? "Spacer" : created.type === "freeform" ? created.name : created.type === "gallery" ? "Gallery" : created.type === "cta" ? "Call to action" : created.type === "testimonial" ? "Testimonial" : created.type === "faq" ? "FAQ" : created.type === "form" ? "Form" : created.editorName || "Item";
     notify(`${label} added.`);
   }
 
@@ -1047,6 +1050,14 @@ export function EditorShell(props: {
     insertPreviewNode(node, block, "element:icon", insertAfter(visualDocument, path, afterId, node), at);
   }
 
+  function insertCreatedGallery(node: NodeDocument) {
+    const layout = node.props.layout === "stack" || node.props.layout === "slideshow" ? node.props.layout : "grid";
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "gallery", hidden: false, images: [], layoutName: layout };
+    gallerySections.current.set(created.id, node.id);
+    insertPreviewSection(node, created, "element:gallery", insertAfter(visualDocument, path, afterId, node));
+  }
+
   function insertCreatedVideo(node: NodeDocument) {
     const url = typeof node.props.url === "string" ? node.props.url : "";
     if (!acceptVideoUrl(url)) return;
@@ -1091,6 +1102,10 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:image") {
       insertCreatedImage(createImage(), at);
+      return;
+    }
+    if (entry.id === "element:gallery") {
+      insertCreatedGallery(createGallery());
       return;
     }
     if (entry.id === "element:video") {
@@ -1535,6 +1550,7 @@ export function EditorShell(props: {
                   else if (node.componentId === "generic.link") insertCreatedLink(node);
                   else if (node.componentId === "generic.button" || node.componentId === "generic.icon-button") insertCreatedButton(node);
                   else if (node.componentId === "generic.image") insertCreatedImage(node);
+                  else if (node.componentId === "generic.gallery") insertCreatedGallery(node);
                   else if (node.componentId === "generic.video") insertCreatedVideo(node);
                   else if (node.componentId === "generic.icon") insertCreatedIcon(node);
                   else if (node.componentId === "generic.divider") insertCreatedDivider(node);

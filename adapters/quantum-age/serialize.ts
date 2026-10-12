@@ -147,7 +147,19 @@ type TestimonialOut = { id: string; type: "testimonial"; hidden: boolean; quote:
 type FaqOut = { id: string; type: "faq"; hidden: boolean; heading: string; items: Array<{ q: string; a: string }> };
 type FormFieldOut = { id: string; label: string; kind: "text" | "email" | "textarea" | "select" | "checkbox"; required: boolean; options?: string[]; checked?: boolean };
 type FormOut = { id: string; type: "form"; hidden: boolean; nameLabel: string; emailLabel: string; messageLabel: string; buttonLabel: string; recipient: string; fields?: FormFieldOut[] };
-type ExtraSection = ReturnType<typeof dividerSection> | ReturnType<typeof spacerSection> | WrappedFlow | CanvasOut | CtaOut | TestimonialOut | FaqOut | FormOut;
+type GalleryOut = { id: string; type: "gallery"; hidden: boolean; images: Array<{ src: string; alt: string }>; layoutName: "grid" | "stack" | "slideshow" };
+type ExtraSection = ReturnType<typeof dividerSection> | ReturnType<typeof spacerSection> | WrappedFlow | CanvasOut | CtaOut | TestimonialOut | FaqOut | FormOut | GalleryOut;
+
+function galleryImages(node: NodeDocument) {
+  if (!Array.isArray(node.props.images)) return [];
+  return node.props.images.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as { src?: unknown; alt?: unknown };
+    const src = typeof row.src === "string" ? row.src : "";
+    if (!src) return [];
+    return [{ src, alt: typeof row.alt === "string" ? row.alt : "" }];
+  });
+}
 
 function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: FlowOut[], videos: Array<ReturnType<typeof videoSection>>, extras: ExtraSection[]) {
   const componentId = node.componentId;
@@ -223,6 +235,9 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
       recipient: typeof node.props.recipient === "string" ? node.props.recipient : "",
       ...(fields.length ? { fields } : {}),
     });
+  } else if (node.type === "gallery" && componentId === "generic.gallery") {
+    const layout = node.props.layout === "stack" || node.props.layout === "slideshow" ? node.props.layout : "grid";
+    extras.push({ id: node.id, type: "gallery", hidden: node.visibility.hidden === true, images: galleryImages(node), layoutName: layout });
   }
   else if (node.type === "video" && componentId === "generic.video" && acceptVideoUrl(typeof node.props.url === "string" ? node.props.url : "")) videos.push(videoSection(node));
   else if (node.type === "icon" && componentId === "generic.icon") {

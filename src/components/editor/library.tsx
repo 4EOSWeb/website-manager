@@ -25,6 +25,7 @@ import { createDivider } from "@/platform/elements/divider";
 import { createIcon } from "@/platform/elements/icon";
 import { createSpacer } from "@/platform/elements/spacer";
 import { createImage } from "@/platform/elements/image";
+import { createGallery } from "@/platform/elements/gallery";
 import { createVideo } from "@/platform/elements/video";
 import { createHeading } from "@/platform/elements/heading";
 import { createLink } from "@/platform/elements/link";
@@ -40,6 +41,7 @@ export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:button", label: "Button", description: "A button", category: "Calls to action", keywords: "button cta", thumb: "button" },
   { id: "element:icon-button", label: "Icon button", description: "A button that is an icon", category: "Calls to action", keywords: "icon aria", thumb: "button" },
   { id: "element:image", label: "Image", description: "A picture", category: "Media", keywords: "photo picture", thumb: "image" },
+  { id: "element:gallery", label: "Gallery", description: "An empty picture grid", category: "Media", keywords: "photos grid", thumb: "gallery" },
   { id: "element:video", label: "Video", description: "A video", category: "Media", keywords: "youtube vimeo", thumb: "video" },
   { id: "element:icon", label: "Icon", description: "An icon", category: "Media", keywords: "icon arrow", thumb: "social" },
   { id: "element:divider", label: "Divider", description: "A horizontal line", category: "Sections", keywords: "rule hr", thumb: "divider" },
@@ -158,6 +160,7 @@ export function LibraryBrowser(props: {
             } else if (entry.id === "element:button" && props.onElement) props.onElement(createButton());
             else if (entry.id === "element:icon-button" && props.onElement) props.onElement(createIconButton());
             else if (entry.id === "element:image" && props.onElement) props.onElement(createImage());
+            else if (entry.id === "element:gallery" && props.onElement) props.onElement(createGallery());
             else if (entry.id === "element:video" && props.onElement) {
               const node = createVideo();
               if (node) props.onElement(node);

@@ -39,7 +39,7 @@ function hrefFieldOf(section: Section) {
 }
 
 export function sectionHasContent(section: Section) {
-  return Boolean(hrefFieldOf(section)) || section.type === "video" || section.type === "image" || section.type === "map";
+  return Boolean(hrefFieldOf(section)) || section.type === "video" || section.type === "image" || section.type === "gallery" || section.type === "map";
 }
 
 export function SectionContent({ api, section }: { api: EditorApi; section: Section }) {
@@ -66,6 +66,11 @@ export function SectionContent({ api, section }: { api: EditorApi; section: Sect
           <Field label="Describe the picture" hint="Say what the picture shows for people who use screen readers.">
             <TextInput value={section.alt} disabled={disabled} maxLength={200} onChange={(value) => api.commitText(applyText(api.site, api.path, section.id, "alt", value), `${section.id}:alt`, true)} />
           </Field>
+        </Group>
+      ) : null}
+      {section.type === "gallery" ? (
+        <Group title="Gallery">
+          <button type="button" className="ed-button" disabled={disabled} onClick={api.openPicker}><ImageIcon size={14} aria-hidden="true" /> Choose image</button>
         </Group>
       ) : null}
       {section.type === "map" ? (
