@@ -3,6 +3,7 @@
 import { ExternalLink } from "lucide-react";
 import type { FreeformItem, Section } from "@/lib/content-schema";
 import { alignItems, applyText, patchChrome, patchItem, renameZone, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
+import { alignCanvas, type AlignMode } from "@/platform/canvas/align";
 import { mixedProps } from "@/platform/canvas/multi-select";
 import { overlapWarning, type OverlapBox } from "@/platform/canvas/overlap";
 import type { EditorApi, Viewport } from "@/components/editor/types";
@@ -109,8 +110,11 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
         {mixedNote}
         <Group title="Align">
           <div className="ed-row">
-            {(["left", "center", "right", "top", "middle"] as const).map((mode) => (
-              <button key={mode} type="button" className="ed-button" disabled={disabled} onClick={() => api.commit(alignItems(api.site, api.path, section.id, ids, api.viewport, mode, overlay), true)}>
+            {(["left", "center", "right", "top", "middle", "bottom"] as const satisfies readonly AlignMode[]).map((mode) => (
+              <button key={mode} type="button" className="ed-button" disabled={disabled} onClick={() => {
+                const aligned = alignCanvas(api.visualDocument, ids, mode);
+                api.commit(alignItems(api.site, api.path, section.id, ids, api.viewport, mode, overlay), true, aligned && aligned.ok ? aligned.document : undefined);
+              }}>
                 {mode.charAt(0).toUpperCase() + mode.slice(1)}
               </button>
             ))}

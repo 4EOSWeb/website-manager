@@ -1647,14 +1647,15 @@ export function EditorShell(props: {
     canEdit: props.canEdit,
     viewport,
     selection,
-    commit: (next, reload) => {
+    visualDocument,
+    commit: (next, reload, nextVisual) => {
       const blockId = selection.itemId;
       const nodeId = blockId ? linkBlocks.current.get(blockId) : undefined;
       const buttonId = blockId ? buttonBlocks.current.get(blockId) : undefined;
       const href = blockId ? flowBlockHref(next, path, blockId) : "";
       const previous = blockId ? flowBlockHref(site, path, blockId) : "";
       const updated = nodeId && href !== previous ? writeLinkHref(visualDocument, nodeId, href) : buttonId && href !== previous ? writeButtonField(visualDocument, buttonId, "href", href) : null;
-      commit(next, reload, updated ?? undefined);
+      commit(next, reload, nextVisual ?? updated ?? undefined);
     },
     commitText,
     notify,

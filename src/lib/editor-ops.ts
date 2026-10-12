@@ -244,7 +244,7 @@ export function alignItems(
   sectionId: string,
   itemIds: string[],
   viewport: "desktop" | "tablet" | "mobile",
-  mode: "left" | "center" | "right" | "top" | "middle",
+  mode: "left" | "center" | "right" | "top" | "middle" | "bottom",
   overlay = false,
 ): SiteDraft {
   return mapSection(site, route, sectionId, (section) => {
@@ -267,6 +267,7 @@ export function alignItems(
       if (mode === "center") box.x = midX - box.w / 2;
       if (mode === "top") box.y = boxes.length === 1 ? 0 : minY;
       if (mode === "middle") box.y = midY - box.h / 2;
+      if (mode === "bottom") box.y = (boxes.length === 1 ? 1 : maxBottom) - box.h;
       return { ...item, [viewport]: clampPlacement(box) };
     });
     if (overlay && section.type === "preset") return { ...section, overlay: items };

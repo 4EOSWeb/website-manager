@@ -51,7 +51,8 @@ export type EditorApi = {
   canEdit: boolean;
   viewport: Viewport;
   selection: Selection;
-  commit: (next: SiteDraft, reload: boolean) => void;
+  visualDocument: unknown;
+  commit: (next: SiteDraft, reload: boolean, nextVisual?: unknown) => void;
   commitText: (next: SiteDraft, key: string, reload?: boolean) => void;
   notify: (message: string, tone?: "info" | "error") => void;
   selectNode: (sectionId: string, itemId?: string) => void;
