@@ -52,6 +52,7 @@ import type { SiteContext } from "@/platform/context";
 import { StatusBar, ToolRail, TopBar, type Zoom } from "@/components/editor/chrome";
 import { Canvas } from "@/components/editor/canvas";
 import { DragStatus, dragRejectReason, type DragRejectReason } from "@/components/editor/drag-status";
+import { toPercent } from "@/platform/canvas/percent";
 import { placeOnCanvas } from "@/platform/drag/canvas-place";
 import { flowReorder } from "@/platform/drag/flow-insert";
 import { groupEnter } from "@/platform/drag/group-enter";
@@ -1426,7 +1427,7 @@ export function EditorShell(props: {
         const record = raw && typeof raw === "object" ? raw as { x?: unknown; y?: unknown; w?: unknown; h?: unknown } : null;
         const fractions = record ? { x: Number(record.x), y: Number(record.y), w: Number(record.w), h: Number(record.h) } : null;
         const box = fractions && [fractions.x, fractions.y, fractions.w, fractions.h].every(Number.isFinite)
-          ? { x: fractions.x * 100, y: fractions.y * 100, w: fractions.w * 100, h: fractions.h * 100 }
+          ? { x: toPercent(fractions.x * 100, 100), y: toPercent(fractions.y * 100, 100), w: toPercent(fractions.w * 100, 100), h: toPercent(fractions.h * 100, 100) }
           : undefined;
         const result = libraryDrop(visualDocument, {
           factoryId,
@@ -1476,10 +1477,10 @@ export function EditorShell(props: {
           const updated = placeOnCanvas(nextVisual, {
             nodeId: item.id,
             breakpoint: name,
-            x: item.placement.x * 100,
-            y: item.placement.y * 100,
-            w: item.placement.w * 100,
-            h: item.placement.h * 100,
+            x: toPercent(item.placement.x * 100, 100),
+            y: toPercent(item.placement.y * 100, 100),
+            w: toPercent(item.placement.w * 100, 100),
+            h: toPercent(item.placement.h * 100, 100),
           });
           if (updated) nextVisual = updated;
         }

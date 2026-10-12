@@ -1,3 +1,5 @@
+import { toPercent } from "../canvas/percent";
+
 type TreeNode = {
   id?: unknown;
   children?: unknown;
@@ -21,8 +23,8 @@ export function canvasPoint(
   const width = parent.width || 1;
   const height = parent.height || 1;
   return {
-    x: clampPercent(((pointer.x - parent.x) / width) * 100),
-    y: clampPercent(((pointer.y - parent.y) / height) * 100),
+    x: toPercent(pointer.x - parent.x, width),
+    y: toPercent(pointer.y - parent.y, height),
   };
 }
 
