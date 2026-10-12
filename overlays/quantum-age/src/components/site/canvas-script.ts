@@ -729,12 +729,49 @@ export function canvasScript(origin: string) {
         return;
       }
       if (drag.kind === "block") {
+        var home = sectionOf(drag.node);
+        var foreign = null;
+        document.querySelectorAll("[data-section-type='flow']").forEach(function (section) {
+          if (!home || section === home || section.getAttribute("data-locked") === "provider") return;
+          var rect = section.getBoundingClientRect();
+          if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) foreign = section;
+        });
+        if (foreign) {
+          var blocks = Array.prototype.filter.call(foreign.querySelectorAll("[data-item-id]"), function (entry) { return sectionOf(entry) === foreign; });
+          var foreignRects = blocks.map(function (node) { var rect = node.getBoundingClientRect(); return { top: rect.top, left: rect.left, width: rect.width, height: rect.height }; });
+          var foreignSpot = H.insertionIndex(x, y, foreignRects);
+          var foreignAnchor = foreignRects.length === 0 ? null : foreignSpot.index < blocks.length ? blocks[foreignSpot.index] : blocks[blocks.length - 1];
+          var foreignAfter = foreignRects.length > 0 && foreignSpot.index >= blocks.length;
+          var foreignBox = foreignAnchor ? foreignAnchor.getBoundingClientRect() : foreign.getBoundingClientRect();
+          var foreignLayout = foreign.getAttribute("data-layout");
+          var foreignDirection = foreignLayout === "cards" ? "row" : "column";
+          var foreignLine = foreignDirection === "row" ? "vertical" : "horizontal";
+          drag.target = { id: foreignAnchor ? foreignAnchor.getAttribute("data-item-id") : "", after: foreignAfter, sectionId: foreign.getAttribute("data-section-id") };
+          drag.line.style.display = "block";
+          drag.line.setAttribute("data-flex-direction", foreignDirection);
+          drag.line.setAttribute("data-flow-line", foreignLine);
+          drag.line.setAttribute("data-reparent", foreign.getAttribute("data-section-id"));
+          clearCell();
+          if (foreignLine === "vertical" && foreignAnchor) {
+            drag.line.style.left = (foreignAfter ? foreignBox.right + 4 : foreignBox.left - 5) + "px";
+            drag.line.style.top = foreignBox.top + "px";
+            drag.line.style.width = "3px";
+            drag.line.style.height = foreignBox.height + "px";
+          } else {
+            drag.line.style.left = foreignBox.left + "px";
+            drag.line.style.top = (foreignAnchor ? (foreignAfter ? foreignBox.bottom + 4 : foreignBox.top - 5) : foreignBox.top + 8) + "px";
+            drag.line.style.width = foreignBox.width + "px";
+            drag.line.style.height = "3px";
+          }
+          return;
+        }
+        drag.line.removeAttribute("data-reparent");
         var siblings = siblingBlocks(drag.node);
         var rects = siblings.map(function (node) { var rect = node.getBoundingClientRect(); return { top: rect.top, left: rect.left, width: rect.width, height: rect.height }; });
         var spot = H.insertionIndex(x, y, rects);
         var all = Array.prototype.filter.call(drag.node.parentElement.children, function (entry) { return entry.getAttribute && entry.getAttribute("data-item-id"); });
         var current = all.indexOf(drag.node);
-        if (rects.length === 0 || spot.index === current) { drag.target = null; drag.line.style.display = "none"; clearCell(); return; }
+        if (rects.length === 0 || spot.index === current) { drag.target = null; drag.line.style.display = "none"; drag.line.removeAttribute("data-reparent"); clearCell(); return; }
         var anchor = spot.index < siblings.length ? siblings[spot.index] : siblings[siblings.length - 1];
         var after = spot.index >= siblings.length;
         var box = anchor.getBoundingClientRect();
@@ -819,7 +856,11 @@ export function canvasScript(origin: string) {
       if (d.kind === "section") {
         if (!cancel && d.target) post({ type: "4eos-move", sectionId: d.node.getAttribute("data-section-id"), beforeId: d.target.dataset.before || "" });
       } else if (d.kind === "block") {
-        if (!cancel && d.target) post({ type: "4eos-reorder-block", sectionId: sectionOf(d.node).getAttribute("data-section-id"), itemId: d.node.getAttribute("data-item-id"), targetId: d.target.id, after: d.target.after });
+        if (!cancel && d.target) {
+          var sourceSection = sectionOf(d.node).getAttribute("data-section-id");
+          if (d.target.sectionId && d.target.sectionId !== sourceSection) post({ type: "4eos-reparent", sectionId: sourceSection, targetSectionId: d.target.sectionId, itemId: d.node.getAttribute("data-item-id"), targetId: d.target.id, after: d.target.after });
+          else post({ type: "4eos-reorder-block", sectionId: sourceSection, itemId: d.node.getAttribute("data-item-id"), targetId: d.target.id, after: d.target.after });
+        }
       } else if (cancel || !d.moved) {
         applyBox(d.node, d.box);
         d.fellows.forEach(function (fellow) { applyBox(fellow.node, fellow.box); });

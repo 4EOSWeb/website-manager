@@ -23,6 +23,7 @@ import {
   insertFlowBlock,
   insertSection,
   insertSectionCopy,
+  moveBlockToSection,
   moveFlowBlockById,
   moveSectionById,
   pageByRoute,
@@ -53,6 +54,7 @@ import { Canvas } from "@/components/editor/canvas";
 import { DragStatus, dragRejectReason, type DragRejectReason } from "@/components/editor/drag-status";
 import { placeOnCanvas } from "@/platform/drag/canvas-place";
 import { flowReorder } from "@/platform/drag/flow-insert";
+import { reparent } from "@/platform/drag/reparent";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
 import { LibraryBrowser } from "@/components/editor/library";
 import { Inspector } from "@/components/editor/inspector";
@@ -1331,6 +1333,26 @@ export function EditorShell(props: {
         const next = moveFlowBlockById(site, path, text("sectionId"), text("itemId"), text("targetId"), Boolean(data.after));
         const nextVisual = flowReorder(visualDocument, text("itemId"), text("targetId"), Boolean(data.after));
         commit(next, true, nextVisual ?? undefined);
+        break;
+      }
+      case "4eos-reparent": {
+        const next = moveBlockToSection(site, path, text("sectionId"), text("targetSectionId"), text("itemId"), text("targetId"), Boolean(data.after));
+        const result = reparent(visualDocument, {
+          nodeId: text("itemId"),
+          parentId: text("targetSectionId"),
+          targetId: text("targetId"),
+          after: Boolean(data.after),
+          draggedLocked: false,
+          childType: "text",
+          childParents: { allowedParents: ["section", "container", "stack", "grid", "group", "card"] },
+          parentType: "section",
+          parentChildren: { acceptsChildren: true },
+        });
+        if (result && result.ok === false) {
+          setDragReason(result.reason);
+          break;
+        }
+        commit(next, true, result && result.ok ? result.document : undefined);
         break;
       }
       case "4eos-insert":

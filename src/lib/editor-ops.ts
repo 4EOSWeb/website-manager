@@ -523,6 +523,31 @@ export function moveFlowBlockById(site: SiteDraft, route: string, sectionId: str
   return moveFlowBlock(site, route, sectionId, from, after ? target + 1 : target);
 }
 
+/** Moves one flow block into a different section. One call is one undo step. */
+export function moveBlockToSection(site: SiteDraft, route: string, fromSectionId: string, toSectionId: string, blockId: string, targetId: string, after: boolean): SiteDraft {
+  if (fromSectionId === toSectionId) return site;
+  const page = pageByRoute(site, route);
+  if (!page || page.locked) return site;
+  const source = page.sections.find((section) => section.id === fromSectionId);
+  const destination = page.sections.find((section) => section.id === toSectionId);
+  if (!source || !destination || source.type !== "flow" || destination.type !== "flow") return site;
+  const block = source.blocks.find((item) => item.id === blockId);
+  if (!block || block.locked) return site;
+  const targetIndex = targetId ? destination.blocks.findIndex((item) => item.id === targetId) : -1;
+  const index = targetIndex < 0 ? destination.blocks.length : after ? targetIndex + 1 : targetIndex;
+  const nextDestination = destination.blocks.slice();
+  nextDestination.splice(index, 0, block);
+  const nextSource = source.blocks.filter((item) => item.id !== blockId);
+  return mapPage(site, route, (current) => ({
+    ...current,
+    sections: current.sections.map((section) => {
+      if (section.id === fromSectionId && section.type === "flow") return { ...section, blocks: nextSource };
+      if (section.id === toSectionId && section.type === "flow") return { ...section, blocks: nextDestination };
+      return section;
+    }),
+  }));
+}
+
 export function insertSectionCopy(site: SiteDraft, route: string, afterSectionId: string, section: Section): SiteDraft {
   const sections = pageByRoute(site, route)?.sections ?? [];
   const at = sections.findIndex((item) => item.id === afterSectionId);
