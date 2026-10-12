@@ -52,6 +52,7 @@ import type { SiteContext } from "@/platform/context";
 import { StatusBar, ToolRail, TopBar, type Zoom } from "@/components/editor/chrome";
 import { Canvas } from "@/components/editor/canvas";
 import { DragStatus, dragRejectReason, type DragRejectReason } from "@/components/editor/drag-status";
+import { overflowWarning } from "@/platform/canvas/overflow";
 import { toPercent } from "@/platform/canvas/percent";
 import { placeOnCanvas } from "@/platform/drag/canvas-place";
 import { flowReorder } from "@/platform/drag/flow-insert";
@@ -205,6 +206,7 @@ export function EditorShell(props: {
   const [shortcuts, setShortcuts] = useState(false);
   const [insert, setInsert] = useState<Insert | null>(null);
   const [dragReason, setDragReason] = useState<DragRejectReason | null>(null);
+  const [contentOverflow, setContentOverflow] = useState<string | null>(null);
   const [keyboardStatus, setKeyboardStatus] = useState("");
 
   const skipSite = useRef(true);
@@ -1294,6 +1296,16 @@ export function EditorShell(props: {
         dragActive.current = false;
         setDragReason(null);
         break;
+      case "4eos-overflow":
+        setContentOverflow(overflowWarning({
+          textWidth: Number(data.textWidth) || 0,
+          textHeight: Number(data.textHeight) || 0,
+          nodeWidth: Number(data.nodeWidth) || 0,
+          nodeHeight: Number(data.nodeHeight) || 0,
+          parentWidth: Number(data.parentWidth) || 0,
+          parentHeight: Number(data.parentHeight) || 0,
+        }));
+        break;
       case "4eos-keyboard": {
         const decision = keyboardStep({
           key: text("key"),
@@ -1843,6 +1855,7 @@ export function EditorShell(props: {
           onOpenPage={openPage}
           onClear={clearSelection}
           managedRoute={managedRoute}
+          overflow={contentOverflow}
         />
       </div>
       <StatusBar message={statusMessage} viewport={viewport} scale={scale} zoom={zoom} onZoom={setZoom} role={props.role} editing={editing} onShortcuts={() => setShortcuts(true)} />

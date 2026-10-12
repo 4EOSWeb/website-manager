@@ -343,6 +343,24 @@ export function canvasScript(origin: string) {
       return true;
     }
     function clearHandles() { document.querySelectorAll(".eos-handle").forEach(function (node) { node.remove(); }); }
+    function reportOverflow(node) {
+      var zone = node ? zoneOf(node) : null;
+      var canvas = !!(zone && zone.getAttribute && zone.getAttribute("data-zone-name") === "Canvas" && node && node.getAttribute("data-item-id"));
+      if (!canvas) {
+        post({ type: "4eos-overflow", textWidth: 0, textHeight: 0, nodeWidth: 1, nodeHeight: 1, parentWidth: 1, parentHeight: 1 });
+        return;
+      }
+      var sample = node.querySelector("[data-field], p, a") || node;
+      post({
+        type: "4eos-overflow",
+        textWidth: sample.scrollWidth,
+        textHeight: sample.scrollHeight,
+        nodeWidth: node.clientWidth,
+        nodeHeight: node.clientHeight,
+        parentWidth: zone.clientWidth,
+        parentHeight: zone.clientHeight,
+      });
+    }
     function clearSelected(silent) {
       clearHandles();
       document.querySelectorAll(".eos-selected").forEach(function (node) { node.classList.remove("eos-selected"); });
@@ -352,6 +370,7 @@ export function canvasScript(origin: string) {
       selectedItems = [];
       markNearGaps();
       if (!silent) post({ type: "4eos-select", sectionId: "", itemId: "", itemIds: [], overlay: false, locked: false, chrome: "", kind: "" });
+      reportOverflow(null);
     }
 
     function selectableFor(target) {
@@ -405,6 +424,7 @@ export function canvasScript(origin: string) {
       showBar();
       markNearGaps();
       if (!silent) post(payload(selected));
+      reportOverflow(selected);
     }
 
     function button(name, label, act, extra) {
@@ -1036,6 +1056,7 @@ export function canvasScript(origin: string) {
       if (cancel) { flash("Move canceled"); post({ type: "4eos-drag-cancel" }); }
       showBar();
       markNearGaps();
+      reportOverflow(selected);
     }
 
     function readText(field) {

@@ -56,6 +56,7 @@ export function Inspector(props: {
   onOpenPage: (route: string) => void;
   onClear: () => void;
   managedRoute: boolean;
+  overflow?: string | null;
 }) {
   const { api } = props;
   const selection = api.selection;
@@ -175,7 +176,12 @@ export function Inspector(props: {
             {active === "advanced" ? <SectionAdvanced api={api} section={section} /> : null}
           </>
         ) : null}
-        {mode.kind === "freeform" && section ? <FreeformInspector api={api} section={section} item={mode.item} tab={active} /> : null}
+        {mode.kind === "freeform" && section ? (
+          <>
+            {props.overflow ? <p className="ed-callout" role="status">{props.overflow}</p> : null}
+            <FreeformInspector api={api} section={section} item={mode.item} tab={active} />
+          </>
+        ) : null}
         {mode.kind === "page" && page ? (
           <>
             {active === "page" ? <PageTab api={api} page={page} onDuplicate={props.onDuplicatePage} /> : null}
