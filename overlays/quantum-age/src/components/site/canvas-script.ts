@@ -724,6 +724,33 @@ export function canvasScript(origin: string) {
       }, 16);
       updateDrag(event.clientX, event.clientY, event.shiftKey, event.altKey);
     }
+    function canvasCenterGuides(zone, box) {
+      if (!zone) return;
+      var centerX = box.x + box.w / 2;
+      var centerY = box.y + box.h / 2;
+      if (Math.abs(centerX - 0.5) <= 0.01) {
+        var vertical = document.createElement("div");
+        vertical.className = "eos-guide";
+        vertical.setAttribute("data-guide", "center-x");
+        vertical.style.left = "50%";
+        vertical.style.top = "0";
+        vertical.style.bottom = "0";
+        vertical.style.width = "1px";
+        zone.appendChild(vertical);
+        if (drag.alt !== true) box.x = 0.5 - box.w / 2;
+      }
+      if (Math.abs(centerY - 0.5) <= 0.01) {
+        var horizontal = document.createElement("div");
+        horizontal.className = "eos-guide";
+        horizontal.setAttribute("data-guide", "center-y");
+        horizontal.style.top = "50%";
+        horizontal.style.left = "0";
+        horizontal.style.right = "0";
+        horizontal.style.height = "1px";
+        zone.appendChild(horizontal);
+        if (drag.alt !== true) box.y = 0.5 - box.h / 2;
+      }
+    }
     function snapShare(value) {
       var interval = 0.04;
       var snapped = Math.round(value / interval) * interval;
@@ -851,6 +878,7 @@ export function canvasScript(origin: string) {
           next.w = Math.max(0.02, snapShare(next.w));
           next.h = Math.max(0.02, snapShare(next.h));
         }
+        if (canvasZone) canvasCenterGuides(drag.zone, next);
       } else {
         next.x = drag.box.x + dx;
         next.y = drag.box.y + dy;
@@ -863,6 +891,7 @@ export function canvasScript(origin: string) {
             next.x = Math.max(0, Math.min(1 - next.w, next.x));
             next.y = Math.max(0, Math.min(1 - next.h, next.y));
           }
+          canvasCenterGuides(drag.zone, next);
           if (drag.ghost) {
             drag.ghost.style.left = (zoneRect.left + next.x * zoneRect.width) + "px";
             drag.ghost.style.top = (zoneRect.top + next.y * zoneRect.height) + "px";
