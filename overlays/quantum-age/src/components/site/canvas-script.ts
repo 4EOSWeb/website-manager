@@ -822,6 +822,12 @@ export function canvasScript(origin: string) {
         next.h = Math.max(canvasZone ? 0.02 : 0.04, Math.min(1, drag.box.h + (top ? -dy : dy)));
         if (left) next.x = Math.max(0, drag.box.x + drag.box.w - next.w);
         if (top) next.y = Math.max(0, drag.box.y + drag.box.h - next.h);
+        if (canvasZone) {
+          if (next.x < 0) next.x = 0;
+          if (next.y < 0) next.y = 0;
+          if (next.x + next.w > 1) next.w = 1 - next.x;
+          if (next.y + next.h > 1) next.h = 1 - next.y;
+        }
       } else {
         next.x = drag.box.x + dx;
         next.y = drag.box.y + dy;

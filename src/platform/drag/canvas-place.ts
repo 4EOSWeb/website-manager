@@ -1,3 +1,4 @@
+import { enforceMaxSize } from "../canvas/max-size";
 import { enforceMinSize } from "../canvas/min-size";
 import { toPercent } from "../canvas/percent";
 
@@ -72,12 +73,12 @@ export function placeOnCanvas(
   const copy = structuredClone(document);
   const node = locate(copy, input.nodeId);
   if (!node) return null;
-  const floored = enforceMinSize({ x: input.x, y: input.y, w: input.w, h: input.h });
+  const sized = enforceMaxSize(enforceMinSize({ x: input.x, y: input.y, w: input.w, h: input.h }));
   const box = {
-    x: clampPercent(floored.x),
-    y: clampPercent(floored.y),
-    w: clampPercent(floored.w),
-    h: clampPercent(floored.h),
+    x: clampPercent(sized.x),
+    y: clampPercent(sized.y),
+    w: clampPercent(sized.w),
+    h: clampPercent(sized.h),
   };
   if (input.breakpoint === "tablet" || input.breakpoint === "mobile") {
     const responsive = node.responsive && typeof node.responsive === "object" ? { ...node.responsive } : {};
