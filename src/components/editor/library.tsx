@@ -8,6 +8,7 @@ import type { NodeDocument } from "@/platform/document/node";
 import { createButton } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createContainer } from "@/platform/elements/container";
+import { createCanvas } from "@/platform/elements/canvas";
 import { createGrid } from "@/platform/elements/grid";
 import { createStack } from "@/platform/elements/stack";
 import { createDivider } from "@/platform/elements/divider";
@@ -36,6 +37,7 @@ export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:container", label: "Container", description: "A box for other elements", category: "Sections", keywords: "box wrap", thumb: "blank" },
   { id: "element:stack", label: "Stack", description: "A vertical or horizontal stack", category: "Sections", keywords: "column row", thumb: "blank" },
   { id: "element:grid", label: "Grid", description: "A two-column grid", category: "Sections", keywords: "columns", thumb: "cards" },
+  { id: "element:canvas", label: "Canvas", description: "A free canvas", category: "Freeform zone", keywords: "canvas", thumb: "zone" },
 ];
 
 function entryVisible(entry: LibraryEntry, query: string, category: LibraryCategory | "All" | "Saved") {
@@ -145,6 +147,7 @@ export function LibraryBrowser(props: {
             else if (entry.id === "element:container" && props.onElement) props.onElement(createContainer());
             else if (entry.id === "element:stack" && props.onElement) props.onElement(createStack());
             else if (entry.id === "element:grid" && props.onElement) props.onElement(createGrid());
+            else if (entry.id === "element:canvas" && props.onElement) props.onElement(createCanvas());
             else props.onChoose(entry);
           }}
         >
