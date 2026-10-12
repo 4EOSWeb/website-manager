@@ -1258,7 +1258,13 @@ export function canvasScript(origin: string) {
       var link = closest(target, "a[href]");
       var node = selectableFor(target);
       if (node) {
-        if (link || closest(target, "button, input, textarea, select, form")) { event.preventDefault(); event.stopPropagation(); }
+        var fieldControl = closest(target, "button, input, textarea, select, form");
+        var checkbox = closest(target, "input[type='checkbox']");
+        if (!checkbox) {
+          var label = closest(target, "label");
+          checkbox = label ? label.querySelector("input[type='checkbox']") : null;
+        }
+        if ((link || fieldControl) && !checkbox) { event.preventDefault(); event.stopPropagation(); }
         select(node, event.shiftKey);
         return;
       }

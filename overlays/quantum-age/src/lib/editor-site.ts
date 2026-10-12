@@ -68,7 +68,7 @@ export type EditorSection = {
   layout?: string;
   hideOn?: ("desktop" | "tablet" | "mobile")[];
   style?: { background?: string; color?: string; padding?: string; minHeight?: string; overlay?: number; width?: "content" | "full"; align?: "start" | "center" };
-  fields?: { id: string; label: string; kind: string; required: boolean; options?: string[] }[];
+  fields?: { id: string; label: string; kind: string; required: boolean; options?: string[]; checked?: boolean }[];
   thankYou?: string;
   recipient?: string;
   address?: string;

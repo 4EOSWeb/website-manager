@@ -286,7 +286,7 @@ function renderSection(section: EditorSection) {
         {fields.map((field, index) => (
           <label key={field.id} className="grid gap-1 text-sm">
             <span data-field={`fields.${index}.label`}>{field.label}</span>
-            {field.kind === "textarea" ? <textarea className="border border-stone px-3 py-2" name={field.id} required={field.required} /> : field.kind === "select" ? <select className="border border-stone px-3 py-2" name={field.id} required={field.required}>{(field.options ?? []).map((option) => <option key={option} value={option}>{option}</option>)}</select> : <input className="border border-stone px-3 py-2" name={field.id} type={field.kind} required={field.required} />}
+            {field.kind === "checkbox" ? <input className="size-4" name={field.id} type="checkbox" defaultChecked={field.checked === true} /> : field.kind === "textarea" ? <textarea className="border border-stone px-3 py-2" name={field.id} required={field.required} /> : field.kind === "select" ? <select className="border border-stone px-3 py-2" name={field.id} required={field.required}>{(field.options ?? []).map((option) => <option key={option} value={option}>{option}</option>)}</select> : <input className="border border-stone px-3 py-2" name={field.id} type={field.kind} required={field.required} />}
           </label>
         ))}
         <button className="min-h-11 bg-plum px-4 font-semibold text-white" type="button" data-field="buttonLabel">{section.buttonLabel}</button>

@@ -11,6 +11,7 @@ import { createContainer } from "@/platform/elements/container";
 import { createInput } from "@/platform/elements/input";
 import { createTextarea } from "@/platform/elements/textarea";
 import { createSelect } from "@/platform/elements/select";
+import { createCheckbox } from "@/platform/elements/checkbox";
 import { createForm, formEntryVisible } from "@/platform/elements/form";
 import { createFaq } from "@/platform/elements/faq";
 import { createTestimonial } from "@/platform/elements/testimonial";
@@ -56,6 +57,7 @@ export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:input", label: "Input", description: "A single field", category: "Forms", keywords: "field text", thumb: "form" },
   { id: "element:textarea", label: "Text area", description: "A multi-line field", category: "Forms", keywords: "textarea message", thumb: "form" },
   { id: "element:select", label: "Select", description: "A choice of two", category: "Forms", keywords: "dropdown options", thumb: "form" },
+  { id: "element:checkbox", label: "Checkbox", description: "A yes or no field", category: "Forms", keywords: "check option", thumb: "form" },
 ];
 
 function entryVisible(entry: LibraryEntry, query: string, category: LibraryCategory | "All" | "Saved") {
@@ -175,6 +177,7 @@ export function LibraryBrowser(props: {
             else if (entry.id === "element:input" && props.onElement) props.onElement(createInput());
             else if (entry.id === "element:textarea" && props.onElement) props.onElement(createTextarea());
             else if (entry.id === "element:select" && props.onElement) props.onElement(createSelect());
+            else if (entry.id === "element:checkbox" && props.onElement) props.onElement(createCheckbox());
             else props.onChoose(entry);
           }}
         >
