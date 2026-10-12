@@ -394,7 +394,9 @@ export function canvasScript(origin: string) {
 
     function select(node, additive, silent) {
       if (!node) { clearSelected(silent); return; }
+      var multi = false;
       if (additive && isFreeformItem(node) && selectedItems.length && zoneOf(selectedItems[0]) === zoneOf(node)) {
+        multi = true;
         var at = selectedItems.indexOf(node);
         if (at >= 0) selectedItems.splice(at, 1); else selectedItems.push(node);
         document.querySelectorAll(".eos-selected").forEach(function (marked) { marked.classList.remove("eos-selected"); });
@@ -423,7 +425,7 @@ export function canvasScript(origin: string) {
       }
       showBar();
       markNearGaps();
-      if (!silent) post(payload(selected));
+      if (!silent) post(Object.assign(payload(selected), { shift: multi }));
       reportOverflow(selected);
     }
 

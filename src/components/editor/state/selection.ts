@@ -1,3 +1,5 @@
+import { toggleCanvasSelection } from "@/platform/canvas/multi-select";
+
 export type NodeSelection = { nodeIds: string[] };
 
 type LegacySelection = { sectionId: string; itemId: string; itemIds: string[] };
@@ -16,4 +18,9 @@ export function selectNodeId(id: string): NodeSelection {
 
 export function clearNodeSelection(): NodeSelection {
   return { nodeIds: [] };
+}
+
+/** Shift-click toggles. A plain click replaces the selection with one node. */
+export function clickNode(current: NodeSelection, id: string, shift: boolean): NodeSelection {
+  return { nodeIds: toggleCanvasSelection(current.nodeIds, id, shift) };
 }

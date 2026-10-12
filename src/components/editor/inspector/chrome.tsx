@@ -3,6 +3,7 @@
 import { ExternalLink } from "lucide-react";
 import type { FreeformItem, Section } from "@/lib/content-schema";
 import { alignItems, applyText, patchChrome, patchItem, renameZone, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
+import { mixedProps } from "@/platform/canvas/multi-select";
 import { overlapWarning, type OverlapBox } from "@/platform/canvas/overlap";
 import type { EditorApi, Viewport } from "@/components/editor/types";
 import { Field, Group, TextArea, TextInput, Toggle } from "@/components/editor/ui";
@@ -96,11 +97,16 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
   const siblings = section.type === "freeform" ? section.items : section.type === "preset" ? section.overlay ?? [] : [];
   const warning = overlapWarning(placedBox(item, api.viewport), siblings.filter((other) => other.id !== item.id).map((other) => placedBox(other, api.viewport)));
   const notice = warning ? <p className="ed-callout" role="status">{warning}</p> : null;
+  const chosenIds = api.selection.itemIds.length ? api.selection.itemIds : [item.id];
+  const chosen = siblings.filter((other) => chosenIds.includes(other.id));
+  const mixed = mixedProps(chosen.map((other) => `${other.kind}:${other.text ?? ""}:${other.alt ?? ""}:${other.href ?? ""}`));
+  const mixedNote = mixed ? <p className="ed-callout">Mixed</p> : null;
   if (tab === "arrange") {
     const ids = api.selection.itemIds.length ? api.selection.itemIds : [item.id];
     return (
       <>
         {notice}
+        {mixedNote}
         <Group title="Align">
           <div className="ed-row">
             {(["left", "center", "right", "top", "middle"] as const).map((mode) => (
@@ -125,20 +131,21 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
   return (
     <>
     {notice}
+    {mixedNote}
     <Group title="Content">
       {item.kind === "image" || item.kind === "graphic" ? (
         <>
           <button type="button" className="ed-button" disabled={disabled} onClick={api.openPicker}>{item.src ? "Replace image" : "Choose image"}</button>
           <Field label="Describe the picture">
-            <TextInput value={item.alt ?? ""} disabled={disabled} maxLength={200} onChange={(value) => api.commitText(patchItem(api.site, api.path, section.id, item.id, { alt: value }, overlay), `${item.id}:alt`, true)} />
+            <TextInput value={item.alt ?? ""} disabled={disabled || mixed} maxLength={200} onChange={(value) => { if (!mixed) api.commitText(patchItem(api.site, api.path, section.id, item.id, { alt: value }, overlay), `${item.id}:alt`, true); }} />
           </Field>
         </>
       ) : (
         <Field label="Text" hint="You can also double-click the text on the page.">
-          <TextArea value={item.text ?? ""} disabled={disabled} onChange={(value) => api.commitText(applyText(api.site, api.path, section.id, "text", value, item.id), `${item.id}:text`, true)} />
+          <TextArea value={item.text ?? ""} disabled={disabled || mixed} onChange={(value) => { if (!mixed) api.commitText(applyText(api.site, api.path, section.id, "text", value, item.id), `${item.id}:text`, true); }} />
         </Field>
       )}
-      {item.kind === "button" ? <LinkPicker key={item.id} site={api.site} value={item.href ?? ""} disabled={disabled} onChange={(href) => set({ href })} /> : null}
+      {item.kind === "button" && !mixed ? <LinkPicker key={item.id} site={api.site} value={item.href ?? ""} disabled={disabled} onChange={(href) => set({ href })} /> : null}
     </Group>
     </>
   );
