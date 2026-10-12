@@ -25,3 +25,15 @@ export function writeTabletBox<T extends BreakpointNode>(node: T, box: Breakpoin
     },
   };
 }
+
+/** A mobile move stores a mobile box and marks that node custom. Desktop and tablet boxes stay as they were. */
+export function writeMobileBox<T extends BreakpointNode>(node: T, box: BreakpointBox): T {
+  return {
+    ...node,
+    responsive: {
+      ...node.responsive,
+      strategy: "custom",
+      mobile: { ...node.responsive?.mobile, box: { ...box } },
+    },
+  };
+}

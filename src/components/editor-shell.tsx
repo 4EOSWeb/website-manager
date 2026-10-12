@@ -219,6 +219,8 @@ export function EditorShell(props: {
   const skipPost = useRef(true);
   const reloadAfter = useRef(false);
   const saveSeq = useRef(0);
+  const pendingDraft = useRef<SiteDraft | null>(null);
+  const saveFlight = useRef<Promise<boolean> | null>(null);
   const siteRef = useRef(site);
   const scrollByPath = useRef<Record<string, number>>({});
   const readyFor = useRef("");
@@ -328,42 +330,64 @@ export function EditorShell(props: {
   }
 
   const persistSite = useCallback(
-    async (next: SiteDraft) => {
-      saveSeq.current += 1;
-      const seq = saveSeq.current;
-      setSave("saving");
-      try {
-        const response = await fetch(`/api/sites/${props.websiteId}/draft`, {
-          method: "PUT",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            websiteId: props.websiteId,
-            draft: next,
-            ...(visualDocument == null ? {} : { visualDocument }),
-          }),
-        });
-        const body = (await response.json().catch(() => ({}))) as { message?: string };
-        if (!response.ok) {
-          const failure = editorErrorFromSave(body);
-          setEditorError(failure);
-          setSave("error");
-          notify(failure.message, "error");
-          return false;
+    (next: SiteDraft) => {
+      pendingDraft.current = next;
+      if (saveFlight.current) return saveFlight.current;
+      saveFlight.current = (async () => {
+        let ok = true;
+        try {
+          while (pendingDraft.current) {
+            const next = pendingDraft.current;
+            pendingDraft.current = null;
+            saveSeq.current += 1;
+            const seq = saveSeq.current;
+            setSave("saving");
+            try {
+              const response = await fetch(`/api/sites/${props.websiteId}/draft`, {
+                method: "PUT",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({
+                  websiteId: props.websiteId,
+                  draft: next,
+                  ...(visualDocument == null ? {} : { visualDocument }),
+                }),
+              });
+              const body = (await response.json().catch(() => ({}))) as { message?: string };
+              if (!response.ok) {
+                ok = false;
+                if (seq === saveSeq.current && !pendingDraft.current) {
+                  const failure = editorErrorFromSave(body);
+                  setEditorError(failure);
+                  setSave("error");
+                  notify(failure.message, "error");
+                  break;
+                }
+                continue;
+              }
+              ok = true;
+              if (seq === saveSeq.current && !pendingDraft.current) {
+                setSave("saved");
+                setSavedAt(Date.now());
+                setEditorError(null);
+                setDirtyState((state) => markSaved(state));
+              }
+            } catch {
+              ok = false;
+              if (seq === saveSeq.current && !pendingDraft.current) {
+                const failure = editorErrorFromSave(null);
+                setEditorError(failure);
+                setSave("error");
+                notify(failure.message, "error");
+                break;
+              }
+            }
+          }
+          return ok;
+        } finally {
+          saveFlight.current = null;
         }
-        if (seq === saveSeq.current) {
-          setSave("saved");
-          setSavedAt(Date.now());
-          setEditorError(null);
-          setDirtyState((state) => markSaved(state));
-        }
-        return true;
-      } catch {
-        const failure = editorErrorFromSave(null);
-        setEditorError(failure);
-        setSave("error");
-        notify(failure.message, "error");
-        return false;
-      }
+      })();
+      return saveFlight.current;
     },
     [notify, props.websiteId, visualDocument],
   );
