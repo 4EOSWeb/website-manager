@@ -8,6 +8,7 @@ import type { NodeDocument } from "@/platform/document/node";
 import { createButton } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createContainer } from "@/platform/elements/container";
+import { createForm, formEntryVisible } from "@/platform/elements/form";
 import { createFaq } from "@/platform/elements/faq";
 import { createTestimonial } from "@/platform/elements/testimonial";
 import { createCta } from "@/platform/elements/cta";
@@ -48,6 +49,7 @@ export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:cta", label: "Call to action", description: "A heading, text, and a button", category: "Calls to action", keywords: "cta button", thumb: "cta" },
   { id: "element:testimonial", label: "Testimonial", description: "A quote, a name, and a role", category: "Testimonials", keywords: "quote review", thumb: "quote" },
   { id: "element:faq", label: "FAQ", description: "A question and an answer", category: "FAQ", keywords: "question answer", thumb: "faq" },
+  { id: "element:form", label: "Form", description: "Name, email, and a message", category: "Forms", keywords: "contact", thumb: "form" },
 ];
 
 function entryVisible(entry: LibraryEntry, query: string, category: LibraryCategory | "All" | "Saved") {
@@ -116,7 +118,7 @@ export function LibraryBrowser(props: {
   }, [registered, query, category]);
   const results = useMemo(() => {
     if (category === "Saved" || category === "Custom") return [];
-    const generic = GENERIC_ENTRIES.filter((entry) => entryVisible(entry, query, category));
+    const generic = GENERIC_ENTRIES.filter((entry) => entryVisible(entry, query, category) && (entry.id !== "element:form" || formEntryVisible(props.adapter)));
     const library = searchLibrary(query, category, props.canEmbed);
     return [...generic, ...library];
   }, [query, category, props.canEmbed]);
@@ -163,6 +165,7 @@ export function LibraryBrowser(props: {
             else if (entry.id === "element:cta" && props.onElement) props.onElement(createCta());
             else if (entry.id === "element:testimonial" && props.onElement) props.onElement(createTestimonial());
             else if (entry.id === "element:faq" && props.onElement) props.onElement(createFaq());
+            else if (entry.id === "element:form" && props.onElement && formEntryVisible(props.adapter)) props.onElement(createForm());
             else props.onChoose(entry);
           }}
         >
