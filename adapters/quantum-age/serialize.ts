@@ -8,6 +8,7 @@ import { validateDocument } from "../../src/platform/document/document.ts";
 import type { NodeDocument } from "../../src/platform/document/node.ts";
 import { nodeTypes } from "../../src/platform/document/node-type.ts";
 import { validLink } from "../../src/lib/links.ts";
+import { acceptVideoUrl } from "../../src/platform/elements/video.ts";
 import { sanitizeMarks, type RichMark } from "../../src/lib/rich-text.ts";
 import { defaultChrome } from "./seed.ts";
 import { quantumAgeHeroProps } from "./components/hero.ts";
@@ -111,7 +112,12 @@ function richMarks(node: NodeDocument): RichMark[] {
   return Array.isArray(node.props.marks) ? (node.props.marks as RichMark[]) : [];
 }
 
-function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: FlowOut[]) {
+function videoSection(node: NodeDocument) {
+  const url = typeof node.props.url === "string" ? node.props.url.trim() : "";
+  return { id: node.id, type: "video" as const, hidden: node.visibility.hidden === true, url };
+}
+
+function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: { props: unknown }, blocks: FlowOut[], videos: Array<ReturnType<typeof videoSection>>) {
   const componentId = node.componentId;
   if (componentId === "quantum-age.hero") hero.props = node.props;
   else if (node.type === "heading" && componentId === "generic.heading") blocks.push(flowText(node, "heading"));
@@ -122,10 +128,11 @@ function walk(node: NodeDocument, path: string, unmapped: UnmappedNode[], hero: 
     if (validLink(href)) blocks.push(flowLink(node));
   } else if (node.type === "button" && (componentId === "generic.button" || componentId === "generic.icon-button")) blocks.push(flowButton(node));
   else if (node.type === "image" && componentId === "generic.image") blocks.push(flowImage(node));
+  else if (node.type === "video" && componentId === "generic.video" && acceptVideoUrl(typeof node.props.url === "string" ? node.props.url : "")) videos.push(videoSection(node));
   else if (!knownTypes.has(node.type) || (node.type === "custom" && !knownComponents.has(componentId))) {
     unmapped.push({ path, id: node.id, type: node.type, componentId });
   }
-  node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, blocks));
+  node.children.forEach((child, index) => walk(child, `${path}.children.${index}`, unmapped, hero, blocks, videos));
 }
 
 export const serializeQuantumAge: SerializeHook = (document) => {
@@ -135,10 +142,12 @@ export const serializeQuantumAge: SerializeHook = (document) => {
   const hero: { props: unknown } = { props: null };
   const pages = validated.value.pages.map((page) => {
     const blocks: FlowOut[] = [];
-    walk(page.root, `pages.${page.route}.root`, unmapped, hero, blocks);
-    const sections = blocks.length
-      ? [{ id: `sec_${page.id.slice(5, 17)}`, type: "flow", hidden: false, blocks }]
-      : [];
+    const videos: Array<ReturnType<typeof videoSection>> = [];
+    walk(page.root, `pages.${page.route}.root`, unmapped, hero, blocks, videos);
+    const sections = [
+      ...(blocks.length ? [{ id: `sec_${page.id.slice(5, 17)}`, type: "flow", hidden: false, blocks }] : []),
+      ...videos,
+    ];
     return {
       id: page.id,
       route: page.route,

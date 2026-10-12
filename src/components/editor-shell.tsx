@@ -60,6 +60,7 @@ import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
 import { createButton, writeButtonField } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createImage, writeImage } from "@/platform/elements/image";
+import { acceptVideoUrl, createVideo, writeVideoUrl } from "@/platform/elements/video";
 import { createCustom, type CustomDefinition } from "@/platform/elements/custom";
 import { createHeading } from "@/platform/elements/heading";
 import { createLink, writeLinkHref } from "@/platform/elements/link";
@@ -79,6 +80,12 @@ function flowBlockText(site: SiteDraft, route: string, blockId: string) {
     if (block?.text && typeof block.text === "object") return block.text.text;
   }
   return "";
+}
+
+function sectionUrl(site: SiteDraft, route: string, sectionId: string) {
+  const page = site.pages.find((item) => item.route === route);
+  const section = page?.sections.find((item) => item.id === sectionId);
+  return section && section.type === "video" ? section.url : "";
 }
 
 function flowBlockHref(site: SiteDraft, route: string, blockId: string) {
@@ -178,6 +185,7 @@ export function EditorShell(props: {
   const linkBlocks = useRef(new Map<string, string>());
   const buttonBlocks = useRef(new Map<string, string>());
   const imageBlocks = useRef(new Map<string, string>());
+  const videoSections = useRef(new Map<string, string>());
   const toastId = useRef(0);
 
   const page = pageByRoute(site, path);
@@ -239,9 +247,15 @@ export function EditorShell(props: {
       rememberHistory();
     }
     const blockId = key.split(":")[0] ?? "";
+    const field = key.split(":")[1] ?? "";
     const nodeId = buttonBlocks.current.get(blockId);
     const label = flowBlockText(next, path, blockId);
-    const nextVisual = nodeId ? writeButtonField(visualDocument, nodeId, "label", label) : null;
+    let nextVisual = nodeId ? writeButtonField(visualDocument, nodeId, "label", label) : null;
+    const videoNodeId = videoSections.current.get(blockId);
+    if (videoNodeId && field === "url") {
+      const url = sectionUrl(next, path, blockId);
+      if (acceptVideoUrl(url)) nextVisual = writeVideoUrl(visualDocument, videoNodeId, url);
+    }
     setDirtyState((state) => markChanged(state, nextVisual ? { version3: next, visualDocument: nextVisual } : { version3: next }));
     setSite(next);
     if (nextVisual) setVisualDocument(nextVisual);
@@ -836,6 +850,26 @@ export function EditorShell(props: {
     insertPreviewNode(node, block, node.componentId === "generic.icon-button" ? "element:icon-button" : "element:button", insertAfter(visualDocument, path, afterId, node), at);
   }
 
+  function insertPreviewSection(node: NodeDocument, created: Section, libraryId: string, nextVisual: unknown | null) {
+    if (!page || !props.canEdit) {
+      notify(managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
+      return;
+    }
+    if (page.locked) {
+      notify("This page is managed for you, so nothing can be added here.");
+      return;
+    }
+    rememberLibrary(libraryId);
+    const index = section ? page.sections.findIndex((item) => item.id === section.id) + 1 : page.sections.length;
+    const next = insertSection(site, path, index < 0 ? page.sections.length : index, created);
+    commit(next, true, nextVisual ?? undefined);
+    pinnedNode.current = node.id;
+    setNodeIds(selectNodeId(node.id).nodeIds);
+    setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
+    setSelection({ ...emptySelection, sectionId: created.id, kind: created.type });
+    notify(`${created.type === "video" ? "Video" : "Item"} added.`);
+  }
+
   function insertCreatedImage(node: NodeDocument, at?: Insert) {
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
     const src = typeof node.props.src === "string" ? node.props.src : "";
@@ -843,6 +877,15 @@ export function EditorShell(props: {
     const block: FlowBlock = { id: createId("blk"), kind: "image", hidden: false, ...(src ? { src } : {}), alt };
     imageBlocks.current.set(block.id, node.id);
     insertPreviewNode(node, block, "element:image", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
+  function insertCreatedVideo(node: NodeDocument) {
+    const url = typeof node.props.url === "string" ? node.props.url : "";
+    if (!acceptVideoUrl(url)) return;
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "video", hidden: false, url };
+    videoSections.current.set(created.id, node.id);
+    insertPreviewSection(node, created, "element:video", insertAfter(visualDocument, path, afterId, node));
   }
 
   function insertCreatedCustom(definition: CustomDefinition, at?: Insert) {
@@ -880,6 +923,11 @@ export function EditorShell(props: {
     }
     if (entry.id === "element:image") {
       insertCreatedImage(createImage(), at);
+      return;
+    }
+    if (entry.id === "element:video") {
+      const node = createVideo();
+      if (node) insertCreatedVideo(node);
       return;
     }
     if (!page || !props.canEdit) {
@@ -1251,6 +1299,7 @@ export function EditorShell(props: {
                   else if (node.componentId === "generic.link") insertCreatedLink(node);
                   else if (node.componentId === "generic.button" || node.componentId === "generic.icon-button") insertCreatedButton(node);
                   else if (node.componentId === "generic.image") insertCreatedImage(node);
+                  else if (node.componentId === "generic.video") insertCreatedVideo(node);
                   else insertCreatedHeading(node);
                 }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>
