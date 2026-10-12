@@ -101,6 +101,7 @@ body.eos-dragging .eos-gap .eos-gap-line{opacity:.18}
 .eos-ghost-body{transform-origin:0 0}
 .eos-guide{position:absolute;z-index:60;background:#ec4899;pointer-events:none}
 .eos-marquee{position:fixed;z-index:70;border:1px solid var(--eos-accent);background:rgba(37,99,235,.16);pointer-events:none}
+.eos-group-outline{position:absolute;z-index:55;outline:2px solid var(--eos-accent);outline-offset:2px;pointer-events:none}
 .eos-handle{all:unset;position:absolute;z-index:61;width:10px;height:10px;background:#fff;border:2px solid var(--eos-accent);border-radius:2px;box-sizing:border-box}
 .eos-nw{left:-6px;top:-6px;cursor:nwse-resize}.eos-ne{right:-6px;top:-6px;cursor:nesw-resize}.eos-sw{left:-6px;bottom:-6px;cursor:nesw-resize}.eos-se{right:-6px;bottom:-6px;cursor:nwse-resize}
 .eos-lock{position:absolute;top:8px;left:8px;z-index:40;display:inline-flex;align-items:center;gap:6px;height:22px;max-width:22px;padding:0 5px;overflow:hidden;border-radius:999px;background:rgba(31,35,41,.72);color:#fff;font:600 11px/1 ui-sans-serif,system-ui,sans-serif;white-space:nowrap;transition:max-width .16s ease;pointer-events:none}
@@ -372,6 +373,7 @@ export function canvasScript(origin: string) {
       markNearGaps();
       if (!silent) post({ type: "4eos-select", sectionId: "", itemId: "", itemIds: [], overlay: false, locked: false, chrome: "", kind: "" });
       reportOverflow(null);
+      clearGroupOutline();
     }
 
     function selectableFor(target) {
@@ -498,6 +500,7 @@ export function canvasScript(origin: string) {
         if (c.image) tools.push(button("image", "Replace image", "replace"));
         if (c.open) tools.push(button("open", "Go to this page", "open"));
         if (c.duplicate) tools.push(button("duplicate", "Duplicate", "duplicate"));
+        if (c.freeform && selectedItems.length > 1 && zoneOf(selected) && zoneOf(selected).getAttribute("data-zone-name") === "Canvas") tools.push(button("plus", "Group", "group"));
         if (c.hide) {
           var hidden = selected.getAttribute("data-hidden") === "true";
           tools.push(button(hidden ? "eyeOff" : "eye", hidden ? "Show on the website" : "Hide from the website", hidden ? "show" : "hide"));
@@ -513,6 +516,40 @@ export function canvasScript(origin: string) {
       }
       document.body.appendChild(bar);
       placeBar();
+      showGroupOutline();
+    }
+    function clearGroupOutline() {
+      document.querySelectorAll(".eos-group-outline").forEach(function (node) { node.remove(); });
+    }
+    function showGroupOutline() {
+      clearGroupOutline();
+      if (!selected) return;
+      var group = selected.getAttribute("data-group");
+      var zone = zoneOf(selected);
+      if (!group || !zone || zone.getAttribute("data-zone-name") !== "Canvas") return;
+      var members = zone.querySelectorAll('[data-item-id][data-group="' + group + '"]');
+      if (members.length < 2) return;
+      var zoneRect = zone.getBoundingClientRect();
+      var left = Infinity;
+      var top = Infinity;
+      var right = -Infinity;
+      var bottom = -Infinity;
+      for (var i = 0; i < members.length; i++) {
+        var rect = members[i].getBoundingClientRect();
+        left = Math.min(left, rect.left);
+        top = Math.min(top, rect.top);
+        right = Math.max(right, rect.right);
+        bottom = Math.max(bottom, rect.bottom);
+      }
+      var outline = document.createElement("div");
+      outline.className = "eos-group-outline";
+      outline.setAttribute("data-group-outline", group);
+      outline.style.left = (left - zoneRect.left) + "px";
+      outline.style.top = (top - zoneRect.top) + "px";
+      outline.style.width = (right - left) + "px";
+      outline.style.height = (bottom - top) + "px";
+      zone.appendChild(outline);
+      for (var n = 0; n < members.length; n++) members[n].classList.remove("eos-selected");
     }
     function headerInset() {
       var header = document.querySelector("header.sticky, .site-header.sticky");

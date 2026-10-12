@@ -52,6 +52,7 @@ import type { SiteContext } from "@/platform/context";
 import { StatusBar, ToolRail, TopBar, type Zoom } from "@/components/editor/chrome";
 import { Canvas } from "@/components/editor/canvas";
 import { DragStatus, dragRejectReason, type DragRejectReason } from "@/components/editor/drag-status";
+import { groupCanvas } from "@/platform/canvas/group";
 import { overflowWarning } from "@/platform/canvas/overflow";
 import { toPercent } from "@/platform/canvas/percent";
 import { placeOnCanvas } from "@/platform/drag/canvas-place";
@@ -791,7 +792,11 @@ export function EditorShell(props: {
         const items: FreeformItem[] = overlay && target.type === "preset" ? target.overlay ?? [] : target.type === "freeform" ? target.items : [];
         const item = items.find((entry) => entry.id === itemId);
         commit(patchItem(site, path, sectionId, itemId, { zIndex: Math.max(0, (item?.zIndex ?? 1) + (action === "forward" ? 1 : -1)) }, overlay), true);
-      } else if (action === "group") commit(groupItems(site, path, sectionId, itemIds.length > 1 ? itemIds : [itemId], overlay), true);
+      } else if (action === "group") {
+        const ids = itemIds.length > 1 ? itemIds : [itemId];
+        const grouped = groupCanvas(visualDocument, ids);
+        commit(groupItems(site, path, sectionId, ids, overlay), true, grouped && grouped.ok ? grouped.document : undefined);
+      }
       return;
     }
     if (action === "duplicate") commit(duplicateSection(site, path, sectionId), true);
@@ -828,6 +833,11 @@ export function EditorShell(props: {
   }
 
   function insertCreatedHeading(node: NodeDocument, at?: Insert) {
+    if (!at && section?.type === "freeform") {
+      commit(addZoneItem(site, path, section.id, "heading", false), true);
+      notify("Heading added to the zone.");
+      return;
+    }
     const parentId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
     const block: FlowBlock = { id: createId("blk"), kind: "heading", hidden: false, text: { text: "Heading", marks: [] } };
     insertPreviewNode(node, block, "element:heading", insertNode(visualDocument, path, parentId, node), at);
