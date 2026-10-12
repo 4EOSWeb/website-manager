@@ -9,6 +9,7 @@ import { createButton } from "@/platform/elements/button";
 import { createIconButton } from "@/platform/elements/icon-button";
 import { createDivider } from "@/platform/elements/divider";
 import { createIcon } from "@/platform/elements/icon";
+import { createSpacer } from "@/platform/elements/spacer";
 import { createImage } from "@/platform/elements/image";
 import { createVideo } from "@/platform/elements/video";
 import { createHeading } from "@/platform/elements/heading";
@@ -28,6 +29,7 @@ export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:video", label: "Video", description: "A video", category: "Media", keywords: "youtube vimeo", thumb: "video" },
   { id: "element:icon", label: "Icon", description: "An icon", category: "Media", keywords: "icon arrow", thumb: "social" },
   { id: "element:divider", label: "Divider", description: "A horizontal line", category: "Sections", keywords: "rule hr", thumb: "divider" },
+  { id: "element:spacer", label: "Spacer", description: "Empty space", category: "Sections", keywords: "gap space", thumb: "spacer" },
 ];
 
 function entryVisible(entry: LibraryEntry, query: string, category: LibraryCategory | "All" | "Saved") {
@@ -133,6 +135,7 @@ export function LibraryBrowser(props: {
               if (node) props.onElement(node);
             } else if (entry.id === "element:icon" && props.onElement) props.onElement(createIcon());
             else if (entry.id === "element:divider" && props.onElement) props.onElement(createDivider());
+            else if (entry.id === "element:spacer" && props.onElement) props.onElement(createSpacer());
             else props.onChoose(entry);
           }}
         >
