@@ -2,10 +2,10 @@
 
 import { ExternalLink } from "lucide-react";
 import type { FreeformItem, Section } from "@/lib/content-schema";
-import { alignItems, applyText, bringForwardItems, bringToFrontItems, distributeItems, patchChrome, patchItem, renameZone, sendBackwardItems, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
+import { alignItems, applyText, bringForwardItems, bringToFrontItems, distributeItems, patchChrome, patchItem, renameZone, sendBackwardItems, sendToBackItems, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
 import { alignCanvas, type AlignMode } from "@/platform/canvas/align";
 import { distributeCanvas, type DistributeAxis } from "@/platform/canvas/distribute";
-import { alreadyInFront, bringForwardCanvas, bringToFrontCanvas, sendBackwardCanvas } from "@/platform/canvas/z-order";
+import { alreadyInFront, bringForwardCanvas, bringToFrontCanvas, sendBackwardCanvas, sendToBackCanvas } from "@/platform/canvas/z-order";
 import { mixedProps } from "@/platform/canvas/multi-select";
 import { overlapWarning, type OverlapBox } from "@/platform/canvas/overlap";
 import type { EditorApi, Viewport } from "@/components/editor/types";
@@ -152,6 +152,10 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
               const ordered = sendBackwardCanvas(api.visualDocument, item.id);
               api.commit(sendBackwardItems(api.site, api.path, section.id, item.id, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
             }}>Send backward</button>
+            <button type="button" className="ed-button" disabled={disabled} onClick={() => {
+              const ordered = sendToBackCanvas(api.visualDocument, item.id);
+              api.commit(sendToBackItems(api.site, api.path, section.id, item.id, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
+            }}>Send to back</button>
           </div>
           <Toggle label="Lock position" checked={item.locked} disabled={disabled} onChange={(value) => set({ locked: value })} />
           <Toggle label="Show on the website" checked={!item.hidden} disabled={disabled} onChange={(value) => set({ hidden: !value })} />
