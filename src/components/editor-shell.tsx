@@ -902,6 +902,11 @@ export function EditorShell(props: {
   }
 
   function insertCreatedImage(node: NodeDocument, at?: Insert) {
+    if (!at && section?.type === "freeform") {
+      commit(addZoneItem(site, path, section.id, "image", false), true);
+      notify("Image added to the zone.");
+      return;
+    }
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
     const src = typeof node.props.src === "string" ? node.props.src : "";
     const alt = typeof node.props.alt === "string" ? node.props.alt : "";

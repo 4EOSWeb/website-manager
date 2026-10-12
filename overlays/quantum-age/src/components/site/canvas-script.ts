@@ -336,6 +336,12 @@ export function canvasScript(origin: string) {
     }
 
     function removeUi(node) { if (node && node.parentNode) node.parentNode.removeChild(node); return null; }
+    function canvasHandlesFor(node) {
+      if (!isFreeformItem(node) || isLocked(node)) return false;
+      var zone = zoneOf(node);
+      if (zone && zone.getAttribute("data-zone-name") === "Canvas") return node.getAttribute("data-kind") === "image";
+      return true;
+    }
     function clearHandles() { document.querySelectorAll(".eos-handle").forEach(function (node) { node.remove(); }); }
     function clearSelected(silent) {
       clearHandles();
@@ -385,7 +391,7 @@ export function canvasScript(origin: string) {
         node.classList.add("eos-selected");
       }
       if (hovered) { hovered.classList.remove("eos-hover", "eos-locked-hover"); hovered = null; }
-      if (isFreeformItem(selected) && !isLocked(selected)) {
+      if (canvasHandlesFor(selected)) {
         ["nw", "ne", "sw", "se"].forEach(function (corner) {
           var handle = document.createElement("button");
           handle.className = "eos-handle eos-" + corner;
@@ -1260,7 +1266,7 @@ export function canvasScript(origin: string) {
       if (!element || !element.closest) return false;
       var selection = window.getSelection();
       if (selection && !selection.isCollapsed && node && selection.anchorNode && node.contains(selection.anchorNode)) return true;
-      if (element.closest("[data-act='grip']")) return false;
+      if (element.closest("[data-act='grip']") || element.closest(".eos-handle")) return false;
       if (element.closest("input, textarea, button, a, [contenteditable]")) return true;
       return false;
     }
