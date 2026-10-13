@@ -12,6 +12,8 @@ import { LayerRename } from "@/components/editor/layers/rename";
 import { renameVisualNode } from "@/components/editor/layers/rename-name";
 import { useLayerReorder } from "@/components/editor/layers/reorder";
 import { reorderLayerSiblings, siblingBeforeId } from "@/components/editor/layers/reorder-drop";
+import { LayerLockButton } from "@/components/editor/layers/lock";
+import { lockFlowBlock, lockVisualNode } from "@/components/editor/layers/lock-node";
 import { LayerReparentNote } from "@/components/editor/layers/reparent";
 import { applyLayerReparent, decideLayerDrop } from "@/components/editor/layers/reparent-drop";
 import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
@@ -117,6 +119,10 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
   };
   const pageId = api.page?.id ?? "";
   const [reject, setReject] = useState<DragRejectReason | null>(null);
+  const lockBlock = (sectionId: string, blockId: string) => {
+    const nextVisual = lockVisualNode(api.visualDocument, blockId);
+    api.commit(lockFlowBlock(api.site, api.path, sectionId, blockId), false, nextVisual ?? undefined);
+  };
   const layersDrag = useLayerReorder(api.canEdit, (drop) => {
     const decision = decideLayerDrop({
       pageId,
@@ -157,7 +163,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
     const siteChanged = JSON.stringify(nextSite) !== JSON.stringify(api.site);
     if (!siteChanged && !nextVisual) return;
     api.commit(siteChanged ? nextSite : api.site, true, nextVisual ?? undefined);
-  });
+  }, (reason) => setReject(reason));
   if (visualRoot) {
     return (
       <div className="ed-panel">
@@ -184,6 +190,13 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
               if (next) api.commit(api.site, false, next);
             }}
             onRenameCancel={() => setRenaming("")}
+            onLock={api.canEdit ? (node) => {
+              const target = legacyTarget(node.metadata?.legacyId);
+              const nextSite = target?.itemId ? lockFlowBlock(api.site, api.path, target.sectionId, target.itemId) : api.site;
+              const nextVisual = lockVisualNode(api.visualDocument, node.id);
+              if (nextVisual) api.commit(nextSite, false, nextVisual);
+              else if (target?.itemId) api.commit(nextSite, false);
+            } : undefined}
             onPointerDown={layersDrag.onPointerDown}
             dropHint={layersDrag.drop}
           />
@@ -242,9 +255,10 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
                             <button type="button" className={`ed-tree-main ${block.hidden ? "is-hidden" : ""}`} onClick={() => props.onSelect(section.id, block.id)} onDoubleClick={() => api.canEdit && setRenaming(block.id)}>
                               <span className="ed-kind">{block.kind === "brand-mark" ? "Logo" : block.kind}</span>
                               <span className="truncate">{label}</span>
-                              {block.locked ? <Lock size={12} aria-label="Managed for you" className="ed-muted-icon" /> : null}
+                              {block.locked ? <Lock size={12} aria-label="Locked" className="ed-muted-icon" /> : null}
                             </button>
                           )}
+                          {!block.locked && api.canEdit ? <LayerLockButton label={`Lock ${label}`} onLock={() => lockBlock(section.id, block.id)} /> : null}
                           {!block.locked && api.canEdit ? (
                             <button type="button" className="ed-icon is-small" aria-label={block.hidden ? "Show" : "Hide"} data-tip={block.hidden ? "Show" : "Hide"} onClick={() => api.commit(setBlockHidden(api.site, api.path, section.id, block.id, !block.hidden), true)}>
                               {block.hidden ? <EyeOff size={13} aria-hidden="true" /> : <Eye size={13} aria-hidden="true" />}

@@ -17,10 +17,12 @@ export type LayerReorderDrop = {
 
 type DropHint = { id: string; parentId: string; sectionType: string; container: boolean; after: boolean };
 
-/** Pointer-drag a layer row onto a sibling. Text fields never start the drag. */
-export function useLayerReorder(enabled: boolean, onDrop: (drop: LayerReorderDrop) => void) {
+/** Pointer-drag a layer row onto a sibling. Text fields never start the drag. A locked row reports locked and does not move. */
+export function useLayerReorder(enabled: boolean, onDrop: (drop: LayerReorderDrop) => void, onReject?: (reason: "locked") => void) {
   const onDropRef = useRef(onDrop);
   onDropRef.current = onDrop;
+  const onRejectRef = useRef(onReject);
+  onRejectRef.current = onReject;
   const enabledRef = useRef(enabled);
   enabledRef.current = enabled;
   const dropRef = useRef<DropHint | null>(null);
@@ -34,7 +36,26 @@ export function useLayerReorder(enabled: boolean, onDrop: (drop: LayerReorderDro
     if (hit !== row) return;
     const id = row.getAttribute("data-layer-id") ?? "";
     const parentId = row.getAttribute("data-layer-parent") ?? "";
-    if (!id || !parentId || parentId === "chrome" || row.getAttribute("data-locked") === "true") return;
+    if (!id || !parentId || parentId === "chrome") return;
+    if (row.getAttribute("data-locked") === "true") {
+      const startX = event.clientX;
+      const startY = event.clientY;
+      let reported = false;
+      const move = (ev: PointerEvent) => {
+        if (reported || Math.hypot(ev.clientX - startX, ev.clientY - startY) < THRESHOLD) return;
+        reported = true;
+        onRejectRef.current?.("locked");
+      };
+      const up = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", up);
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", up);
+      return;
+    }
     const startX = event.clientX;
     const startY = event.clientY;
     let active = false;
