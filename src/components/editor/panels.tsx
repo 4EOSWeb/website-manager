@@ -8,7 +8,7 @@ import type { EditorApi, MediaItem, Viewport } from "@/components/editor/types";
 import { Empty, Field, Group, Segmented, TextInput } from "@/components/editor/ui";
 import { sectionName } from "@/components/editor/inspector/section";
 import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
-import { defaultOpenIds, visualPageRoot } from "@/components/editor/layers/rows";
+import { defaultOpenIds, legacyTarget, visualPageRoot } from "@/components/editor/layers/rows";
 
 export function PagesPanel(props: {
   site: SiteDraft;
@@ -116,7 +116,16 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
         </div>
         <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it.</p>
         <ul className="ed-tree is-layers" role="tree" aria-label="Page layers" data-layer-source="visual">
-          <LayerTree root={visualRoot} open={layers.open} onToggle={layers.toggle} />
+          <LayerTree
+            root={visualRoot}
+            open={layers.open}
+            onToggle={layers.toggle}
+            selection={{ sectionId: api.selection.sectionId, itemId: api.selection.itemId }}
+            onSelect={(node) => {
+              const target = legacyTarget(node.metadata?.legacyId);
+              if (target) props.onSelect(target.sectionId, target.itemId);
+            }}
+          />
         </ul>
       </div>
     );
@@ -163,7 +172,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
                     const active = api.selection.itemId === block.id;
                     const label = block.editorName || (block.text && typeof block.text === "object" && block.text.text ? block.text.text.slice(0, 32) : block.kind);
                     return (
-                      <li key={block.id} role="treeitem" aria-selected={active}>
+                      <li key={block.id} role="treeitem" aria-selected={active} data-layer-id={block.id}>
                         <div className={active ? "ed-tree-row is-child is-active" : "ed-tree-row is-child"}>
                           {renaming === block.id ? (
                             <input className="ed-input is-inline" autoFocus defaultValue={block.editorName || block.kind} aria-label="Item name" onBlur={(event) => rename(section.id, event.target.value, block.id)} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); if (event.key === "Escape") setRenaming(""); }} />

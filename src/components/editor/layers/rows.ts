@@ -17,6 +17,30 @@ export type LayerRow = {
   providerManaged: boolean;
 };
 
+export type LayerSelection = { sectionId: string; itemId: string };
+
+/** The section and block recorded on a migrated node, when that path has them. */
+export function legacyTarget(legacyId: unknown): LayerSelection | null {
+  if (typeof legacyId !== "string" || !legacyId) return null;
+  const parts = legacyId.split("/");
+  let sectionId = "";
+  let itemId = "";
+  for (let index = 0; index < parts.length; index += 1) {
+    if (parts[index] === "section" && parts[index + 2]) sectionId = parts[index + 2] ?? "";
+    if (parts[index] === "block" && parts[index + 2]) itemId = parts[index + 2] ?? "";
+  }
+  if (!sectionId) return null;
+  return { sectionId, itemId };
+}
+
+/** A row is selected when it is the section, or the block, currently selected on the page. */
+export function layerRowSelected(node: LayerNode, selection: LayerSelection): boolean {
+  const target = legacyTarget(node.metadata?.legacyId);
+  if (!target || target.sectionId !== selection.sectionId) return false;
+  if (selection.itemId) return target.itemId === selection.itemId;
+  return target.itemId === "";
+}
+
 /** The display name, or the node type when the page has not named it. */
 export function layerLabel(node: LayerNode): string {
   const name = node.metadata?.name;
