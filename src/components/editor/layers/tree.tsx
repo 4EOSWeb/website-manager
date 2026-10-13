@@ -62,6 +62,8 @@ function Branch(props: {
       data-node-id={node.id}
       data-layer-id={node.id}
       data-layer-parent={parentId || undefined}
+      data-layer-container={children.length > 0 ? "true" : undefined}
+      data-section-type={node.type}
       data-layer-drop={dropHint?.id === node.id ? (dropHint.after ? "after" : "before") : undefined}
       data-provider-managed={node.source?.providerManaged ? "true" : undefined}
       data-locked={node.locked?.locked ? "true" : undefined}

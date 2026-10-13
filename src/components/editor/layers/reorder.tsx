@@ -5,7 +5,17 @@ import { dropIsAfter, layerDragAllowed } from "@/components/editor/layers/reorde
 
 const THRESHOLD = 4;
 
-export type LayerReorderDrop = { id: string; parentId: string; targetId: string; after: boolean };
+export type LayerReorderDrop = {
+  id: string;
+  parentId: string;
+  targetId: string;
+  targetParentId: string;
+  targetSectionType: string;
+  targetContainer: boolean;
+  after: boolean;
+};
+
+type DropHint = { id: string; parentId: string; sectionType: string; container: boolean; after: boolean };
 
 /** Pointer-drag a layer row onto a sibling. Text fields never start the drag. */
 export function useLayerReorder(enabled: boolean, onDrop: (drop: LayerReorderDrop) => void) {
@@ -13,8 +23,8 @@ export function useLayerReorder(enabled: boolean, onDrop: (drop: LayerReorderDro
   onDropRef.current = onDrop;
   const enabledRef = useRef(enabled);
   enabledRef.current = enabled;
-  const dropRef = useRef<{ id: string; after: boolean } | null>(null);
-  const [drop, setDrop] = useState<{ id: string; after: boolean } | null>(null);
+  const dropRef = useRef<DropHint | null>(null);
+  const [drop, setDrop] = useState<DropHint | null>(null);
 
   function onPointerDown(event: React.PointerEvent<HTMLLIElement>) {
     if (!enabledRef.current || event.button !== 0) return;
@@ -24,7 +34,7 @@ export function useLayerReorder(enabled: boolean, onDrop: (drop: LayerReorderDro
     if (hit !== row) return;
     const id = row.getAttribute("data-layer-id") ?? "";
     const parentId = row.getAttribute("data-layer-parent") ?? "";
-    if (!id || !parentId || row.getAttribute("data-locked") === "true") return;
+    if (!id || !parentId || parentId === "chrome" || row.getAttribute("data-locked") === "true") return;
     const startX = event.clientX;
     const startY = event.clientY;
     let active = false;
@@ -36,13 +46,19 @@ export function useLayerReorder(enabled: boolean, onDrop: (drop: LayerReorderDro
       const target = under?.closest?.("[data-layer-id]");
       const targetId = target?.getAttribute("data-layer-id") ?? "";
       const targetParent = target?.getAttribute("data-layer-parent") ?? "";
-      if (!target || !targetId || targetId === id || targetParent !== parentId) {
+      if (!target || !targetId || !targetParent || targetId === id) {
         dropRef.current = null;
         setDrop(null);
         return;
       }
       const rect = target.getBoundingClientRect();
-      const next = { id: targetId, after: dropIsAfter(ev.clientY, rect.top, rect.height) };
+      const next = {
+        id: targetId,
+        parentId: targetParent,
+        sectionType: target.getAttribute("data-section-type") ?? "",
+        container: target.getAttribute("data-layer-container") === "true",
+        after: dropIsAfter(ev.clientY, rect.top, rect.height),
+      };
       dropRef.current = next;
       setDrop(next);
     };
@@ -54,7 +70,17 @@ export function useLayerReorder(enabled: boolean, onDrop: (drop: LayerReorderDro
       const hint = dropRef.current;
       dropRef.current = null;
       setDrop(null);
-      if (active && hint) onDropRef.current({ id, parentId, targetId: hint.id, after: hint.after });
+      if (active && hint) {
+        onDropRef.current({
+          id,
+          parentId,
+          targetId: hint.id,
+          targetParentId: hint.parentId,
+          targetSectionType: hint.sectionType,
+          targetContainer: hint.container,
+          after: hint.after,
+        });
+      }
     };
 
     window.addEventListener("pointermove", move);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { DragRejectReason } from "@/components/editor/drag-status";
 import { ArrowDown, ArrowUp, Eye, EyeOff, FileText, Home, Lock, MoreHorizontal, PanelBottom, PanelTop, Plus, Search, Trash2, Upload } from "lucide-react";
 import type { BlogDraft, SiteDraft } from "@/lib/content-schema";
 import { moveFlowBlockById, moveSectionById, reorderPages, setBlockHidden, setEditorName, setSectionHidden } from "@/lib/editor-ops";
@@ -11,6 +12,8 @@ import { LayerRename } from "@/components/editor/layers/rename";
 import { renameVisualNode } from "@/components/editor/layers/rename-name";
 import { useLayerReorder } from "@/components/editor/layers/reorder";
 import { reorderLayerSiblings, siblingBeforeId } from "@/components/editor/layers/reorder-drop";
+import { LayerReparentNote } from "@/components/editor/layers/reparent";
+import { applyLayerReparent, decideLayerDrop } from "@/components/editor/layers/reparent-drop";
 import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
 import { defaultOpenIds, legacyTarget, visualPageRoot } from "@/components/editor/layers/rows";
 
@@ -113,7 +116,34 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
     api.commit(setEditorName(api.site, api.path, sectionId, value, blockId), false);
   };
   const pageId = api.page?.id ?? "";
+  const [reject, setReject] = useState<DragRejectReason | null>(null);
   const layersDrag = useLayerReorder(api.canEdit, (drop) => {
+    const decision = decideLayerDrop({
+      pageId,
+      sourceId: drop.id,
+      sourceParentId: drop.parentId,
+      targetId: drop.targetId,
+      targetParentId: drop.targetParentId,
+      targetSectionType: drop.targetSectionType,
+      targetContainer: drop.targetContainer,
+      after: drop.after,
+    });
+    if (decision.kind === "ignore") return;
+    if (decision.kind === "reject") {
+      setReject(decision.reason);
+      return;
+    }
+    if (decision.kind === "reparent") {
+      const applied = applyLayerReparent(api.site, api.path, api.visualDocument, decision);
+      if ("reason" in applied) {
+        setReject(applied.reason);
+        return;
+      }
+      setReject(null);
+      api.commit(applied.site, true, applied.visual ?? undefined);
+      return;
+    }
+    setReject(null);
     const sectionIds = sections.map((section) => section.id);
     let nextSite = api.site;
     if (drop.parentId === pageId) {
@@ -134,7 +164,8 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
         <div className="ed-panel-head">
           <h2>Layers</h2>
         </div>
-        <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it. Drag a row to reorder it.</p>
+        <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it. Drag a row to reorder it, or onto another section to move it.</p>
+        <LayerReparentNote reason={reject} />
         <ul className="ed-tree is-layers" role="tree" aria-label="Page layers" data-layer-source="visual">
           <LayerTree
             root={visualRoot}
@@ -165,16 +196,17 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
       <div className="ed-panel-head">
         <h2>Layers</h2>
       </div>
-      <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it. Drag a row to reorder it.</p>
+      <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it. Drag a row to reorder it, or onto another section to move it.</p>
+      <LayerReparentNote reason={reject} />
       <ul className="ed-tree is-layers" role="tree" aria-label="Page layers" data-layer-source="version3">
-        <li role="treeitem" aria-selected={props.chromeFocus === "header"} className={props.chromeFocus === "header" ? "is-active" : ""}>
+        <li role="treeitem" aria-selected={props.chromeFocus === "header"} className={props.chromeFocus === "header" ? "is-active" : ""} data-layer-id="header" data-layer-parent="chrome" data-layer-drop={layersDrag.drop?.id === "header" ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
           <button type="button" className="ed-tree-main" onClick={() => props.onChrome("header")}><PanelTop size={14} aria-hidden="true" /> Header</button>
         </li>
         {sections.map((section) => {
           const activeSection = api.selection.sectionId === section.id && !api.selection.itemId;
           const locked = section.type === "preset" && section.providerLocked;
           return (
-            <li key={section.id} role="treeitem" aria-selected={activeSection} aria-expanded={section.type === "flow" && section.blocks.length > 0 ? layers.open.has(section.id) : undefined} data-layer-id={section.id} data-layer-parent={pageId || undefined} data-locked={locked ? "true" : undefined} data-layer-drop={layersDrag.drop?.id === section.id ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
+            <li key={section.id} role="treeitem" aria-selected={activeSection} aria-expanded={section.type === "flow" && section.blocks.length > 0 ? layers.open.has(section.id) : undefined} data-layer-id={section.id} data-layer-parent={pageId || undefined} data-layer-container="true" data-section-type={section.type} data-locked={locked ? "true" : undefined} data-layer-drop={layersDrag.drop?.id === section.id ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
               <div className={activeSection ? "ed-tree-row is-active" : "ed-tree-row"}>
                 {renaming === section.id ? (
                   <LayerRename value={section.editorName || ""} label="Section name" onCommit={(value) => rename(section.id, value)} onCancel={() => setRenaming("")} />
@@ -202,7 +234,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
                     const active = api.selection.itemId === block.id;
                     const label = block.editorName || (block.text && typeof block.text === "object" && block.text.text ? block.text.text.slice(0, 32) : block.kind);
                     return (
-                      <li key={block.id} role="treeitem" aria-selected={active} data-layer-id={block.id} data-layer-parent={section.id} data-locked={block.locked ? "true" : undefined} data-layer-drop={layersDrag.drop?.id === block.id ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
+                      <li key={block.id} role="treeitem" aria-selected={active} data-layer-id={block.id} data-layer-parent={section.id} data-section-type={section.type} data-locked={block.locked ? "true" : undefined} data-layer-drop={layersDrag.drop?.id === block.id ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
                         <div className={active ? "ed-tree-row is-child is-active" : "ed-tree-row is-child"}>
                           {renaming === block.id ? (
                             <LayerRename value={block.editorName || ""} label="Item name" onCommit={(value) => rename(section.id, value, block.id)} onCancel={() => setRenaming("")} />
@@ -227,7 +259,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
             </li>
           );
         })}
-        <li role="treeitem" aria-selected={props.chromeFocus === "footer"} className={props.chromeFocus === "footer" ? "is-active" : ""}>
+        <li role="treeitem" aria-selected={props.chromeFocus === "footer"} className={props.chromeFocus === "footer" ? "is-active" : ""} data-layer-id="footer" data-layer-parent="chrome" data-layer-drop={layersDrag.drop?.id === "footer" ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
           <button type="button" className="ed-tree-main" onClick={() => props.onChrome("footer")}><PanelBottom size={14} aria-hidden="true" /> Footer</button>
         </li>
       </ul>
