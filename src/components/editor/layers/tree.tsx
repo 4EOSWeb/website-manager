@@ -37,6 +37,7 @@ export function useLayerOpen(websiteId: string, pageId: string, defaults: string
 
 function Branch(props: {
   node: LayerNode;
+  parentId: string;
   depth: number;
   open: Set<string>;
   onToggle: (id: string) => void;
@@ -46,8 +47,10 @@ function Branch(props: {
   onRenameStart: (node: LayerNode) => void;
   onRename: (node: LayerNode, name: string) => void;
   onRenameCancel: () => void;
+  onPointerDown?: (event: React.PointerEvent<HTMLLIElement>) => void;
+  dropHint?: { id: string; after: boolean } | null;
 }) {
-  const { node, depth, open, onToggle, selection, onSelect, renamingId, onRenameStart, onRename, onRenameCancel } = props;
+  const { node, parentId, depth, open, onToggle, selection, onSelect, renamingId, onRenameStart, onRename, onRenameCancel, onPointerDown, dropHint } = props;
   const children = node.children ?? [];
   const expanded = children.length > 0 && open.has(node.id);
   const selected = layerRowSelected(node, selection);
@@ -57,8 +60,12 @@ function Branch(props: {
       aria-selected={selected}
       aria-expanded={children.length > 0 ? expanded : undefined}
       data-node-id={node.id}
+      data-layer-id={node.id}
+      data-layer-parent={parentId || undefined}
+      data-layer-drop={dropHint?.id === node.id ? (dropHint.after ? "after" : "before") : undefined}
       data-provider-managed={node.source?.providerManaged ? "true" : undefined}
       data-locked={node.locked?.locked ? "true" : undefined}
+      onPointerDown={onPointerDown}
     >
       <div className={selected ? (depth > 0 ? "ed-tree-row is-child is-active" : "ed-tree-row is-active") : (depth > 0 ? "ed-tree-row is-child" : "ed-tree-row")}>
         {renamingId === node.id ? (
@@ -77,7 +84,7 @@ function Branch(props: {
       {expanded ? (
         <ul role="group">
           {children.map((child) => (
-            <Branch key={child.id} node={child} depth={depth + 1} open={open} onToggle={onToggle} selection={selection} onSelect={onSelect} renamingId={renamingId} onRenameStart={onRenameStart} onRename={onRename} onRenameCancel={onRenameCancel} />
+            <Branch key={child.id} node={child} parentId={node.id} depth={depth + 1} open={open} onToggle={onToggle} selection={selection} onSelect={onSelect} renamingId={renamingId} onRenameStart={onRenameStart} onRename={onRename} onRenameCancel={onRenameCancel} onPointerDown={onPointerDown} dropHint={dropHint} />
           ))}
         </ul>
       ) : null}
@@ -96,10 +103,13 @@ export function LayerTree(props: {
   onRenameStart: (node: LayerNode) => void;
   onRename: (node: LayerNode, name: string) => void;
   onRenameCancel: () => void;
+  onPointerDown?: (event: React.PointerEvent<HTMLLIElement>) => void;
+  dropHint?: { id: string; after: boolean } | null;
 }) {
   return (
     <Branch
       node={props.root}
+      parentId=""
       depth={0}
       open={props.open}
       onToggle={props.onToggle}
@@ -109,6 +119,8 @@ export function LayerTree(props: {
       onRenameStart={props.onRenameStart}
       onRename={props.onRename}
       onRenameCancel={props.onRenameCancel}
+      onPointerDown={props.onPointerDown}
+      dropHint={props.dropHint}
     />
   );
 }

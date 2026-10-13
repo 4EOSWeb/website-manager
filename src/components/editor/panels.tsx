@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { ArrowDown, ArrowUp, Eye, EyeOff, FileText, Home, Lock, MoreHorizontal, PanelBottom, PanelTop, Plus, Search, Trash2, Upload } from "lucide-react";
 import type { BlogDraft, SiteDraft } from "@/lib/content-schema";
-import { reorderPages, setBlockHidden, setEditorName, setSectionHidden } from "@/lib/editor-ops";
+import { moveFlowBlockById, moveSectionById, reorderPages, setBlockHidden, setEditorName, setSectionHidden } from "@/lib/editor-ops";
 import type { EditorApi, MediaItem, Viewport } from "@/components/editor/types";
 import { Empty, Field, Group, Segmented, TextInput } from "@/components/editor/ui";
 import { sectionName } from "@/components/editor/inspector/section";
 import { LayerRename } from "@/components/editor/layers/rename";
 import { renameVisualNode } from "@/components/editor/layers/rename-name";
+import { useLayerReorder } from "@/components/editor/layers/reorder";
+import { reorderLayerSiblings, siblingBeforeId } from "@/components/editor/layers/reorder-drop";
 import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
 import { defaultOpenIds, legacyTarget, visualPageRoot } from "@/components/editor/layers/rows";
 
@@ -110,13 +112,29 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
     setRenaming("");
     api.commit(setEditorName(api.site, api.path, sectionId, value, blockId), false);
   };
+  const pageId = api.page?.id ?? "";
+  const layersDrag = useLayerReorder(api.canEdit, (drop) => {
+    const sectionIds = sections.map((section) => section.id);
+    let nextSite = api.site;
+    if (drop.parentId === pageId) {
+      const beforeId = siblingBeforeId(sectionIds, drop.id, drop.targetId, drop.after);
+      if (beforeId === null) return;
+      nextSite = moveSectionById(api.site, api.path, drop.id, beforeId);
+    } else if (sections.some((section) => section.id === drop.parentId && section.type === "flow")) {
+      nextSite = moveFlowBlockById(api.site, api.path, drop.parentId, drop.id, drop.targetId, drop.after);
+    }
+    const nextVisual = reorderLayerSiblings(api.visualDocument, drop.id, drop.targetId, drop.after);
+    const siteChanged = JSON.stringify(nextSite) !== JSON.stringify(api.site);
+    if (!siteChanged && !nextVisual) return;
+    api.commit(siteChanged ? nextSite : api.site, true, nextVisual ?? undefined);
+  });
   if (visualRoot) {
     return (
       <div className="ed-panel">
         <div className="ed-panel-head">
           <h2>Layers</h2>
         </div>
-        <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it.</p>
+        <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it. Drag a row to reorder it.</p>
         <ul className="ed-tree is-layers" role="tree" aria-label="Page layers" data-layer-source="visual">
           <LayerTree
             root={visualRoot}
@@ -135,6 +153,8 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
               if (next) api.commit(api.site, false, next);
             }}
             onRenameCancel={() => setRenaming("")}
+            onPointerDown={layersDrag.onPointerDown}
+            dropHint={layersDrag.drop}
           />
         </ul>
       </div>
@@ -145,7 +165,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
       <div className="ed-panel-head">
         <h2>Layers</h2>
       </div>
-      <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it.</p>
+      <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it. Drag a row to reorder it.</p>
       <ul className="ed-tree is-layers" role="tree" aria-label="Page layers" data-layer-source="version3">
         <li role="treeitem" aria-selected={props.chromeFocus === "header"} className={props.chromeFocus === "header" ? "is-active" : ""}>
           <button type="button" className="ed-tree-main" onClick={() => props.onChrome("header")}><PanelTop size={14} aria-hidden="true" /> Header</button>
@@ -154,7 +174,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
           const activeSection = api.selection.sectionId === section.id && !api.selection.itemId;
           const locked = section.type === "preset" && section.providerLocked;
           return (
-            <li key={section.id} role="treeitem" aria-selected={activeSection} aria-expanded={section.type === "flow" && section.blocks.length > 0 ? layers.open.has(section.id) : undefined} data-layer-id={section.id}>
+            <li key={section.id} role="treeitem" aria-selected={activeSection} aria-expanded={section.type === "flow" && section.blocks.length > 0 ? layers.open.has(section.id) : undefined} data-layer-id={section.id} data-layer-parent={pageId || undefined} data-locked={locked ? "true" : undefined} data-layer-drop={layersDrag.drop?.id === section.id ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
               <div className={activeSection ? "ed-tree-row is-active" : "ed-tree-row"}>
                 {renaming === section.id ? (
                   <LayerRename value={section.editorName || ""} label="Section name" onCommit={(value) => rename(section.id, value)} onCancel={() => setRenaming("")} />
@@ -182,7 +202,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
                     const active = api.selection.itemId === block.id;
                     const label = block.editorName || (block.text && typeof block.text === "object" && block.text.text ? block.text.text.slice(0, 32) : block.kind);
                     return (
-                      <li key={block.id} role="treeitem" aria-selected={active} data-layer-id={block.id}>
+                      <li key={block.id} role="treeitem" aria-selected={active} data-layer-id={block.id} data-layer-parent={section.id} data-locked={block.locked ? "true" : undefined} data-layer-drop={layersDrag.drop?.id === block.id ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
                         <div className={active ? "ed-tree-row is-child is-active" : "ed-tree-row is-child"}>
                           {renaming === block.id ? (
                             <LayerRename value={block.editorName || ""} label="Item name" onCommit={(value) => rename(section.id, value, block.id)} onCancel={() => setRenaming("")} />
