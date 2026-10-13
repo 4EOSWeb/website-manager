@@ -7,6 +7,8 @@ import { reorderPages, setBlockHidden, setEditorName, setSectionHidden } from "@
 import type { EditorApi, MediaItem, Viewport } from "@/components/editor/types";
 import { Empty, Field, Group, Segmented, TextInput } from "@/components/editor/ui";
 import { sectionName } from "@/components/editor/inspector/section";
+import { LayerRename } from "@/components/editor/layers/rename";
+import { renameVisualNode } from "@/components/editor/layers/rename-name";
 import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
 import { defaultOpenIds, legacyTarget, visualPageRoot } from "@/components/editor/layers/rows";
 
@@ -125,6 +127,14 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
               const target = legacyTarget(node.metadata?.legacyId);
               if (target) props.onSelect(target.sectionId, target.itemId);
             }}
+            renamingId={renaming}
+            onRenameStart={(node) => api.canEdit && setRenaming(node.id)}
+            onRename={(node, name) => {
+              setRenaming("");
+              const next = renameVisualNode(api.visualDocument, node.id, name);
+              if (next) api.commit(api.site, false, next);
+            }}
+            onRenameCancel={() => setRenaming("")}
           />
         </ul>
       </div>
@@ -147,7 +157,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
             <li key={section.id} role="treeitem" aria-selected={activeSection} aria-expanded={section.type === "flow" && section.blocks.length > 0 ? layers.open.has(section.id) : undefined} data-layer-id={section.id}>
               <div className={activeSection ? "ed-tree-row is-active" : "ed-tree-row"}>
                 {renaming === section.id ? (
-                  <input className="ed-input is-inline" autoFocus defaultValue={sectionName(section)} aria-label="Section name" onBlur={(event) => rename(section.id, event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); if (event.key === "Escape") setRenaming(""); }} />
+                  <LayerRename value={section.editorName || ""} label="Section name" onCommit={(value) => rename(section.id, value)} onCancel={() => setRenaming("")} />
                 ) : (
                   <button type="button" className={`ed-tree-main ${section.hidden ? "is-hidden" : ""}`} onClick={() => props.onSelect(section.id)} onDoubleClick={() => api.canEdit && setRenaming(section.id)}>
                     <span className="ed-layer-dot" aria-hidden="true" />
@@ -175,7 +185,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
                       <li key={block.id} role="treeitem" aria-selected={active} data-layer-id={block.id}>
                         <div className={active ? "ed-tree-row is-child is-active" : "ed-tree-row is-child"}>
                           {renaming === block.id ? (
-                            <input className="ed-input is-inline" autoFocus defaultValue={block.editorName || block.kind} aria-label="Item name" onBlur={(event) => rename(section.id, event.target.value, block.id)} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); if (event.key === "Escape") setRenaming(""); }} />
+                            <LayerRename value={block.editorName || ""} label="Item name" onCommit={(value) => rename(section.id, value, block.id)} onCancel={() => setRenaming("")} />
                           ) : (
                             <button type="button" className={`ed-tree-main ${block.hidden ? "is-hidden" : ""}`} onClick={() => props.onSelect(section.id, block.id)} onDoubleClick={() => api.canEdit && setRenaming(block.id)}>
                               <span className="ed-kind">{block.kind === "brand-mark" ? "Logo" : block.kind}</span>

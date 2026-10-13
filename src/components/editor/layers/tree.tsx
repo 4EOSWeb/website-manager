@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { LayerNode } from "@/components/editor/layers/rows";
 import { layerLabel, layerRowSelected, layerStorageKey, type LayerSelection } from "@/components/editor/layers/rows";
+import { LayerRename } from "@/components/editor/layers/rename";
 
 /** Remembers which rows are open for this website and page. */
 export function useLayerOpen(websiteId: string, pageId: string, defaults: string[]) {
@@ -41,8 +42,12 @@ function Branch(props: {
   onToggle: (id: string) => void;
   selection: LayerSelection;
   onSelect: (node: LayerNode) => void;
+  renamingId: string;
+  onRenameStart: (node: LayerNode) => void;
+  onRename: (node: LayerNode, name: string) => void;
+  onRenameCancel: () => void;
 }) {
-  const { node, depth, open, onToggle, selection, onSelect } = props;
+  const { node, depth, open, onToggle, selection, onSelect, renamingId, onRenameStart, onRename, onRenameCancel } = props;
   const children = node.children ?? [];
   const expanded = children.length > 0 && open.has(node.id);
   const selected = layerRowSelected(node, selection);
@@ -56,9 +61,13 @@ function Branch(props: {
       data-locked={node.locked?.locked ? "true" : undefined}
     >
       <div className={selected ? (depth > 0 ? "ed-tree-row is-child is-active" : "ed-tree-row is-active") : (depth > 0 ? "ed-tree-row is-child" : "ed-tree-row")}>
-        <button type="button" className="ed-tree-main" onClick={() => onSelect(node)}>
-          <span className="truncate">{layerLabel(node)}</span>
-        </button>
+        {renamingId === node.id ? (
+          <LayerRename value={typeof node.metadata?.name === "string" ? node.metadata.name : ""} label="Layer name" onCommit={(value) => onRename(node, value)} onCancel={onRenameCancel} />
+        ) : (
+          <button type="button" className="ed-tree-main" onClick={() => onSelect(node)} onDoubleClick={() => onRenameStart(node)}>
+            <span className="truncate">{layerLabel(node)}</span>
+          </button>
+        )}
         {children.length > 0 ? (
           <button type="button" className="ed-icon is-small" aria-label={expanded ? "Collapse" : "Expand"} data-layer-toggle={node.id} onClick={() => onToggle(node.id)}>
             {expanded ? "–" : "+"}
@@ -68,7 +77,7 @@ function Branch(props: {
       {expanded ? (
         <ul role="group">
           {children.map((child) => (
-            <Branch key={child.id} node={child} depth={depth + 1} open={open} onToggle={onToggle} selection={selection} onSelect={onSelect} />
+            <Branch key={child.id} node={child} depth={depth + 1} open={open} onToggle={onToggle} selection={selection} onSelect={onSelect} renamingId={renamingId} onRenameStart={onRenameStart} onRename={onRename} onRenameCancel={onRenameCancel} />
           ))}
         </ul>
       ) : null}
@@ -83,6 +92,23 @@ export function LayerTree(props: {
   onToggle: (id: string) => void;
   selection: LayerSelection;
   onSelect: (node: LayerNode) => void;
+  renamingId: string;
+  onRenameStart: (node: LayerNode) => void;
+  onRename: (node: LayerNode, name: string) => void;
+  onRenameCancel: () => void;
 }) {
-  return <Branch node={props.root} depth={0} open={props.open} onToggle={props.onToggle} selection={props.selection} onSelect={props.onSelect} />;
+  return (
+    <Branch
+      node={props.root}
+      depth={0}
+      open={props.open}
+      onToggle={props.onToggle}
+      selection={props.selection}
+      onSelect={props.onSelect}
+      renamingId={props.renamingId}
+      onRenameStart={props.onRenameStart}
+      onRename={props.onRename}
+      onRenameCancel={props.onRenameCancel}
+    />
+  );
 }
