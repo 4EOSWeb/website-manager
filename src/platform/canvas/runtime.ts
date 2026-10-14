@@ -1845,6 +1845,11 @@ export function canvasRuntimeScript(origin: string) {
     window.addEventListener("message", function (event) {
       if (event.origin !== origin) return;
       var data = event.data;
+      if (data && data.type === "4eos-article-html") {
+        var body = document.getElementById("article-body");
+        post({ type: "4eos-article-html", html: body ? body.innerHTML : "" });
+        return;
+      }
       if (!data || data.type !== "4eos-library-probe") return;
       var zone = null;
       document.querySelectorAll("[data-zone-name='Canvas']").forEach(function (node) {

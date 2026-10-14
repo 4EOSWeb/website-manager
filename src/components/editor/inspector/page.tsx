@@ -8,6 +8,7 @@ import { applyText, setArchived, setNavVisible, updatePageMeta } from "@/lib/edi
 import type { EditorApi } from "@/components/editor/types";
 import { Field, Group, Select, TextArea, TextInput, Toggle } from "@/components/editor/ui";
 import { navigationEditingEnabled, pageCapabilityFlags, showBody, showHeaderToggle, showMetadata } from "@/components/editor/inspector/page-controls";
+import { ArticleConvert } from "@/components/editor/article-convert";
 import { articleBodyKind } from "@/platform/pages/route-flags";
 import { routeReserved } from "@/platform/pages/reserved";
 import { seoHost } from "@/platform/pages/seo-host";
@@ -106,7 +107,7 @@ export function SeoTab({ api, page }: { api: EditorApi; page: PageDocument }) {
   );
 }
 
-export function ArticleRegions({ api }: { api: EditorApi }) {
+export function ArticleRegions({ api, experience = "basic", canAdminister = false }: { api: EditorApi; experience?: string; canAdminister?: boolean }) {
   const flags = pageCapabilityFlags(api.adapter, api.page ?? {}, api.path);
   const preserved = articleBodyKind(api.adapter) === "html-preserved";
   return (
@@ -119,6 +120,9 @@ export function ArticleRegions({ api }: { api: EditorApi }) {
         </Group>
       ) : null}
       {flags.editHeader ? <p className="ed-note" data-article-region="header">The header on this page can change.</p> : null}
+      {preserved ? (
+        <ArticleConvert experience={experience} canAdminister={canAdminister} websiteId={api.websiteId} />
+      ) : null}
     </>
   );
 }

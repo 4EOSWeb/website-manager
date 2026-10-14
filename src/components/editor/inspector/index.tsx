@@ -312,7 +312,7 @@ export function Inspector(props: {
             {active === "seo" ? <SeoTab api={api} page={page} /> : null}
           </>
         ) : null}
-        {mode.kind === "article" ? <ArticleRegions api={api} /> : null}
+        {mode.kind === "article" ? <ArticleRegions api={api} experience={props.experience} canAdminister={props.canAdminister === true} /> : null}
         {mode.kind === "post" && props.post ? <PostTab api={api} post={props.post} onPost={props.onPost} onBlock={props.onPostBlock} /> : null}
       </div>
     </aside>
