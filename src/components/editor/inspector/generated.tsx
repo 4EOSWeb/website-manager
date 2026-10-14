@@ -19,7 +19,7 @@ function labelFor(key: string) {
   return key.charAt(0).toUpperCase() + key.slice(1);
 }
 
-export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: string; value: string }[]; adapter?: unknown; registered?: RegisteredInspector[]; slots?: Record<string, { label: string }>; experience?: string; onName: (name: string) => void; onProp?: (prop: string, value: string) => void; onStyle?: (key: string, value: string) => void }) {
+export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: string; value: string }[]; adapter?: unknown; registered?: RegisteredInspector[]; slots?: Record<string, { label: string }>; experience?: string; canAdminister?: boolean; onName: (name: string) => void; onProp?: (prop: string, value: string) => void; onStyle?: (key: string, value: string) => void }) {
   const schema = propsSchemaFor(props.node.componentId);
   const generated = schema ? inspectorFields(schema) : { fields: [], warnings: [] };
   const content = generated.fields.filter((field) => isContentProp(field.prop, field.control));
@@ -51,7 +51,7 @@ export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: 
           }}
         />
       </Field>
-      {fieldVisible("componentId", props.experience ?? "basic") ? (
+      {fieldVisible("componentId", props.experience ?? "basic", props.canAdminister === true) ? (
         <>
           <Field label="Id">
             <input className="ed-input" aria-label="Id" value={props.node.id} readOnly />

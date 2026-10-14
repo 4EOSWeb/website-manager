@@ -2112,6 +2112,7 @@ export function EditorShell(props: {
           registered={props.registered}
           inspectorSlots={props.inspectorSlots}
           experience={experience}
+          canAdminister={props.canAdminister}
         />
         </FieldIssueProvider>
       </div>

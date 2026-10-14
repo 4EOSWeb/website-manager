@@ -21,6 +21,7 @@ import { ImageFields } from "@/components/editor/inspector/image-fields";
 import { ButtonFields } from "@/components/editor/inspector/button-fields";
 import { adapterFontFamilies, type ButtonStateName } from "@/components/editor/inspector/button-model";
 import { TextFields } from "@/components/editor/inspector/text-fields";
+import { AdminFields } from "@/components/editor/inspector/admin-fields";
 
 const BLOCK_LABELS: Record<string, string> = {
   eyebrow: "Small heading",
@@ -90,6 +91,7 @@ export function Inspector(props: {
   registered?: RegisteredInspector[];
   inspectorSlots?: Record<string, { label: string }>;
   experience?: string;
+  canAdminister?: boolean;
 }) {
   const { api } = props;
   const selection = api.selection;
@@ -174,7 +176,19 @@ export function Inspector(props: {
         </div>
       ) : null}
       <div className="ed-inspector-body" id="inspector-panel" role={tabs.length > 1 ? "tabpanel" : undefined} aria-labelledby={tabs.length > 1 ? `tab-${active}` : undefined}>
-        {props.generated && props.onGeneratedName ? <GeneratedInspector node={props.generated} tokens={adapterColorTokens(api.adapter)} adapter={api.adapter} registered={props.registered} slots={props.inspectorSlots} experience={props.experience} onName={props.onGeneratedName} onProp={props.onGeneratedProp} onStyle={props.onGeneratedStyle} /> : null}
+        {props.generated && props.onGeneratedName ? <GeneratedInspector node={props.generated} tokens={adapterColorTokens(api.adapter)} adapter={api.adapter} registered={props.registered} slots={props.inspectorSlots} experience={props.experience} canAdminister={props.canAdminister} onName={props.onGeneratedName} onProp={props.onGeneratedProp} onStyle={props.onGeneratedStyle} /> : null}
+        {props.generated ? (
+          <AdminFields
+            experience={props.experience ?? "basic"}
+            canAdminister={props.canAdminister === true}
+            adapterId={api.adapterId ?? ""}
+            componentId={props.generated.componentId}
+            lockId={typeof props.generated.metadata.lockId === "string" ? props.generated.metadata.lockId : ""}
+            providerManaged={props.generated.metadata.providerManaged === true}
+            embedUrl={typeof props.generated.props.src === "string" ? props.generated.props.src : ""}
+            embed={props.generated.componentId === "generic.embed"}
+          />
+        ) : null}
         {props.sectionLayout && layoutModeName(props.sectionLayout.layout) ? (
           <LayoutFields
             mode={layoutModeName(props.sectionLayout.layout) as LayoutModeName}
