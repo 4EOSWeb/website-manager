@@ -9,7 +9,8 @@ import { DeviceVisibility, LinkPicker, THEME_SWATCHES } from "@/components/edito
 import { pageCapabilityFlags } from "@/components/editor/inspector/page-controls";
 
 function editingDisabled(api: EditorApi) {
-  return !api.canEdit || pageCapabilityFlags(api.adapter, api.page ?? {}).editBody !== true;
+  const flags = pageCapabilityFlags(api.adapter, api.page ?? {});
+  return !api.canEdit || flags.editBody !== true || flags.lockContent === true;
 }
 
 type Flow = Extract<Section, { type: "flow" }>;
@@ -41,6 +42,7 @@ export function TextContent({ api, section, block }: { api: EditorApi; section: 
   const isTitle = !heroTitle && (block.kind === "eyebrow" || block.kind === "heading" || block.kind === "paragraph");
   return (
     <>
+      {pageCapabilityFlags(api.adapter, api.page ?? {}).lockContent ? <p className="ed-note">This content is locked.</p> : null}
       {heroTitle ? <p className="ed-note">This is the main title of the page, so it is always an H1.</p> : null}
       {isTitle ? (
         <Group title="Text type">

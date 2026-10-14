@@ -1485,6 +1485,7 @@ export function EditorShell(props: {
         break;
       case "4eos-text": {
         const flags = pageCapabilityFlags(adapter, page ?? {});
+        if (flags.lockContent === true) return;
         const target = page?.sections.find((item) => item.id === text("sectionId"));
         if (target?.editorName === "Sidebar" ? flags.editSidebar !== true : flags.editBody !== true) return;
         const marks = readMarks(data.marks);
