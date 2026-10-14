@@ -15,6 +15,7 @@ import { LayoutFields } from "@/components/editor/inspector/layout-fields";
 import { layoutModeName, type LayoutModeName, type LayoutNode } from "@/components/editor/inspector/layout-model";
 import { VisibilityFields } from "@/components/editor/inspector/visibility-fields";
 import type { VisibilityDevice, VisibilityState } from "@/components/editor/inspector/visibility-model";
+import { LinkFields } from "@/components/editor/inspector/link-fields";
 
 const BLOCK_LABELS: Record<string, string> = {
   eyebrow: "Small heading",
@@ -73,6 +74,8 @@ export function Inspector(props: {
   onLayoutSetting?: (key: string, value: string | number | boolean) => void;
   visibility?: VisibilityState | null;
   onVisibility?: (device: VisibilityDevice, hidden: boolean) => void;
+  onLink?: (href: string) => void;
+  onLinkTarget?: (target: "same" | "new") => void;
 }) {
   const { api } = props;
   const selection = api.selection;
@@ -168,6 +171,9 @@ export function Inspector(props: {
           />
         ) : null}
         {props.visibility && props.onVisibility ? <VisibilityFields visibility={props.visibility} onToggle={props.onVisibility} /> : null}
+        {props.generated && block && (props.generated.componentId === "generic.button" || props.generated.componentId === "generic.link") && props.onLink && props.onLinkTarget ? (
+          <LinkFields site={api.site} href={block.href ?? "/"} target={block.target === "new" ? "new" : "same"} onHref={props.onLink} onTarget={props.onLinkTarget} />
+        ) : null}
         {mode.kind === "none" ? (
           props.managedRoute ? (
             <Empty title="This page is managed for you">Articles, search results, and system pages come from your website provider. Choose a page on the left to edit it.</Empty>

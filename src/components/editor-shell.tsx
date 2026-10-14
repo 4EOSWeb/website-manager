@@ -76,6 +76,7 @@ import { Inspector } from "@/components/editor/inspector";
 import { adapterColorTokens, renameGeneratedNode, writeGeneratedProp, writeGeneratedStyle, type GeneratedNode } from "@/components/editor/inspector/generated-model";
 import { applySectionLayout, componentDefinitions, confirmLayoutMode, definitionAllowsLayout, writeLayoutSetting, type LayoutNode } from "@/components/editor/inspector/layout-model";
 import { applyBlockVisibility, writeHideOn } from "@/components/editor/inspector/visibility-model";
+import { acceptLink } from "@/components/editor/inspector/link-model";
 import { renameVisualNode } from "@/components/editor/layers/rename-name";
 import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTargetForNode, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
 import { selectNodeId } from "@/components/editor/state/selection";
@@ -2012,6 +2013,19 @@ export function EditorShell(props: {
             if (!blockId || !sectionId || !flowBlock) return;
             const next = writeHideOn({ hidden: flowBlock.hidden, hideOn: flowBlock.hideOn ?? [] }, device, hidden);
             commit(applyBlockVisibility(site, path, sectionId, blockId, next), true);
+          }}
+          onLink={(href) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            const next = acceptLink(href);
+            if (!blockId || !sectionId || !next) return;
+            commit(patchFlowBlock(site, path, sectionId, blockId, { href: next }), true);
+          }}
+          onLinkTarget={(target) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            if (!blockId || !sectionId) return;
+            commit(patchFlowBlock(site, path, sectionId, blockId, { target }), true);
           }}
         />
       </div>
