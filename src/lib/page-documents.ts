@@ -178,6 +178,10 @@ export function templateSections(template: PageDocument["template"]): Section[] 
   if (template === "insights-landing") {
     return [withText("heading", "Insights"), withText("paragraph", "Introduce the latest writing from your team."), createSection("image")];
   }
+  if (template === "blank") {
+    const id = createId("sec");
+    return [{ id, type: "flow", hidden: false, editorName: "Section", layout: "stack", blocks: [] }];
+  }
   return [withText("heading", "New page"), createSection("paragraph")];
 }
 
