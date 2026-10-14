@@ -18,6 +18,7 @@ export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: Page
   const disabled = !api.canEdit || page.locked || !body;
   const parents = api.site.pages.filter((item) => item.route !== page.route && item.route !== "/" && !item.parentRoute && !item.archived);
   const sidebar = page.sections.find((section) => section.type === "paragraph" && section.editorName === "Sidebar");
+  const cta = page.sections.find((section) => section.type === "button" && section.editorName === "Call to action");
   return (
     <>
       {flags.providerManaged ? <p className="ed-note">This page is managed for you. You can still change its menu label and search details.</p> : null}
@@ -53,6 +54,11 @@ export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: Page
         {sidebar ? (
           <Field label="Sidebar text">
             <TextArea rows={3} value={sidebar.text} disabled={!api.canEdit || flags.editSidebar !== true} onChange={(value) => api.commitText(applyText(api.site, page.route, sidebar.id, "text", value), `${sidebar.id}:text`, true)} />
+          </Field>
+        ) : null}
+        {cta ? (
+          <Field label="Call to action">
+            <TextInput value={cta.label} disabled={!api.canEdit || flags.editCta !== true} maxLength={80} onChange={(value) => api.commitText(applyText(api.site, page.route, cta.id, "label", value), `${cta.id}:label`, true)} />
           </Field>
         ) : null}
       </Group>

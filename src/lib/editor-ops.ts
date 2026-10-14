@@ -534,6 +534,7 @@ export function createPage(
     sections: templateSections(input.template),
     editBody: true,
     ...(input.template === "article" ? { editHeader: true, editSidebar: true } : {}),
+    ...(input.template === "landing" ? { editCta: true } : {}),
   };
   return { site: { ...site, pages: [...site.pages, next] }, error: undefined };
 }

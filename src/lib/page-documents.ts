@@ -166,7 +166,7 @@ export function templateSections(template: PageDocument["template"]): Section[] 
     return [
       withText("heading", "Landing page"),
       withText("paragraph", "Describe the offer"),
-      button.type === "button" ? { ...button, label: "Get started", href: "/" } : button,
+      button.type === "button" ? { ...button, label: "Get started", href: "/", editorName: "Call to action" } : button,
       catalogSection("cards"),
     ];
   }

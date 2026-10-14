@@ -17,6 +17,7 @@ export function landingPage(options?: {
   const paragraph = createParagraph();
   paragraph.props = { text: "Describe the offer" };
   const button = createElement("button", "generic.button", { label: "Get started", href: "/" });
+  button.metadata = { region: "cta" };
   const features = createElement("grid", "generic.grid", {});
   features.layout = { mode: "layout", display: "grid", columns: 3, gap: 16, align: "stretch" };
   features.children = [createCard(), createCard(), createCard()];
