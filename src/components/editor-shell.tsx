@@ -78,6 +78,7 @@ import { applySectionLayout, componentDefinitions, confirmLayoutMode, definition
 import { applyBlockVisibility, writeHideOn } from "@/components/editor/inspector/visibility-model";
 import { acceptLink } from "@/components/editor/inspector/link-model";
 import { replaceImageSrc } from "@/components/editor/inspector/image-model";
+import { buttonFlowPatch, writeButtonState } from "@/components/editor/inspector/button-model";
 import { renameVisualNode } from "@/components/editor/layers/rename-name";
 import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTargetForNode, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
 import { selectNodeId } from "@/components/editor/state/selection";
@@ -2057,6 +2058,30 @@ export function EditorShell(props: {
             const sectionId = selection.sectionId;
             if (!blockId || !sectionId) return;
             commit(patchFlowBlock(site, path, sectionId, blockId, { focal }), true);
+          }}
+          onButton={(key, value) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            const current = genericByBlock[blockId];
+            if (!current || !blockId || !sectionId) return;
+            setGenericByBlock((items) => ({ ...items, [blockId]: { ...current, props: { ...current.props, [key]: value } } }));
+            if (key === "label") {
+              commitText(applyText(site, path, sectionId, "text", value, blockId), `${blockId}:label`, true);
+              return;
+            }
+            if (key === "href") {
+              const href = acceptLink(value);
+              if (href) commit(patchFlowBlock(site, path, sectionId, blockId, { href }), true);
+              return;
+            }
+            const patch = buttonFlowPatch(key, value);
+            if (patch) commit(patchFlowBlock(site, path, sectionId, blockId, patch as Parameters<typeof patchFlowBlock>[4]), true);
+          }}
+          onButtonState={(state, key, value) => {
+            const blockId = selection.itemId;
+            const current = genericByBlock[blockId];
+            if (!current) return;
+            setGenericByBlock((items) => ({ ...items, [blockId]: { ...current, props: writeButtonState(current.props, state, key, value) } }));
           }}
         />
       </div>

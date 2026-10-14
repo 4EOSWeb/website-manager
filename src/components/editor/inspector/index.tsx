@@ -17,6 +17,8 @@ import { VisibilityFields } from "@/components/editor/inspector/visibility-field
 import type { VisibilityDevice, VisibilityState } from "@/components/editor/inspector/visibility-model";
 import { LinkFields } from "@/components/editor/inspector/link-fields";
 import { ImageFields } from "@/components/editor/inspector/image-fields";
+import { ButtonFields } from "@/components/editor/inspector/button-fields";
+import { adapterFontFamilies, type ButtonStateName } from "@/components/editor/inspector/button-model";
 
 const BLOCK_LABELS: Record<string, string> = {
   eyebrow: "Small heading",
@@ -80,6 +82,8 @@ export function Inspector(props: {
   onImageAlt?: (alt: string) => void;
   onImageFit?: (fit: "fit" | "fill") => void;
   onImageFocal?: (focal: "center" | "top" | "bottom" | "left" | "right") => void;
+  onButton?: (key: string, value: string) => void;
+  onButtonState?: (state: ButtonStateName, key: string, value: string) => void;
 }) {
   const { api } = props;
   const selection = api.selection;
@@ -174,8 +178,8 @@ export function Inspector(props: {
             onSetting={(key, value) => props.onLayoutSetting?.(key, value)}
           />
         ) : null}
-        {props.visibility && props.onVisibility ? <VisibilityFields visibility={props.visibility} onToggle={props.onVisibility} /> : null}
-        {props.generated && block && (props.generated.componentId === "generic.button" || props.generated.componentId === "generic.link") && props.onLink && props.onLinkTarget ? (
+        {props.visibility && props.onVisibility && props.generated?.componentId !== "generic.button" ? <VisibilityFields visibility={props.visibility} onToggle={props.onVisibility} /> : null}
+        {props.generated && block && props.generated.componentId === "generic.link" && props.onLink && props.onLinkTarget ? (
           <LinkFields site={api.site} href={block.href ?? "/"} target={block.target === "new" ? "new" : "same"} onHref={props.onLink} onTarget={props.onLinkTarget} />
         ) : null}
         {mode.kind === "none" ? (
@@ -198,8 +202,34 @@ export function Inspector(props: {
           <>
             {mode.kind === "text" && active === "content" ? <TextContent api={api} section={section} block={block} /> : null}
             {mode.kind === "text" && active === "design" ? <TextStyleTab api={api} section={section} block={block} /> : null}
-            {mode.kind === "button" && active === "content" ? <ButtonContent api={api} section={section} block={block} /> : null}
-            {mode.kind === "button" && active === "design" ? <ButtonStyle api={api} section={section} block={block} /> : null}
+            {mode.kind === "button" && active === "content" && props.generated?.componentId !== "generic.button" ? <ButtonContent api={api} section={section} block={block} /> : null}
+            {mode.kind === "button" && active === "design" && props.generated?.componentId !== "generic.button" ? <ButtonStyle api={api} section={section} block={block} /> : null}
+            {props.generated?.componentId === "generic.button" && (active === "content" || active === "design") && props.onButton && props.onButtonState ? (
+              <ButtonFields
+                site={api.site}
+                label={typeof block.text === "object" ? block.text.text : ""}
+                href={block.href ?? "/"}
+                target={block.target === "new" ? "new" : "same"}
+                variant={block.variant ?? "filled"}
+                size={block.size ?? "m"}
+                font={typeof props.generated.props.font === "string" ? props.generated.props.font : ""}
+                color={block.textStyle?.color ?? ""}
+                background={block.background ?? ""}
+                border={typeof props.generated.props.border === "string" ? props.generated.props.border : ""}
+                radius={typeof props.generated.props.radius === "string" ? props.generated.props.radius : ""}
+                padding={typeof props.generated.props.padding === "string" ? props.generated.props.padding : ""}
+                icon={block.icon ?? "none"}
+                iconPosition={typeof props.generated.props.iconPosition === "string" ? props.generated.props.iconPosition : "end"}
+                align={block.align ?? "start"}
+                width={typeof props.generated.props.width === "string" ? props.generated.props.width : "auto"}
+                fonts={adapterFontFamilies(api.adapter?.fonts)}
+                nodeProps={props.generated.props}
+                visibility={props.visibility}
+                onChange={props.onButton}
+                onState={props.onButtonState}
+                onVisibility={props.onVisibility}
+              />
+            ) : null}
             {mode.kind === "image" && active === "content" && props.generated?.componentId !== "generic.image" ? <ImageContent api={api} section={section} block={block} /> : null}
             {mode.kind === "image" && active === "layout" && props.generated?.componentId !== "generic.image" ? <ImageStyle api={api} section={section} block={block} /> : null}
             {props.generated?.componentId === "generic.image" && (active === "content" || active === "layout") && props.onImageAlt && props.onImageFit && props.onImageFocal ? (
