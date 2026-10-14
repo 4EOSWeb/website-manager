@@ -13,8 +13,8 @@ test("an article page can edit metadata, header, and a rich text body", () => {
   assert.equal(root?.metadata.editHeader, true);
   assert.equal(root?.metadata.editBody, true);
   assert.equal(root?.layout?.mode, "flow");
-  assert.equal(root?.children.length, 1);
   assert.equal(root?.children[0]?.type, "richtext");
+  assert.equal(root?.children.some((child) => child.metadata?.region === "sidebar"), true);
   assert.equal(root?.children[0]?.componentId, "generic.richtext");
   const serialized = JSON.stringify(document);
   assert.equal(serialized.includes("Write the article"), true);

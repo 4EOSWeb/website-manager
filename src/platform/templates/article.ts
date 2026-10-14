@@ -1,4 +1,5 @@
 import { createElement } from "../elements/create";
+import { createParagraph } from "../elements/paragraph";
 import { createRichText } from "../elements/richtext";
 import { createPlatformId } from "../ids";
 import type { SharedLayoutChoice } from "./blank-structured";
@@ -12,6 +13,11 @@ export function articlePage(options?: {
   const shared = options?.shared ?? { header: "optional" as const, footer: "optional" as const };
   const body = createRichText();
   body.props = { text: "Write the article", marks: [] };
+  const note = createParagraph();
+  note.props = { text: "Sidebar note" };
+  const sidebar = createElement("section", "generic.section", {});
+  sidebar.metadata = { region: "sidebar" };
+  sidebar.children = [note];
   const root = createElement("section", "generic.section", {});
   root.layout = { mode: "flow", direction: "vertical", gap: 16 };
   root.metadata = {
@@ -20,8 +26,9 @@ export function articlePage(options?: {
     editMetadata: true,
     editHeader: true,
     editBody: true,
+    editSidebar: true,
   };
-  root.children = [body];
+  root.children = [body, sidebar];
   return {
     version: 1 as const,
     pages: [

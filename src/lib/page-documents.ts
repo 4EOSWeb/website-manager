@@ -189,14 +189,18 @@ export function templateSections(template: PageDocument["template"]): Section[] 
   }
   if (template === "article") {
     const id = createId("sec");
-    return [{
-      id,
-      type: "flow",
-      hidden: false,
-      editorName: "Article",
-      layout: "stack",
-      blocks: [{ id: createId("blk"), kind: "paragraph", hidden: false, text: { text: "Write the article", marks: [] } }],
-    }];
+    const side = withText("paragraph", "Sidebar note");
+    return [
+      {
+        id,
+        type: "flow",
+        hidden: false,
+        editorName: "Article",
+        layout: "stack",
+        blocks: [{ id: createId("blk"), kind: "paragraph", hidden: false, text: { text: "Write the article", marks: [] } }],
+      },
+      side.type === "paragraph" ? { ...side, editorName: "Sidebar" } : side,
+    ];
   }
   if (template === "canvas") return [createSection("freeform", "Canvas")];
   if (template === "blank") {

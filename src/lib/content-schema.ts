@@ -483,6 +483,7 @@ export const pageDocumentSchema = z
     hideHeader: z.boolean().optional(),
     editHeader: z.boolean().optional(),
     editBody: z.boolean().optional(),
+    editSidebar: z.boolean().optional(),
     sections: z.array(sectionSchema).max(80),
   })
   .strict();

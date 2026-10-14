@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Archive, ArchiveRestore, Copy } from "lucide-react";
 import type { BlogDraft, PageDocument } from "@/lib/content-schema";
 import { SITE_AUTHORS } from "@/lib/content-schema";
-import { setArchived, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
+import { applyText, setArchived, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
 import type { EditorApi } from "@/components/editor/types";
 import { Field, Group, Select, TextArea, TextInput, Toggle } from "@/components/editor/ui";
 import { navigationEditingEnabled, pageCapabilityFlags, showBody, showHeaderToggle, showMetadata } from "@/components/editor/inspector/page-controls";
@@ -17,6 +17,7 @@ export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: Page
   const canEditNav = navigationEditingEnabled(api.adapter);
   const disabled = !api.canEdit || page.locked || !body;
   const parents = api.site.pages.filter((item) => item.route !== page.route && item.route !== "/" && !item.parentRoute && !item.archived);
+  const sidebar = page.sections.find((section) => section.type === "paragraph" && section.editorName === "Sidebar");
   return (
     <>
       {flags.providerManaged ? <p className="ed-note">This page is managed for you. You can still change its menu label and search details.</p> : null}
@@ -49,6 +50,11 @@ export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: Page
           </Field>
         ) : null}
         {showHeaderToggle(flags) ? <Toggle label="Hide the site header on this page" checked={Boolean(page.hideHeader)} disabled={disabled} onChange={(value) => api.commit(updatePageMeta(api.site, page.route, { hideHeader: value }), true)} /> : null}
+        {sidebar ? (
+          <Field label="Sidebar text">
+            <TextArea rows={3} value={sidebar.text} disabled={!api.canEdit || flags.editSidebar !== true} onChange={(value) => api.commitText(applyText(api.site, page.route, sidebar.id, "text", value), `${sidebar.id}:text`, true)} />
+          </Field>
+        ) : null}
       </Group>
       {page.route !== "/" && body ? (
         <Group title="Page actions">

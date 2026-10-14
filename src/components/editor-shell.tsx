@@ -1483,7 +1483,9 @@ export function EditorShell(props: {
         setEditing(Boolean(data.active));
         break;
       case "4eos-text": {
-        if (pageCapabilityFlags(adapter, page ?? {}).editBody !== true) return;
+        const flags = pageCapabilityFlags(adapter, page ?? {});
+        const target = page?.sections.find((item) => item.id === text("sectionId"));
+        if (target?.editorName === "Sidebar" ? flags.editSidebar !== true : flags.editBody !== true) return;
         const marks = readMarks(data.marks);
         const itemId = text("itemId");
         const nodeId = richBlocks.current.get(itemId);
