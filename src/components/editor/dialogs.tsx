@@ -9,6 +9,7 @@ import type { MediaItem, Publication } from "@/components/editor/types";
 import { Dialog, Field, Kbd, Select, TextArea, TextInput, Toggle } from "@/components/editor/ui";
 import { LibraryBrowser } from "@/components/editor/library";
 import type { CustomDefinition } from "@/platform/elements/custom";
+import { slugPatternOf, slugProblem } from "@/platform/pages/slug";
 import { templateChoices } from "@/platform/templates/catalog";
 
 export type PageForm = { title: string; route: string; template: PageDocument["template"]; navVisible: boolean; seoTitle: string; metaDescription: string };
@@ -21,9 +22,14 @@ export function AddPageDialog(props: { site: SiteDraft; adapter: Record<string, 
   const [busy, setBusy] = useState(false);
   const route = form.route || (form.title ? `/${slugify(form.title)}` : "");
   const taken = props.site.pages.some((page) => page.route === route);
+  const addressError = slugProblem(route, slugPatternOf(props.adapter));
   async function submit() {
     if (!form.title.trim()) {
       setError("Give the page a name.");
+      return;
+    }
+    if (addressError || taken) {
+      setError(addressError || "That address is already used.");
       return;
     }
     setBusy(true);
@@ -46,7 +52,7 @@ export function AddPageDialog(props: { site: SiteDraft; adapter: Record<string, 
         <Field label="Page name">
           <TextInput value={form.title} maxLength={80} placeholder="Our services" onChange={(title) => { setError(""); setForm({ ...form, title, route: routeTouched ? form.route : title ? `/${slugify(title)}` : "" }); }} />
         </Field>
-        <Field label="Web address" hint={taken ? "That address is already used." : "Lowercase words joined by dashes."}>
+        <Field label="Web address" hint={taken ? "That address is already used." : addressError || "Lowercase words joined by dashes."}>
           <TextInput value={route} placeholder="/our-services" onChange={(value) => { setError(""); setRouteTouched(true); setForm({ ...form, route: value }); }} />
         </Field>
         <Field label="Starting layout">
