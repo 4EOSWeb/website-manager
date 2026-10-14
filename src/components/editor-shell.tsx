@@ -72,7 +72,7 @@ import { reparent } from "@/platform/drag/reparent";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
 import { LibraryBrowser } from "@/components/editor/library";
 import { Inspector } from "@/components/editor/inspector";
-import { renameGeneratedNode, type GeneratedNode } from "@/components/editor/inspector/generated-model";
+import { renameGeneratedNode, writeGeneratedProp, type GeneratedNode } from "@/components/editor/inspector/generated-model";
 import { renameVisualNode } from "@/components/editor/layers/rename-name";
 import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTargetForNode, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
 import { selectNodeId } from "@/components/editor/state/selection";
@@ -1936,6 +1936,16 @@ export function EditorShell(props: {
             setGenericByBlock((items) => ({ ...items, [blockId]: renamed }));
             const nextVisual = renameVisualNode(visualDocument, current.id, name);
             commit(setEditorName(site, path, sectionId, name, blockId), false, nextVisual ?? undefined);
+          }}
+          onGeneratedProp={(prop, value) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            const current = genericByBlock[blockId];
+            if (!current || !sectionId) return;
+            const nextNode = writeGeneratedProp(current, prop, value);
+            setGenericByBlock((items) => ({ ...items, [blockId]: nextNode }));
+            if (prop !== "text" && prop !== "label" && prop !== "quote" && prop !== "title") return;
+            commitText(applyText(site, path, sectionId, "text", value, blockId), `${blockId}:${prop}`, true);
           }}
         />
       </div>

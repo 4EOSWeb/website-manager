@@ -61,6 +61,7 @@ export function Inspector(props: {
   overflow?: string | null;
   generated?: GeneratedNode | null;
   onGeneratedName?: (name: string) => void;
+  onGeneratedProp?: (prop: string, value: string) => void;
 }) {
   const { api } = props;
   const selection = api.selection;
@@ -145,7 +146,7 @@ export function Inspector(props: {
         </div>
       ) : null}
       <div className="ed-inspector-body" id="inspector-panel" role={tabs.length > 1 ? "tabpanel" : undefined} aria-labelledby={tabs.length > 1 ? `tab-${active}` : undefined}>
-        {props.generated && props.onGeneratedName ? <GeneratedInspector node={props.generated} onName={props.onGeneratedName} /> : null}
+        {props.generated && props.onGeneratedName ? <GeneratedInspector node={props.generated} onName={props.onGeneratedName} onProp={props.onGeneratedProp} /> : null}
         {mode.kind === "none" ? (
           props.managedRoute ? (
             <Empty title="This page is managed for you">Articles, search results, and system pages come from your website provider. Choose a page on the left to edit it.</Empty>
