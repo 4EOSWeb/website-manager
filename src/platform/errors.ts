@@ -16,6 +16,8 @@ export type PlatformError = {
   code: PlatformErrorCode;
   message: string;
   path?: string;
+  /** Set by an adapter when the editor must not save. Omitted means a warning. */
+  fatal?: boolean;
 };
 
 const defaultMessages: Record<PlatformErrorCode, string> = {

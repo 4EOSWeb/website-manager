@@ -50,6 +50,8 @@ import { activeSiteContext, createSiteState } from "@/components/editor/state/si
 import { breakpointWidth, previewRadioLabel, type BreakpointId } from "@/components/editor/state/breakpoint";
 import { emptyDirty, markChanged, markSaved, shouldWarnBeforeUnload, switchWebsite } from "@/components/editor/state/dirty";
 import { dismissEditorError, editorErrorFromSave, type EditorError } from "@/components/editor/state/errors";
+import { FieldIssueProvider } from "@/components/editor/inspector/errors";
+import { blocksSave, type FieldIssue } from "@/components/editor/inspector/errors-model";
 import { mountEditorStore, unmountEditorStore } from "@/components/editor/state/store";
 import { persistExperience, readExperience, type ExperienceMode } from "@/components/editor/state/experience";
 import { emptySelection, type EditorApi, type MediaItem, type Publication, type RailPanel, type SaveState, type Selection, type Snapshot, type Viewport } from "@/components/editor/types";
@@ -236,6 +238,11 @@ export function EditorShell(props: {
   const saveSeq = useRef(0);
   const pendingDraft = useRef<SiteDraft | null>(null);
   const saveFlight = useRef<Promise<boolean> | null>(null);
+  const fieldIssues = useRef(new Map<string, readonly FieldIssue[]>());
+  const reportFieldIssues = useCallback((id: string, issues: readonly FieldIssue[]) => {
+    if (issues.length === 0) fieldIssues.current.delete(id);
+    else fieldIssues.current.set(id, issues);
+  }, []);
   const siteRef = useRef(site);
   const scrollByPath = useRef<Record<string, number>>({});
   const readyFor = useRef("");
@@ -358,6 +365,13 @@ export function EditorShell(props: {
         let ok = true;
         try {
           while (pendingDraft.current) {
+            const marked = [...fieldIssues.current.values()].flat();
+            if (blocksSave(marked)) {
+              setSave("error");
+              setEditorError({ code: "document_invalid", message: "Fix the marked fields before saving." });
+              notify("Fix the marked fields before saving.", "error");
+              return false;
+            }
             const next = pendingDraft.current;
             pendingDraft.current = null;
             saveSeq.current += 1;
@@ -1956,6 +1970,7 @@ export function EditorShell(props: {
             }}
           />
         </main>
+        <FieldIssueProvider onReport={reportFieldIssues}>
         <Inspector
           api={api}
           post={activePost}
@@ -2098,6 +2113,7 @@ export function EditorShell(props: {
           inspectorSlots={props.inspectorSlots}
           experience={experience}
         />
+        </FieldIssueProvider>
       </div>
       <StatusBar message={statusMessage} viewport={viewport} scale={scale} zoom={zoom} onZoom={setZoom} role={props.role} editing={editing} onShortcuts={() => setShortcuts(true)} />
       <div className="ed-toasts" aria-live="polite">

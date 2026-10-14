@@ -68,10 +68,10 @@ export function Field(props: { label: string; hint?: string; children: ReactNode
   );
 }
 
-export function TextInput(props: { value: string; onChange: (value: string) => void; placeholder?: string; disabled?: boolean; maxLength?: number; type?: string; list?: string; autoFocus?: boolean }) {
+export function TextInput(props: { value: string; onChange: (value: string) => void; placeholder?: string; disabled?: boolean; maxLength?: number; type?: string; list?: string; autoFocus?: boolean; invalid?: boolean }) {
   return (
     <input
-      className="ed-input"
+      className={props.invalid ? "ed-input is-invalid" : "ed-input"}
       type={props.type ?? "text"}
       value={props.value}
       placeholder={props.placeholder}
@@ -79,6 +79,7 @@ export function TextInput(props: { value: string; onChange: (value: string) => v
       maxLength={props.maxLength}
       list={props.list}
       autoFocus={props.autoFocus}
+      aria-invalid={props.invalid || undefined}
       onChange={(event) => props.onChange(event.target.value)}
     />
   );

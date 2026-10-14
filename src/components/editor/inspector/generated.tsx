@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { inspectorFields } from "@/platform/registry/inspector-fields";
+import { validateProps } from "@/platform/registry/props-schema";
 import { propsSchemaFor } from "@/platform/elements/props-schemas";
 import { Field } from "@/components/editor/ui";
 import { colorTokenOptions, designDefinitionFor, generatedName, isContentProp, visibleDesignKeys, type GeneratedNode } from "@/components/editor/inspector/generated-model";
 import { inspectorSlot, type RegisteredInspector } from "@/components/editor/inspector/registered-model";
+import { FieldError, useFieldIssues } from "@/components/editor/inspector/errors";
+import { issuesFromProps, type FieldIssue } from "@/components/editor/inspector/errors-model";
 
 /** Name, id, and component for a generic node, plus the descriptors from its props schema. */
 const colorKeys = new Set(["color", "background", "border"]);
@@ -24,7 +27,11 @@ export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: 
   const tokens = colorTokenOptions(props.tokens ?? []);
   const registered = props.registered?.find((item) => item.componentId === props.node.componentId);
   const slot = inspectorSlot(registered?.customInspectorId, props.slots ?? {}, props.experience ?? "basic");
+  const checked = schema ? validateProps({ propsSchema: schema, propsSchemaId: props.node.componentId }, props.node.props) : null;
+  const propIssues = checked ? issuesFromProps(checked) : [];
+  useFieldIssues(`props:${props.node.id}`, propIssues);
   const stored = generatedName(props.node);
+  const issueFor = (path: string): FieldIssue | null => propIssues.find((issue) => issue.path === path) ?? null;
   const [name, setName] = useState(stored);
   useEffect(() => setName(stored), [stored, props.node.id]);
   return (
@@ -54,12 +61,14 @@ export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: 
           {content.map((field) => (
             <Field key={field.prop} label={field.label}>
               <input
-                className="ed-input"
+                className={issueFor(field.prop) ? "ed-input is-invalid" : "ed-input"}
                 aria-label={field.label}
+                aria-invalid={issueFor(field.prop) ? true : undefined}
                 value={String(props.node.props[field.prop] ?? "")}
                 data-generated-prop={field.prop}
                 onChange={(event) => props.onProp?.(field.prop, event.target.value)}
               />
+              <FieldError issue={issueFor(field.prop)} />
             </Field>
           ))}
         </div>
@@ -104,7 +113,8 @@ export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: 
             const value = typeof stored === "string" ? stored : "";
             return (
               <Field key={field.prop} label={field.label}>
-                <input className="ed-input" aria-label={field.label} value={value} data-generated-prop={field.prop} onChange={(event) => props.onProp?.(field.prop, event.target.value)} />
+                <input className={issueFor(field.prop) ? "ed-input is-invalid" : "ed-input"} aria-label={field.label} aria-invalid={issueFor(field.prop) ? true : undefined} value={value} data-generated-prop={field.prop} onChange={(event) => props.onProp?.(field.prop, event.target.value)} />
+                <FieldError issue={issueFor(field.prop)} />
               </Field>
             );
           })}
@@ -117,7 +127,8 @@ export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: 
           <p key={field.prop} className="ed-hint" data-generated-prop={field.prop}>{field.warning}</p>
         ) : (
           <Field key={field.prop} label={field.label}>
-            <input className="ed-input" aria-label={field.label} value={String(props.node.props[field.prop] ?? "")} readOnly data-generated-prop={field.prop} />
+            <input className={issueFor(field.prop) ? "ed-input is-invalid" : "ed-input"} aria-label={field.label} aria-invalid={issueFor(field.prop) ? true : undefined} value={String(props.node.props[field.prop] ?? "")} readOnly data-generated-prop={field.prop} />
+            <FieldError issue={issueFor(field.prop)} />
           </Field>
         )
       ))}
