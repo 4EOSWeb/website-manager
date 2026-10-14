@@ -19,6 +19,7 @@ import { LinkFields } from "@/components/editor/inspector/link-fields";
 import { ImageFields } from "@/components/editor/inspector/image-fields";
 import { ButtonFields } from "@/components/editor/inspector/button-fields";
 import { adapterFontFamilies, type ButtonStateName } from "@/components/editor/inspector/button-model";
+import { TextFields } from "@/components/editor/inspector/text-fields";
 
 const BLOCK_LABELS: Record<string, string> = {
   eyebrow: "Small heading",
@@ -84,6 +85,7 @@ export function Inspector(props: {
   onImageFocal?: (focal: "center" | "top" | "bottom" | "left" | "right") => void;
   onButton?: (key: string, value: string) => void;
   onButtonState?: (state: ButtonStateName, key: string, value: string) => void;
+  onTextStyle?: (key: string, value: string) => void;
 }) {
   const { api } = props;
   const selection = api.selection;
@@ -201,7 +203,18 @@ export function Inspector(props: {
         {block && section?.type === "flow" ? (
           <>
             {mode.kind === "text" && active === "content" ? <TextContent api={api} section={section} block={block} /> : null}
-            {mode.kind === "text" && active === "design" ? <TextStyleTab api={api} section={section} block={block} /> : null}
+            {mode.kind === "text" && active === "design" && props.generated?.componentId !== "generic.heading" && props.generated?.componentId !== "generic.text" ? <TextStyleTab api={api} section={section} block={block} /> : null}
+            {(props.generated?.componentId === "generic.heading" || props.generated?.componentId === "generic.text") && active === "design" && props.onTextStyle ? (
+              <TextFields
+                tag={block.textStyle?.tag ?? (props.generated.componentId === "generic.text" ? "p" : "h2")}
+                weight={block.textStyle?.weight ?? "regular"}
+                leading={block.textStyle?.leading ?? "normal"}
+                tracking={block.textStyle?.tracking ?? "normal"}
+                align={block.textStyle?.align ?? "start"}
+                color={block.textStyle?.color ?? ""}
+                onChange={props.onTextStyle}
+              />
+            ) : null}
             {mode.kind === "button" && active === "content" && props.generated?.componentId !== "generic.button" ? <ButtonContent api={api} section={section} block={block} /> : null}
             {mode.kind === "button" && active === "design" && props.generated?.componentId !== "generic.button" ? <ButtonStyle api={api} section={section} block={block} /> : null}
             {props.generated?.componentId === "generic.button" && (active === "content" || active === "design") && props.onButton && props.onButtonState ? (

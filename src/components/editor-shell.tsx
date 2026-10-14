@@ -79,6 +79,7 @@ import { applyBlockVisibility, writeHideOn } from "@/components/editor/inspector
 import { acceptLink } from "@/components/editor/inspector/link-model";
 import { replaceImageSrc } from "@/components/editor/inspector/image-model";
 import { buttonFlowPatch, writeButtonState } from "@/components/editor/inspector/button-model";
+import { textStylePatch } from "@/components/editor/inspector/text-model";
 import { renameVisualNode } from "@/components/editor/layers/rename-name";
 import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTargetForNode, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
 import { selectNodeId } from "@/components/editor/state/selection";
@@ -2082,6 +2083,13 @@ export function EditorShell(props: {
             const current = genericByBlock[blockId];
             if (!current) return;
             setGenericByBlock((items) => ({ ...items, [blockId]: { ...current, props: writeButtonState(current.props, state, key, value) } }));
+          }}
+          onTextStyle={(key, value) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            const patch = textStylePatch(key, value);
+            if (!blockId || !sectionId || !patch) return;
+            commit(patchFlowBlock(site, path, sectionId, blockId, { textStyle: patch }), true);
           }}
         />
       </div>
