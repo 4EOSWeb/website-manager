@@ -482,6 +482,7 @@ export const pageDocumentSchema = z
     shareImage: mediaPath.optional(),
     hideHeader: z.boolean().optional(),
     editHeader: z.boolean().optional(),
+    editBody: z.boolean().optional(),
     sections: z.array(sectionSchema).max(80),
   })
   .strict();

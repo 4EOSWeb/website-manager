@@ -39,3 +39,18 @@ export function staysLocked(node: unknown): boolean {
 export function headerChromeField(field: string): boolean {
   return field === "buttonLabel" || field === "siteName" || field === "announcement";
 }
+
+const regionRoles = new Set(["header", "footer", "sidebar", "cta"]);
+
+/** Root children that are the page body. Header, footer, sidebar, and call to action are left out. */
+export function bodyNodes(root: unknown): Tree[] {
+  const tree = record(root);
+  if (!tree) return [];
+  const nodes: Tree[] = [];
+  for (const child of tree.children ?? []) {
+    const item = record(child);
+    if (!item || regionRoles.has(regionTag(item))) continue;
+    nodes.push(item);
+  }
+  return nodes;
+}
