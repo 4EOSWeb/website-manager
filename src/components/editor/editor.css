@@ -700,6 +700,17 @@
   text-transform: capitalize;
 }
 
+.ed-layer-id {
+  flex: none;
+  max-width: 9rem;
+  overflow: hidden;
+  color: var(--ed-muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  user-select: text;
+  cursor: text;
+}
+
 /* Form controls */
 .ed-field {
   display: grid;

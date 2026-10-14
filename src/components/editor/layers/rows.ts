@@ -4,6 +4,7 @@ import { layerNodeLabel } from "@/components/editor/layers/labels";
 export type LayerNode = {
   id: string;
   type: string;
+  componentId?: string;
   metadata?: Record<string, unknown>;
   children?: LayerNode[];
   locked?: { locked?: boolean };

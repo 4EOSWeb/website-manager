@@ -47,3 +47,13 @@ export function layerNodeLabel(node: { type: string; metadata?: { name?: unknown
 }
 
 export const labeledNodeTypes: readonly string[] = [...nodeTypes, "paragraph", "canvas"];
+
+export type LayerExperience = "basic" | "advanced" | "administrator";
+
+/** Advanced and Administrator can copy the component id. Basic rows omit it. */
+export function layerIdText(mode: LayerExperience, node: { id?: string; componentId?: string | null }): string {
+  if (mode === "basic") return "";
+  const componentId = typeof node.componentId === "string" ? node.componentId.trim() : "";
+  if (componentId) return componentId;
+  return typeof node.id === "string" ? node.id.trim() : "";
+}

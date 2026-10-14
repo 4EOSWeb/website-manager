@@ -20,7 +20,7 @@ import { setLayerVisibility } from "@/components/editor/layers/visibility-node";
 import { LayerReparentNote } from "@/components/editor/layers/reparent";
 import { applyLayerReparent, decideLayerDrop } from "@/components/editor/layers/reparent-drop";
 import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
-import { typeLabel } from "@/components/editor/layers/labels";
+import { layerIdText, typeLabel, type LayerExperience } from "@/components/editor/layers/labels";
 import { defaultOpenIds, legacyTarget, visualPageRoot } from "@/components/editor/layers/rows";
 
 export function PagesPanel(props: {
@@ -108,7 +108,7 @@ export function PagesPanel(props: {
   );
 }
 
-export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSelect: (sectionId: string, itemId?: string) => void; onChrome: (part: "header" | "footer") => void }) {
+export function LayersPanel(props: { api: EditorApi; experience: LayerExperience; chromeFocus: string; onSelect: (sectionId: string, itemId?: string) => void; onChrome: (part: "header" | "footer") => void }) {
   const { api } = props;
   const [renaming, setRenaming] = useState("");
   const sections = api.page?.sections ?? [];
@@ -183,6 +183,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
         <ul className="ed-tree is-layers" role="tree" aria-label="Page layers" data-layer-source="visual">
           <LayerTree
             root={visualRoot}
+            experience={props.experience}
             open={layers.open}
             onToggle={layers.toggle}
             selection={{ sectionId: api.selection.sectionId, itemId: api.selection.itemId }}
@@ -264,17 +265,21 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
                   {section.blocks.map((block) => {
                     const active = api.selection.itemId === block.id;
                     const label = block.editorName || (block.text && typeof block.text === "object" && block.text.text ? block.text.text.slice(0, 32) : block.kind);
+                    const componentId = layerIdText(props.experience, { id: block.id });
                     return (
                       <li key={block.id} role="treeitem" aria-selected={active} data-layer-id={block.id} data-layer-parent={section.id} data-section-type={section.type} data-locked={block.locked ? "true" : undefined} data-hidden={block.hidden ? "true" : undefined} data-layer-drop={layersDrag.drop?.id === block.id ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
                         <div className={active ? "ed-tree-row is-child is-active" : "ed-tree-row is-child"}>
                           {renaming === block.id ? (
                             <LayerRename value={block.editorName || ""} label="Item name" onCommit={(value) => rename(section.id, value, block.id)} onCancel={() => setRenaming("")} />
                           ) : (
-                            <button type="button" className={`ed-tree-main ${block.hidden ? "is-hidden" : ""}`} onClick={() => props.onSelect(section.id, block.id)} onDoubleClick={() => api.canEdit && setRenaming(block.id)}>
-                              <span className="ed-kind">{block.kind === "brand-mark" ? "Logo" : typeLabel(block.kind)}</span>
-                              <span className="truncate">{label}</span>
-                              {block.locked ? <Lock size={12} aria-label="Locked" className="ed-muted-icon" /> : null}
-                            </button>
+                            <>
+                              <button type="button" className={`ed-tree-main ${block.hidden ? "is-hidden" : ""}`} onClick={() => props.onSelect(section.id, block.id)} onDoubleClick={() => api.canEdit && setRenaming(block.id)}>
+                                <span className="ed-kind">{block.kind === "brand-mark" ? "Logo" : typeLabel(block.kind)}</span>
+                                <span className="truncate">{label}</span>
+                                {block.locked ? <Lock size={12} aria-label="Locked" className="ed-muted-icon" /> : null}
+                              </button>
+                              {componentId ? <span className="ed-layer-id">{componentId}</span> : null}
+                            </>
                           )}
                           {block.locked ? (
                             <LayerUnlockButton

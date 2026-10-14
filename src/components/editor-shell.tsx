@@ -1851,7 +1851,7 @@ export function EditorShell(props: {
                 commit={commit}
               />
             ) : null}
-            {rail === "layers" ? <LayersPanel api={api} chromeFocus={selection.chrome} onSelect={selectNode} onChrome={selectChrome} /> : null}
+            {rail === "layers" ? <LayersPanel api={api} experience={experience} chromeFocus={selection.chrome} onSelect={selectNode} onChrome={selectChrome} /> : null}
             {rail === "design" ? <DesignPanel site={site} canEdit={props.canEdit} commit={commit} commitText={commitText} /> : null}
             {rail === "media" ? (
               <MediaPanel

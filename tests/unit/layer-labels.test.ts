@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { quantumAgeHero } from "../../adapters/quantum-age/components/hero.ts";
-import { labeledNodeTypes, layerNodeLabel, typeLabel } from "../../src/components/editor/layers/labels.ts";
+import { labeledNodeTypes, layerIdText, layerNodeLabel, typeLabel } from "../../src/components/editor/layers/labels.ts";
 import { nodeTypes } from "../../src/platform/document/node-type.ts";
 
 test("a heading row says Heading unless it was renamed", () => {
@@ -32,4 +32,13 @@ test("node types and paragraph and canvas have words", () => {
   assert.equal(typeLabel("group"), "Group");
   assert.equal(typeLabel("unknown-type"), "unknown-type");
   assert.ok(labeledNodeTypes.includes("heading"));
+});
+
+test("basic layers hide component ids and advanced layers show them", () => {
+  const button = { id: "node_button", componentId: "generic.button" };
+  assert.equal(layerIdText("basic", button), "");
+  assert.equal(layerIdText("advanced", button), "generic.button");
+  assert.equal(layerIdText("administrator", button), "generic.button");
+  assert.equal(layerIdText("advanced", { id: "blk_who_h" }), "blk_who_h");
+  assert.equal(layerIdText("basic", { id: "blk_who_h", componentId: "generic.button" }), "");
 });
