@@ -11,8 +11,8 @@ import { mixedProps } from "@/platform/canvas/multi-select";
 import { overlapWarning, type OverlapBox } from "@/platform/canvas/overlap";
 import type { EditorApi, Viewport } from "@/components/editor/types";
 import { Field, Group, TextArea, TextInput, Toggle } from "@/components/editor/ui";
-import { InheritanceLabel } from "@/components/editor/inspector/inheritance-label";
-import { inheritanceLabelText } from "@/components/editor/inspector/inheritance-text";
+import { ResponsiveFields } from "@/components/editor/inspector/responsive-fields";
+import { responsiveFieldsVisible } from "@/components/editor/inspector/responsive-model";
 import { LinkPicker } from "@/components/editor/inspector/shared";
 
 function placedBox(item: FreeformItem, viewport: Viewport): OverlapBox {
@@ -107,18 +107,20 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
       mobile: item.mobile ? { box: item.mobile } : undefined,
     },
   };
-  const label = inheritanceLabelText({ mode: "canvas", breakpoint: api.viewport, node });
-  const inheritance = (
-    <>
-      <InheritanceLabel mode="canvas" breakpoint={api.viewport} node={node} />
-      {label === "Custom position" ? (
-        <button type="button" className="ed-button" disabled={disabled} onClick={() => {
-          if (api.viewport !== "tablet" && api.viewport !== "mobile") return;
-          const reset = resetOverride(api.visualDocument, item.id, api.viewport);
-          api.commit(clearItemBreakpoint(api.site, api.path, section.id, item.id, api.viewport, overlay), true, reset ?? undefined);
-        }}>Use inherited position</button>
-      ) : null}
-    </>
+  const responsive = (
+    <ResponsiveFields
+      visible={responsiveFieldsVisible({ mode: "canvas" })}
+      strategy={item.strategy}
+      breakpoint={api.viewport}
+      node={node}
+      disabled={disabled}
+      onStrategy={(strategy) => set({ strategy })}
+      onReset={() => {
+        if (api.viewport !== "tablet" && api.viewport !== "mobile") return;
+        const reset = resetOverride(api.visualDocument, item.id, api.viewport);
+        api.commit(clearItemBreakpoint(api.site, api.path, section.id, item.id, api.viewport, overlay), true, reset ?? undefined);
+      }}
+    />
   );
   const siblings = section.type === "freeform" ? section.items : section.type === "preset" ? section.overlay ?? [] : [];
   const warning = overlapWarning(placedBox(item, api.viewport), siblings.filter((other) => other.id !== item.id).map((other) => placedBox(other, api.viewport)));
@@ -131,7 +133,7 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
     const ids = api.selection.itemIds.length ? api.selection.itemIds : [item.id];
     return (
       <>
-        {inheritance}
+        {responsive}
         {notice}
         {mixedNote}
         <Group title="Align">
@@ -189,7 +191,7 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
   }
   return (
     <>
-    {inheritance}
+    {responsive}
     {notice}
     {mixedNote}
     <Group title="Content">

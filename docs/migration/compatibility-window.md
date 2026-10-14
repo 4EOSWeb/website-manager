@@ -11,7 +11,7 @@ The editor still reads and writes version 3 drafts. The visual document is store
 | Legacy reorder messages | Same-section and cross-section block moves use `4eos-reparent`. The hub no longer listens for `4eos-reorder-block`. | Removed in step 11.31 |
 | Preview website id | A preview message must include this website’s id. A missing id is ignored. | Removed in step 11.31 |
 | Version 3 layers list | Layers shows the visual page tree when a visual document is present. The version 3 section list stays as the fallback. | Step 19.25 |
-| Version 3 inspector | A generic node shows a generated name, id, and component. Text, label, quote, and title sit on a generated Content tab. A styleable button shows color and background, and the color list comes from the active adapter. A generic container can switch Flow, Stack, Grid, and Canvas after a confirm, and undo restores the previous layout. Version 3 selections keep their Content, Design, and Layout tabs until generated fields cover that control. | Step 19.25 |
+| Version 3 inspector | A generic node shows a generated name, id, and component. Text, label, quote, and title sit on a generated Content tab. A styleable button shows color and background, and the color list comes from the active adapter. A generic container can switch Flow, Stack, Grid, and Canvas after a confirm, and undo restores the previous layout. A canvas item shows Scale, Reflow, and Custom, plus the inheritance label and reset. Flow text does not show that strategy. Version 3 selections keep their Content, Design, and Layout tabs until generated fields cover that control. | Step 19.25 |
 
 Check: `rg "step 19.25"`.
 
