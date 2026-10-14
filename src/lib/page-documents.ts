@@ -171,7 +171,15 @@ export function templateSections(template: PageDocument["template"]): Section[] 
     ];
   }
   if (template === "service") {
-    return [createSection("heading"), createSection("features"), createSection("faq"), createSection("cta")];
+    const cta = createSection("cta");
+    return [
+      withText("heading", "Service"),
+      withText("paragraph", "Explain the work"),
+      createSection("card"),
+      createSection("card"),
+      createSection("card"),
+      cta.type === "cta" ? { ...cta, heading: "Next step", body: "Say what happens next.", label: "Continue", href: "/" } : cta,
+    ];
   }
   if (template === "resource") {
     return [createSection("heading"), withText("paragraph", "Summarize the resource in a few sentences."), createSection("quote")];
