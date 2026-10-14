@@ -16,6 +16,7 @@ import { layoutModeName, type LayoutModeName, type LayoutNode } from "@/componen
 import { VisibilityFields } from "@/components/editor/inspector/visibility-fields";
 import type { VisibilityDevice, VisibilityState } from "@/components/editor/inspector/visibility-model";
 import { LinkFields } from "@/components/editor/inspector/link-fields";
+import { ImageFields } from "@/components/editor/inspector/image-fields";
 
 const BLOCK_LABELS: Record<string, string> = {
   eyebrow: "Small heading",
@@ -76,6 +77,9 @@ export function Inspector(props: {
   onVisibility?: (device: VisibilityDevice, hidden: boolean) => void;
   onLink?: (href: string) => void;
   onLinkTarget?: (target: "same" | "new") => void;
+  onImageAlt?: (alt: string) => void;
+  onImageFit?: (fit: "fit" | "fill") => void;
+  onImageFocal?: (focal: "center" | "top" | "bottom" | "left" | "right") => void;
 }) {
   const { api } = props;
   const selection = api.selection;
@@ -196,8 +200,24 @@ export function Inspector(props: {
             {mode.kind === "text" && active === "design" ? <TextStyleTab api={api} section={section} block={block} /> : null}
             {mode.kind === "button" && active === "content" ? <ButtonContent api={api} section={section} block={block} /> : null}
             {mode.kind === "button" && active === "design" ? <ButtonStyle api={api} section={section} block={block} /> : null}
-            {mode.kind === "image" && active === "content" ? <ImageContent api={api} section={section} block={block} /> : null}
-            {mode.kind === "image" && active === "layout" ? <ImageStyle api={api} section={section} block={block} /> : null}
+            {mode.kind === "image" && active === "content" && props.generated?.componentId !== "generic.image" ? <ImageContent api={api} section={section} block={block} /> : null}
+            {mode.kind === "image" && active === "layout" && props.generated?.componentId !== "generic.image" ? <ImageStyle api={api} section={section} block={block} /> : null}
+            {props.generated?.componentId === "generic.image" && (active === "content" || active === "layout") && props.onImageAlt && props.onImageFit && props.onImageFocal ? (
+              <ImageFields
+                active={active}
+                websiteId={api.websiteId}
+                src={block.src ?? ""}
+                alt={block.alt ?? ""}
+                fit={block.fit === "fill" ? "fill" : "fit"}
+                focal={block.focal ?? "center"}
+                disabled={!api.canEdit}
+                onChoose={api.openPicker}
+                onCrop={api.openCrop}
+                onAlt={props.onImageAlt}
+                onFit={props.onImageFit}
+                onFocal={props.onImageFocal}
+              />
+            ) : null}
             {active === "layout" && mode.kind !== "locked" ? <BlockVisibility api={api} section={section} block={block} /> : null}
           </>
         ) : null}

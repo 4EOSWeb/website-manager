@@ -77,6 +77,7 @@ import { adapterColorTokens, renameGeneratedNode, writeGeneratedProp, writeGener
 import { applySectionLayout, componentDefinitions, confirmLayoutMode, definitionAllowsLayout, writeLayoutSetting, type LayoutNode } from "@/components/editor/inspector/layout-model";
 import { applyBlockVisibility, writeHideOn } from "@/components/editor/inspector/visibility-model";
 import { acceptLink } from "@/components/editor/inspector/link-model";
+import { replaceImageSrc } from "@/components/editor/inspector/image-model";
 import { renameVisualNode } from "@/components/editor/layers/rename-name";
 import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTargetForNode, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
 import { selectNodeId } from "@/components/editor/state/selection";
@@ -646,6 +647,16 @@ export function EditorShell(props: {
     }
     if (!selection.sectionId) {
       notify("Select an image on the page first.");
+      return;
+    }
+    if (selection.itemId && genericByBlock[selection.itemId]?.componentId === "generic.image") {
+      const blockId = selection.itemId;
+      setGenericByBlock((items) => {
+        const current = items[blockId];
+        if (!current) return items;
+        return { ...items, [blockId]: { ...current, props: { ...current.props, src: item.src } } };
+      });
+      commit(replaceImageSrc(site, path, selection.sectionId, blockId, item.src), true);
       return;
     }
     const galleryNodeId = selection.itemId ? undefined : gallerySections.current.get(selection.sectionId);
@@ -2026,6 +2037,26 @@ export function EditorShell(props: {
             const sectionId = selection.sectionId;
             if (!blockId || !sectionId) return;
             commit(patchFlowBlock(site, path, sectionId, blockId, { target }), true);
+          }}
+          onImageAlt={(alt) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            const current = genericByBlock[blockId];
+            if (!blockId || !sectionId) return;
+            if (current) setGenericByBlock((items) => ({ ...items, [blockId]: { ...current, props: { ...current.props, alt } } }));
+            commitText(applyText(site, path, sectionId, "alt", alt, blockId), `${blockId}:alt`, true);
+          }}
+          onImageFit={(fit) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            if (!blockId || !sectionId) return;
+            commit(patchFlowBlock(site, path, sectionId, blockId, { fit }), true);
+          }}
+          onImageFocal={(focal) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            if (!blockId || !sectionId) return;
+            commit(patchFlowBlock(site, path, sectionId, blockId, { focal }), true);
           }}
         />
       </div>
