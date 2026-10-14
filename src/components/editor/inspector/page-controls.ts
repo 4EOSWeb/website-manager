@@ -26,3 +26,9 @@ export function showBody(flags: PageCapabilities): boolean {
 export function showHeaderToggle(flags: PageCapabilities): boolean {
   return flags.editHeader === true;
 }
+
+/** The menu toggle is shown only when the adapter allows navigation editing. */
+export function navigationEditingEnabled(adapter: unknown): boolean {
+  const capabilities = adapter && typeof adapter === "object" ? (adapter as { capabilities?: { supportsNavigationEditing?: unknown } }).capabilities : undefined;
+  return capabilities?.supportsNavigationEditing === true;
+}

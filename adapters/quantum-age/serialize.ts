@@ -312,12 +312,15 @@ export const serializeQuantumAge: SerializeHook = (document) => {
       ...videos,
       ...extras,
     ];
+    const navMeta = page.root.metadata;
+    const navVisible = typeof navMeta.navVisible === "boolean" ? navMeta.navVisible : page.route !== "/privacy" && page.route !== "/terms" && page.route !== "/contact";
     return {
       id: page.id,
       route: page.route,
       title: page.title,
       template: page.route === "/" ? "home" : "marketing",
-      navVisible: page.route !== "/privacy" && page.route !== "/terms" && page.route !== "/contact",
+      navVisible,
+      ...(typeof navMeta.navLabel === "string" ? { navLabel: navMeta.navLabel } : {}),
       seoTitle: page.metadata.seoTitle ?? page.title,
       metaDescription: page.metadata.metaDescription ?? "",
       archived: false,

@@ -7,12 +7,13 @@ import { SITE_AUTHORS } from "@/lib/content-schema";
 import { setArchived, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
 import type { EditorApi } from "@/components/editor/types";
 import { Field, Group, Select, TextArea, TextInput, Toggle } from "@/components/editor/ui";
-import { pageCapabilityFlags, showBody, showHeaderToggle, showMetadata } from "@/components/editor/inspector/page-controls";
+import { navigationEditingEnabled, pageCapabilityFlags, showBody, showHeaderToggle, showMetadata } from "@/components/editor/inspector/page-controls";
 import { routeReserved } from "@/platform/pages/reserved";
 
 export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: PageDocument; onDuplicate: () => void }) {
   const flags = pageCapabilityFlags(api.adapter, page);
   const body = showBody(flags);
+  const canEditNav = navigationEditingEnabled(api.adapter);
   const disabled = !api.canEdit || page.locked || !body;
   const parents = api.site.pages.filter((item) => item.route !== page.route && item.route !== "/" && !item.parentRoute && !item.archived);
   return (
@@ -36,7 +37,7 @@ export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: Page
       </Group>
       <Group title="Menu">
         <div data-page-control="menu">
-          <Toggle label="Show in the site menu" checked={page.navVisible} disabled={!api.canEdit || page.route === "/" || page.archived} onChange={(value) => api.commit(setNavVisible(api.site, page.route, value), true)} />
+          {canEditNav ? <Toggle label="Show in the site menu" checked={page.navVisible} disabled={!api.canEdit || page.route === "/" || page.archived} onChange={(value) => api.commit(setNavVisible(api.site, page.route, value), true)} /> : null}
           <Field label="Menu label">
             <TextInput value={page.navLabel ?? ""} placeholder={page.title} disabled={!api.canEdit} maxLength={80} onChange={(value) => api.commitText(updatePageMeta(api.site, page.route, { navLabel: value }), `${page.route}:nav`, true)} />
           </Field>

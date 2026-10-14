@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { pageCapabilityFlags, showBody, showMetadata } from "../../src/components/editor/inspector/page-controls.ts";
+import { navigationEditingEnabled, pageCapabilityFlags, showBody, showMetadata } from "../../src/components/editor/inspector/page-controls.ts";
 
 test("a provider-managed page hides body editing and a normal page shows metadata", () => {
   const adapter = { level: 2, pageCapabilities: { editMetadata: true, editBody: true } };
@@ -14,6 +14,9 @@ test("a provider-managed page hides body editing and a normal page shows metadat
   assert.equal(managed.providerManaged, true);
   const hidden = pageCapabilityFlags({ level: 2, pageCapabilities: { editMetadata: false, editBody: true } }, { locked: false });
   assert.equal(showMetadata(hidden), false);
+  assert.equal(navigationEditingEnabled({ capabilities: { supportsNavigationEditing: true } }), true);
+  assert.equal(navigationEditingEnabled({ capabilities: { supportsNavigationEditing: false } }), false);
+  assert.equal(navigationEditingEnabled(null), false);
   const source = readFileSync("src/components/editor/inspector/page.tsx", "utf8");
   assert.equal(source.includes("/privacy"), false);
   assert.equal(source.includes("/terms"), false);
