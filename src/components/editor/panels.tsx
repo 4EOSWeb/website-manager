@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DragRejectReason } from "@/components/editor/drag-status";
 import { ArrowDown, ArrowUp, Eye, EyeOff, FileText, Home, Lock, MoreHorizontal, PanelBottom, PanelTop, Plus, Search, Trash2, Upload } from "lucide-react";
 import type { BlogDraft, SiteDraft } from "@/lib/content-schema";
@@ -19,6 +19,7 @@ import { LayerVisibilityButton } from "@/components/editor/layers/visibility";
 import { setLayerVisibility } from "@/components/editor/layers/visibility-node";
 import { LayerReparentNote } from "@/components/editor/layers/reparent";
 import { applyLayerReparent, decideLayerDrop } from "@/components/editor/layers/reparent-drop";
+import { useLayerKeyboard } from "@/components/editor/layers/keyboard";
 import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
 import { layerIdText, layoutModeLabel, managedLabel, typeLabel, type LayerExperience } from "@/components/editor/layers/labels";
 import { defaultOpenIds, legacyTarget, visualPageRoot } from "@/components/editor/layers/rows";
@@ -130,6 +131,8 @@ export function LayersPanel(props: { api: EditorApi; experience: LayerExperience
     api.commit(setEditorName(api.site, api.path, sectionId, value, blockId), false);
   };
   const pageId = api.page?.id ?? "";
+  const treeRef = useRef<HTMLUListElement>(null);
+  useLayerKeyboard(treeRef, visualRoot ? "visual" : "version3");
   const selectedIds = api.selection.itemIds.length
     ? api.selection.itemIds
     : props.nodeIds.length
@@ -201,9 +204,9 @@ export function LayersPanel(props: { api: EditorApi; experience: LayerExperience
         <div className="ed-panel-head">
           <h2>Layers</h2>
         </div>
-        <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it. Drag a row to reorder it, or onto another section to move it.</p>
+        <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it. Use the arrow keys to move, and Enter to select. Drag a row to reorder it, or onto another section to move it.</p>
         <LayerReparentNote reason={reject} />
-        <ul className="ed-tree is-layers" role="tree" aria-label="Page layers" data-layer-source="visual">
+        <ul ref={treeRef} className="ed-tree is-layers" role="tree" aria-label="Page layers" tabIndex={0} data-layer-source="visual">
           <LayerTree
             root={visualRoot}
             experience={props.experience}
@@ -251,9 +254,9 @@ export function LayersPanel(props: { api: EditorApi; experience: LayerExperience
       <div className="ed-panel-head">
         <h2>Layers</h2>
       </div>
-      <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it. Drag a row to reorder it, or onto another section to move it.</p>
+      <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it. Use the arrow keys to move, and Enter to select. Drag a row to reorder it, or onto another section to move it.</p>
       <LayerReparentNote reason={reject} />
-      <ul className="ed-tree is-layers" role="tree" aria-label="Page layers" data-layer-source="version3">
+      <ul ref={treeRef} className="ed-tree is-layers" role="tree" aria-label="Page layers" tabIndex={0} data-layer-source="version3">
         <li role="treeitem" aria-selected={props.chromeFocus === "header"} className={props.chromeFocus === "header" ? "is-active" : ""} data-layer-id="header" data-layer-parent="chrome" data-locked="true" data-layer-drop={layersDrag.drop?.id === "header" ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
           <button type="button" className="ed-tree-main" onClick={() => props.onChrome("header")}><PanelTop size={14} aria-hidden="true" /> Header <Lock size={12} aria-label="Locked" className="ed-muted-icon" /></button>
           {layerUnlockAllowed("header", layerRole(api.role)) ? null : <LayerUnlockButton allowed={false} reason={LAYER_UNLOCK_REASON} onUnlock={() => {}} />}
