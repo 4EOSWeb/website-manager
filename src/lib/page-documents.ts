@@ -162,11 +162,12 @@ export function catalogSection(layout: "hero" | "split" | "cards" | "list" | "st
 
 export function templateSections(template: PageDocument["template"]): Section[] {
   if (template === "landing") {
+    const button = createSection("button");
     return [
-      createSection("heading"),
-      withText("paragraph", "Tell visitors who this is for and what they can do next."),
-      createSection("image"),
-      createSection("cta"),
+      withText("heading", "Landing page"),
+      withText("paragraph", "Describe the offer"),
+      button.type === "button" ? { ...button, label: "Get started", href: "/" } : button,
+      catalogSection("cards"),
     ];
   }
   if (template === "service") {
