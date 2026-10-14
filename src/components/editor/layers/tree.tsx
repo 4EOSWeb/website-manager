@@ -41,12 +41,13 @@ export function useLayerOpen(websiteId: string, pageId: string, defaults: string
 function Branch(props: {
   node: LayerNode;
   experience: LayerExperience;
+  nodeIds: readonly string[];
   parentId: string;
   depth: number;
   open: Set<string>;
   onToggle: (id: string) => void;
   selection: LayerSelection;
-  onSelect: (node: LayerNode) => void;
+  onSelect: (node: LayerNode, shift?: boolean) => void;
   renamingId: string;
   onRenameStart: (node: LayerNode) => void;
   onRename: (node: LayerNode, name: string) => void;
@@ -58,13 +59,13 @@ function Branch(props: {
   onPointerDown?: (event: React.PointerEvent<HTMLLIElement>) => void;
   dropHint?: { id: string; after: boolean } | null;
 }) {
-  const { node, experience, parentId, depth, open, onToggle, selection, onSelect, renamingId, onRenameStart, onRename, onRenameCancel, onLock, onUnlock, unlockAllowed, unlockReason, onPointerDown, dropHint } = props;
+  const { node, experience, nodeIds, parentId, depth, open, onToggle, selection, onSelect, renamingId, onRenameStart, onRename, onRenameCancel, onLock, onUnlock, unlockAllowed, unlockReason, onPointerDown, dropHint } = props;
   const componentId = layerIdText(experience, node);
   const layoutText = layoutModeLabel({ type: node.type, layout: node.layout });
   const managed = managedLabel(Boolean(node.source?.providerManaged));
   const children = node.children ?? [];
   const expanded = children.length > 0 && open.has(node.id);
-  const selected = layerRowSelected(node, selection);
+  const selected = layerRowSelected(node, selection, nodeIds);
   return (
     <li
       role="treeitem"
@@ -85,7 +86,7 @@ function Branch(props: {
           <LayerRename value={typeof node.metadata?.name === "string" ? node.metadata.name : ""} label="Layer name" onCommit={(value) => onRename(node, value)} onCancel={onRenameCancel} />
         ) : (
           <>
-            <button type="button" className="ed-tree-main" onClick={() => onSelect(node)} onDoubleClick={() => onRenameStart(node)}>
+            <button type="button" className="ed-tree-main" onClick={(event) => onSelect(node, event.shiftKey)} onDoubleClick={() => onRenameStart(node)}>
               <span className="truncate">{layerLabel(node)}</span>
               {node.locked?.locked ? <Lock size={12} aria-label="Locked" className="ed-muted-icon" /> : null}
             </button>
@@ -105,7 +106,7 @@ function Branch(props: {
       {expanded ? (
         <ul role="group">
           {children.map((child) => (
-            <Branch key={child.id} node={child} experience={experience} parentId={node.id} depth={depth + 1} open={open} onToggle={onToggle} selection={selection} onSelect={onSelect} renamingId={renamingId} onRenameStart={onRenameStart} onRename={onRename} onRenameCancel={onRenameCancel} onLock={onLock} onUnlock={onUnlock} unlockAllowed={unlockAllowed} unlockReason={unlockReason} onPointerDown={onPointerDown} dropHint={dropHint} />
+            <Branch key={child.id} node={child} experience={experience} nodeIds={nodeIds} parentId={node.id} depth={depth + 1} open={open} onToggle={onToggle} selection={selection} onSelect={onSelect} renamingId={renamingId} onRenameStart={onRenameStart} onRename={onRename} onRenameCancel={onRenameCancel} onLock={onLock} onUnlock={onUnlock} unlockAllowed={unlockAllowed} unlockReason={unlockReason} onPointerDown={onPointerDown} dropHint={dropHint} />
           ))}
         </ul>
       ) : null}
@@ -117,10 +118,11 @@ function Branch(props: {
 export function LayerTree(props: {
   root: LayerNode;
   experience?: LayerExperience;
+  nodeIds?: readonly string[];
   open: Set<string>;
   onToggle: (id: string) => void;
   selection: LayerSelection;
-  onSelect: (node: LayerNode) => void;
+  onSelect: (node: LayerNode, shift?: boolean) => void;
   renamingId: string;
   onRenameStart: (node: LayerNode) => void;
   onRename: (node: LayerNode, name: string) => void;
@@ -136,6 +138,7 @@ export function LayerTree(props: {
     <Branch
       node={props.root}
       experience={props.experience ?? "basic"}
+      nodeIds={props.nodeIds ?? []}
       parentId=""
       depth={0}
       open={props.open}

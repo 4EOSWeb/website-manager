@@ -37,9 +37,12 @@ export function legacyTarget(legacyId: unknown): LayerSelection | null {
   return { sectionId, itemId };
 }
 
-/** A row is selected when it is the section, or the block, currently selected on the page. */
-export function layerRowSelected(node: LayerNode, selection: LayerSelection): boolean {
+/** A row is selected when its id is in the shared selection, or it is the single legacy target. */
+export function layerRowSelected(node: LayerNode, selection: LayerSelection, nodeIds: readonly string[] = []): boolean {
+  if (nodeIds.includes(node.id)) return true;
   const target = legacyTarget(node.metadata?.legacyId);
+  if (target && nodeIds.includes(target.itemId || target.sectionId)) return true;
+  if (nodeIds.length) return false;
   if (!target || target.sectionId !== selection.sectionId) return false;
   if (selection.itemId) return target.itemId === selection.itemId;
   return target.itemId === "";

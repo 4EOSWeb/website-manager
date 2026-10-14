@@ -43,7 +43,7 @@ import { validLink } from "@/lib/links";
 import { blockFitsInZone, createId } from "@/lib/page-documents";
 import { entryById, recommendedFor, sectionForEntry, type LibraryEntry } from "@/lib/library";
 import { articlePatternFrom, articleRouteFor, articleSlug, selectActivePage } from "@/components/editor/state/page";
-import { clearNodeSelection, nodeIdsFromLegacy } from "@/components/editor/state/selection";
+import { clearNodeSelection, clickNode, nodeIdsFromLegacy } from "@/components/editor/state/selection";
 import { activeSiteContext, createSiteState } from "@/components/editor/state/site";
 import { breakpointWidth, previewRadioLabel, type BreakpointId } from "@/components/editor/state/breakpoint";
 import { emptyDirty, markChanged, markSaved, shouldWarnBeforeUnload, switchWebsite } from "@/components/editor/state/dirty";
@@ -500,9 +500,18 @@ export function EditorShell(props: {
     return { ...emptySelection, sectionId, itemId, itemIds: itemId ? [itemId] : [], locked, kind: block?.kind ?? target.type };
   }
 
-  function selectNode(sectionId: string, itemId = "") {
-    setSelection(selectionFor(sectionId, itemId));
-    toFrame({ type: "4eos-select-node", sectionId, itemId });
+  function selectNode(sectionId: string, itemId = "", shift = false) {
+    pinnedNode.current = null;
+    if (!shift) {
+      setSelection(selectionFor(sectionId, itemId));
+      toFrame({ type: "4eos-select-node", sectionId, itemId });
+      return;
+    }
+    const next = clickNode({ nodeIds: nodeIdsFromLegacy(selection).nodeIds }, itemId || sectionId, true).nodeIds;
+    const primary = next[next.length - 1] ?? "";
+    const base = selectionFor(sectionId, primary && primary !== sectionId ? primary : "");
+    setSelection({ ...base, sectionId, itemId: primary && primary !== sectionId ? primary : "", itemIds: next });
+    toFrame({ type: "4eos-select-node", sectionId, itemId: primary, itemIds: next });
   }
 
   function selectChrome(part: "header" | "footer") {
@@ -1322,6 +1331,7 @@ export function EditorShell(props: {
         break;
       }
       case "4eos-select": {
+        pinnedNode.current = null;
         const itemId = text("itemId");
         const itemIds = Array.isArray(data.itemIds) ? data.itemIds.map((item) => String(item)).filter(Boolean) : itemId ? [itemId] : [];
         const chrome = data.chrome === "header" || data.chrome === "footer" ? data.chrome : "";
@@ -1851,7 +1861,7 @@ export function EditorShell(props: {
                 commit={commit}
               />
             ) : null}
-            {rail === "layers" ? <LayersPanel api={api} experience={experience} chromeFocus={selection.chrome} onSelect={selectNode} onChrome={selectChrome} /> : null}
+            {rail === "layers" ? <LayersPanel api={api} experience={experience} nodeIds={nodeIds} chromeFocus={selection.chrome} onSelect={selectNode} onChrome={selectChrome} /> : null}
             {rail === "design" ? <DesignPanel site={site} canEdit={props.canEdit} commit={commit} commitText={commitText} /> : null}
             {rail === "media" ? (
               <MediaPanel

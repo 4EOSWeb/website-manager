@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { DragRejectReason } from "@/components/editor/drag-status";
 import { ArrowDown, ArrowUp, Eye, EyeOff, FileText, Home, Lock, MoreHorizontal, PanelBottom, PanelTop, Plus, Search, Trash2, Upload } from "lucide-react";
 import type { BlogDraft, SiteDraft } from "@/lib/content-schema";
@@ -116,7 +116,7 @@ function sectionLayoutText(section: { type: string; layout?: string }): string {
   return layoutModeLabel({ type: "section", layout: { mode: "flow" } });
 }
 
-export function LayersPanel(props: { api: EditorApi; experience: LayerExperience; chromeFocus: string; onSelect: (sectionId: string, itemId?: string) => void; onChrome: (part: "header" | "footer") => void }) {
+export function LayersPanel(props: { api: EditorApi; experience: LayerExperience; nodeIds: readonly string[]; chromeFocus: string; onSelect: (sectionId: string, itemId?: string, shift?: boolean) => void; onChrome: (part: "header" | "footer") => void }) {
   const { api } = props;
   const [renaming, setRenaming] = useState("");
   const sections = api.page?.sections ?? [];
@@ -130,6 +130,21 @@ export function LayersPanel(props: { api: EditorApi; experience: LayerExperience
     api.commit(setEditorName(api.site, api.path, sectionId, value, blockId), false);
   };
   const pageId = api.page?.id ?? "";
+  const selectedIds = api.selection.itemIds.length
+    ? api.selection.itemIds
+    : props.nodeIds.length
+      ? props.nodeIds
+      : api.selection.itemId
+        ? [api.selection.itemId]
+        : api.selection.sectionId
+          ? [api.selection.sectionId]
+          : [];
+  const selectedKey = selectedIds.join("|");
+  useEffect(() => {
+    const last = selectedKey.split("|").filter(Boolean).at(-1);
+    if (!last) return;
+    document.querySelector(`[data-layer-id="${CSS.escape(last)}"]`)?.scrollIntoView({ block: "nearest" });
+  }, [selectedKey]);
   const [reject, setReject] = useState<DragRejectReason | null>(null);
   const setVisibility = (sectionId: string, blockId: string, hidden: boolean) => {
     const nextVisual = setLayerVisibility(api.visualDocument, blockId, hidden);
@@ -192,12 +207,13 @@ export function LayersPanel(props: { api: EditorApi; experience: LayerExperience
           <LayerTree
             root={visualRoot}
             experience={props.experience}
+            nodeIds={selectedIds}
             open={layers.open}
             onToggle={layers.toggle}
             selection={{ sectionId: api.selection.sectionId, itemId: api.selection.itemId }}
-            onSelect={(node) => {
+            onSelect={(node, shift) => {
               const target = legacyTarget(node.metadata?.legacyId);
-              if (target) props.onSelect(target.sectionId, target.itemId);
+              if (target) props.onSelect(target.sectionId, target.itemId, shift);
             }}
             renamingId={renaming}
             onRenameStart={(node) => api.canEdit && setRenaming(node.id)}
@@ -251,15 +267,15 @@ export function LayersPanel(props: { api: EditorApi; experience: LayerExperience
           </li>
         ) : null}
         {sections.map((section) => {
-          const activeSection = api.selection.sectionId === section.id && !api.selection.itemId;
+          const activeSection = selectedIds.includes(section.id);
           const locked = section.type === "preset" && section.providerLocked;
           return (
-            <li key={section.id} role="treeitem" aria-selected={activeSection} aria-expanded={section.type === "flow" && section.blocks.length > 0 ? layers.open.has(section.id) : undefined} data-layer-id={section.id} data-layer-parent={pageId || undefined} data-layer-container="true" data-section-type={section.type} data-locked={locked ? "true" : undefined} data-layer-drop={layersDrag.drop?.id === section.id ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
+            <li key={section.id} role="treeitem" aria-selected={selectedIds.includes(section.id)} aria-expanded={section.type === "flow" && section.blocks.length > 0 ? layers.open.has(section.id) : section.type === "freeform" && section.items.length > 0 ? layers.open.has(section.id) || section.items.some((item) => selectedIds.includes(item.id)) : undefined} data-layer-id={section.id} data-layer-parent={pageId || undefined} data-layer-container="true" data-section-type={section.type} data-locked={locked ? "true" : undefined} data-layer-drop={layersDrag.drop?.id === section.id ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
               <div className={activeSection ? "ed-tree-row is-active" : "ed-tree-row"}>
                 {renaming === section.id ? (
                   <LayerRename value={section.editorName || ""} label="Section name" onCommit={(value) => rename(section.id, value)} onCancel={() => setRenaming("")} />
                 ) : (
-                  <button type="button" className={`ed-tree-main ${section.hidden ? "is-hidden" : ""}`} onClick={() => props.onSelect(section.id)} onDoubleClick={() => api.canEdit && setRenaming(section.id)}>
+                  <button type="button" className={`ed-tree-main ${section.hidden ? "is-hidden" : ""}`} onClick={(event) => props.onSelect(section.id, "", event.shiftKey)} onDoubleClick={() => api.canEdit && setRenaming(section.id)}>
                     <span className="ed-layer-dot" aria-hidden="true" />
                     <span className="truncate">{sectionName(section)}</span>
                     {sectionLayoutText(section) ? <span className="ed-layout">{sectionLayoutText(section)}</span> : null}
@@ -281,7 +297,7 @@ export function LayersPanel(props: { api: EditorApi; experience: LayerExperience
               {section.type === "flow" && section.blocks.length > 0 && layers.open.has(section.id) ? (
                 <ul role="group">
                   {section.blocks.map((block) => {
-                    const active = api.selection.itemId === block.id;
+                    const active = selectedIds.includes(block.id);
                     const label = block.editorName || (block.text && typeof block.text === "object" && block.text.text ? block.text.text.slice(0, 32) : block.kind);
                     const componentId = layerIdText(props.experience, { id: block.id });
                     return (
@@ -291,7 +307,7 @@ export function LayersPanel(props: { api: EditorApi; experience: LayerExperience
                             <LayerRename value={block.editorName || ""} label="Item name" onCommit={(value) => rename(section.id, value, block.id)} onCancel={() => setRenaming("")} />
                           ) : (
                             <>
-                              <button type="button" className={`ed-tree-main ${block.hidden ? "is-hidden" : ""}`} onClick={() => props.onSelect(section.id, block.id)} onDoubleClick={() => api.canEdit && setRenaming(block.id)}>
+                              <button type="button" className={`ed-tree-main ${block.hidden ? "is-hidden" : ""}`} onClick={(event) => props.onSelect(section.id, block.id, event.shiftKey)} onDoubleClick={() => api.canEdit && setRenaming(block.id)}>
                                 <span className="ed-kind">{block.kind === "brand-mark" ? "Logo" : typeLabel(block.kind)}</span>
                                 <span className="truncate">{label}</span>
                                 {block.locked ? <Lock size={12} aria-label="Locked" className="ed-muted-icon" /> : null}
@@ -314,6 +330,21 @@ export function LayersPanel(props: { api: EditorApi; experience: LayerExperience
                       </li>
                     );
                   })}
+                </ul>
+              ) : null}
+              {section.type === "freeform" && section.items.length > 0 && (layers.open.has(section.id) || section.items.some((item) => selectedIds.includes(item.id))) ? (
+                <ul role="group">
+                  {section.items.map((item) => (
+                    <li key={item.id} role="treeitem" aria-selected={selectedIds.includes(item.id)} data-layer-id={item.id} data-layer-parent={section.id} data-section-type="freeform">
+                      <div className={selectedIds.includes(item.id) ? "ed-tree-row is-child is-active" : "ed-tree-row is-child"}>
+                        <button type="button" className="ed-tree-main" onClick={(event) => props.onSelect(section.id, item.id, event.shiftKey)}>
+                          <span className="ed-kind">{typeLabel(item.kind)}</span>
+                          <span className="truncate">{item.kind}</span>
+                        </button>
+                        {layerIdText(props.experience, { id: item.id }) ? <span className="ed-layer-id">{layerIdText(props.experience, { id: item.id })}</span> : null}
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               ) : null}
             </li>

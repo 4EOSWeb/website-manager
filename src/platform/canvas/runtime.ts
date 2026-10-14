@@ -1990,6 +1990,22 @@ export function canvasRuntimeScript(origin: string) {
       if (data.type === "4eos-edit" && selected) runAct("edit");
       if (data.type === "4eos-select-node") {
         if (editing) finishEdit();
+        if (Array.isArray(data.itemIds) && data.itemIds.length > 1) {
+          var many = [];
+          data.itemIds.forEach(function (id) {
+            var found = document.querySelector('[data-item-id="' + id + '"]');
+            if (found) many.push(found);
+          });
+          if (many.length) {
+            clearHandles();
+            document.querySelectorAll(".eos-selected").forEach(function (marked) { marked.classList.remove("eos-selected"); });
+            selectedItems = many;
+            selected = many[many.length - 1];
+            many.forEach(function (marked) { marked.classList.add("eos-selected"); });
+            selected.scrollIntoView({ block: "center" });
+            return;
+          }
+        }
         var target = null;
         if (data.chrome) target = document.querySelector('[data-chrome="' + data.chrome + '"]');
         else if (data.sectionId) {

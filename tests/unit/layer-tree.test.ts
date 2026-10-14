@@ -58,7 +58,28 @@ test("a layer click resolves the section and block, and the matching row is sele
   assert.equal(layerRowSelected(section, { sectionId: "main", itemId: "item_a" }), false);
   const tree = readFileSync(new URL("../../src/components/editor/layers/tree.tsx", import.meta.url), "utf8");
   assert.equal(tree.includes("aria-selected={selected}"), true);
-  assert.equal(tree.includes("onSelect(node)"), true);
+  assert.equal(tree.includes("onSelect(node"), true);
+  assert.equal(tree.includes("event.shiftKey"), true);
+});
+
+test("every id in the shared selection highlights its row", () => {
+  const image: LayerNode = { id: "item_image", type: "image", children: [] };
+  const button: LayerNode = { id: "item_button", type: "button", children: [] };
+  const other: LayerNode = { id: "item_other", type: "text", children: [] };
+  const ids = ["item_image", "item_button"];
+  assert.equal(layerRowSelected(image, { sectionId: "zone", itemId: "item_image" }, ids), true);
+  assert.equal(layerRowSelected(button, { sectionId: "zone", itemId: "item_image" }, ids), true);
+  assert.equal(layerRowSelected(other, { sectionId: "zone", itemId: "item_image" }, ids), false);
+  const legacy: LayerNode = {
+    id: "node_block",
+    type: "heading",
+    metadata: { legacyId: "page/0/page_1/section/2/main/block/1/item_a" },
+    children: [],
+  };
+  assert.equal(layerRowSelected(legacy, { sectionId: "elsewhere", itemId: "" }, ["item_a", "item_b"]), true);
+  const panel = readFileSync(new URL("../../src/components/editor/panels.tsx", import.meta.url), "utf8");
+  assert.equal(panel.includes("scrollIntoView({ block: \"nearest\" })"), true);
+  assert.equal(panel.includes("event.shiftKey"), true);
 });
 
 test("a missing visual document keeps the version 3 list", () => {
