@@ -75,6 +75,7 @@ import { LibraryBrowser } from "@/components/editor/library";
 import { Inspector } from "@/components/editor/inspector";
 import { adapterColorTokens, renameGeneratedNode, writeGeneratedProp, writeGeneratedStyle, type GeneratedNode } from "@/components/editor/inspector/generated-model";
 import { applySectionLayout, componentDefinitions, confirmLayoutMode, definitionAllowsLayout, writeLayoutSetting, type LayoutNode } from "@/components/editor/inspector/layout-model";
+import { applyBlockVisibility, writeHideOn } from "@/components/editor/inspector/visibility-model";
 import { renameVisualNode } from "@/components/editor/layers/rename-name";
 import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTargetForNode, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
 import { selectNodeId } from "@/components/editor/state/selection";
@@ -1997,6 +1998,20 @@ export function EditorShell(props: {
               if (!current) return items;
               return { ...items, [sectionId]: writeLayoutSetting(current, key, value) };
             });
+          }}
+          visibility={(() => {
+            const current = genericByBlock[selection.itemId];
+            const flowBlock = section?.type === "flow" ? section.blocks.find((item) => item.id === selection.itemId) : undefined;
+            if (!current || !flowBlock) return null;
+            return { hidden: flowBlock.hidden, hideOn: flowBlock.hideOn ?? [] };
+          })()}
+          onVisibility={(device, hidden) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            const flowBlock = section?.type === "flow" ? section.blocks.find((item) => item.id === blockId) : undefined;
+            if (!blockId || !sectionId || !flowBlock) return;
+            const next = writeHideOn({ hidden: flowBlock.hidden, hideOn: flowBlock.hideOn ?? [] }, device, hidden);
+            commit(applyBlockVisibility(site, path, sectionId, blockId, next), true);
           }}
         />
       </div>

@@ -13,6 +13,8 @@ import { GeneratedInspector } from "@/components/editor/inspector/generated";
 import { adapterColorTokens, type GeneratedNode } from "@/components/editor/inspector/generated-model";
 import { LayoutFields } from "@/components/editor/inspector/layout-fields";
 import { layoutModeName, type LayoutModeName, type LayoutNode } from "@/components/editor/inspector/layout-model";
+import { VisibilityFields } from "@/components/editor/inspector/visibility-fields";
+import type { VisibilityDevice, VisibilityState } from "@/components/editor/inspector/visibility-model";
 
 const BLOCK_LABELS: Record<string, string> = {
   eyebrow: "Small heading",
@@ -69,6 +71,8 @@ export function Inspector(props: {
   layoutAllowed?: boolean;
   onLayoutMode?: (mode: LayoutModeName) => void;
   onLayoutSetting?: (key: string, value: string | number | boolean) => void;
+  visibility?: VisibilityState | null;
+  onVisibility?: (device: VisibilityDevice, hidden: boolean) => void;
 }) {
   const { api } = props;
   const selection = api.selection;
@@ -163,6 +167,7 @@ export function Inspector(props: {
             onSetting={(key, value) => props.onLayoutSetting?.(key, value)}
           />
         ) : null}
+        {props.visibility && props.onVisibility ? <VisibilityFields visibility={props.visibility} onToggle={props.onVisibility} /> : null}
         {mode.kind === "none" ? (
           props.managedRoute ? (
             <Empty title="This page is managed for you">Articles, search results, and system pages come from your website provider. Choose a page on the left to edit it.</Empty>
