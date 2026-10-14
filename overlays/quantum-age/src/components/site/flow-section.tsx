@@ -87,7 +87,7 @@ function ButtonIcon({ icon }: { icon: Block["icon"] }) {
 }
 
 function BlockView({ block, fluid }: { block: Block; fluid: boolean }) {
-  if (block.hidden && !previewMode) return null;
+  if (block.hidden) return null;
   const placed = fluid && block.desktop;
   const box = placed
     ? {

@@ -15,6 +15,8 @@ import { reorderLayerSiblings, siblingBeforeId } from "@/components/editor/layer
 import { LayerLockButton, LayerUnlockButton } from "@/components/editor/layers/lock";
 import { lockFlowBlock, lockVisualNode } from "@/components/editor/layers/lock-node";
 import { applyLayerUnlock, LAYER_UNLOCK_REASON, layerRole, layerUnlockAllowed } from "@/components/editor/layers/unlock-policy";
+import { LayerVisibilityButton } from "@/components/editor/layers/visibility";
+import { setLayerVisibility } from "@/components/editor/layers/visibility-node";
 import { LayerReparentNote } from "@/components/editor/layers/reparent";
 import { applyLayerReparent, decideLayerDrop } from "@/components/editor/layers/reparent-drop";
 import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
@@ -120,6 +122,10 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
   };
   const pageId = api.page?.id ?? "";
   const [reject, setReject] = useState<DragRejectReason | null>(null);
+  const setVisibility = (sectionId: string, blockId: string, hidden: boolean) => {
+    const nextVisual = setLayerVisibility(api.visualDocument, blockId, hidden);
+    api.commit(setBlockHidden(api.site, api.path, sectionId, blockId, hidden), true, nextVisual ?? undefined);
+  };
   const lockBlock = (sectionId: string, blockId: string) => {
     const nextVisual = lockVisualNode(api.visualDocument, blockId);
     api.commit(lockFlowBlock(api.site, api.path, sectionId, blockId), false, nextVisual ?? undefined);
@@ -258,7 +264,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
                     const active = api.selection.itemId === block.id;
                     const label = block.editorName || (block.text && typeof block.text === "object" && block.text.text ? block.text.text.slice(0, 32) : block.kind);
                     return (
-                      <li key={block.id} role="treeitem" aria-selected={active} data-layer-id={block.id} data-layer-parent={section.id} data-section-type={section.type} data-locked={block.locked ? "true" : undefined} data-layer-drop={layersDrag.drop?.id === block.id ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
+                      <li key={block.id} role="treeitem" aria-selected={active} data-layer-id={block.id} data-layer-parent={section.id} data-section-type={section.type} data-locked={block.locked ? "true" : undefined} data-hidden={block.hidden ? "true" : undefined} data-layer-drop={layersDrag.drop?.id === block.id ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
                         <div className={active ? "ed-tree-row is-child is-active" : "ed-tree-row is-child"}>
                           {renaming === block.id ? (
                             <LayerRename value={block.editorName || ""} label="Item name" onCommit={(value) => rename(section.id, value, block.id)} onCancel={() => setRenaming("")} />
@@ -279,11 +285,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
                               }}
                             />
                           ) : api.canEdit ? <LayerLockButton label={`Lock ${label}`} onLock={() => lockBlock(section.id, block.id)} /> : null}
-                          {!block.locked && api.canEdit ? (
-                            <button type="button" className="ed-icon is-small" aria-label={block.hidden ? "Show" : "Hide"} data-tip={block.hidden ? "Show" : "Hide"} onClick={() => api.commit(setBlockHidden(api.site, api.path, section.id, block.id, !block.hidden), true)}>
-                              {block.hidden ? <EyeOff size={13} aria-hidden="true" /> : <Eye size={13} aria-hidden="true" />}
-                            </button>
-                          ) : null}
+                          {!block.locked && api.canEdit ? <LayerVisibilityButton hidden={block.hidden} label={label} onChange={(hidden) => setVisibility(section.id, block.id, hidden)} /> : null}
                         </div>
                       </li>
                     );
