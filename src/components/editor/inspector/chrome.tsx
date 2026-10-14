@@ -16,6 +16,7 @@ import { responsiveFieldsVisible } from "@/components/editor/inspector/responsiv
 import { LinkPicker } from "@/components/editor/inspector/shared";
 import { CanvasFields } from "@/components/editor/inspector/canvas-fields";
 import { canvasPercents, writeCanvasPercent, type CanvasAnchor } from "@/components/editor/inspector/canvas-model";
+import { canvasControlsVisible } from "@/components/editor/inspector/capability-gate";
 
 function placedBox(item: FreeformItem, viewport: Viewport): OverlapBox {
   const box = viewport === "tablet" ? item.tablet ?? item.desktop : viewport === "mobile" ? item.mobile ?? item.desktop : item.desktop;
@@ -158,7 +159,7 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
     return (
       <>
         <CanvasFields
-          visible
+          visible={canvasControlsVisible(api.adapter)}
           x={percents.x}
           y={percents.y}
           w={percents.w}

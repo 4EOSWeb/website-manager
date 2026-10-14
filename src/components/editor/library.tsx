@@ -12,7 +12,8 @@ import { createInput } from "@/platform/elements/input";
 import { createTextarea } from "@/platform/elements/textarea";
 import { createSelect } from "@/platform/elements/select";
 import { createCheckbox } from "@/platform/elements/checkbox";
-import { createForm, formEntryVisible } from "@/platform/elements/form";
+import { createForm } from "@/platform/elements/form";
+import { canvasControlsVisible, formControlsVisible, libraryEntryVisible } from "@/components/editor/inspector/capability-gate";
 import { createFaq } from "@/platform/elements/faq";
 import { createTestimonial } from "@/platform/elements/testimonial";
 import { createCta } from "@/platform/elements/cta";
@@ -132,10 +133,10 @@ export function LibraryBrowser(props: {
   }, [registered, query, category]);
   const results = useMemo(() => {
     if (category === "Saved" || category === "Custom") return [];
-    const generic = GENERIC_ENTRIES.filter((entry) => entryVisible(entry, query, category) && (entry.id !== "element:form" || formEntryVisible(props.adapter)));
+    const generic = GENERIC_ENTRIES.filter((entry) => entryVisible(entry, query, category) && libraryEntryVisible(entry.id, props.adapter));
     const library = searchLibrary(query, category, props.canEmbed);
     return [...generic, ...library];
-  }, [query, category, props.canEmbed]);
+  }, [query, category, props.canEmbed, props.adapter]);
   const catalog = useMemo(() => [...GENERIC_ENTRIES, ...LIBRARY], []);
   const recent = props.recent.map((id) => catalog.find((entry) => entry.id === id)).filter((entry): entry is LibraryEntry => Boolean(entry)).slice(0, 4);
   const recommended = props.recommended.map((id) => LIBRARY.find((entry) => entry.id === id)).filter((entry): entry is LibraryEntry => Boolean(entry));
@@ -192,17 +193,17 @@ export function LibraryBrowser(props: {
             else if (entry.id === "element:container" && props.onElement) props.onElement(createContainer());
             else if (entry.id === "element:stack" && props.onElement) props.onElement(createStack());
             else if (entry.id === "element:grid" && props.onElement) props.onElement(createGrid());
-            else if (entry.id === "element:canvas" && props.onElement) props.onElement(createCanvas());
+            else if (entry.id === "element:canvas" && props.onElement && canvasControlsVisible(props.adapter)) props.onElement(createCanvas());
             else if (entry.id === "element:group" && props.onElement) props.onElement(createGroup());
             else if (entry.id === "element:card" && props.onElement) props.onElement(createCard());
             else if (entry.id === "element:cta" && props.onElement) props.onElement(createCta());
             else if (entry.id === "element:testimonial" && props.onElement) props.onElement(createTestimonial());
             else if (entry.id === "element:faq" && props.onElement) props.onElement(createFaq());
-            else if (entry.id === "element:form" && props.onElement && formEntryVisible(props.adapter)) props.onElement(createForm());
-            else if (entry.id === "element:input" && props.onElement) props.onElement(createInput());
-            else if (entry.id === "element:textarea" && props.onElement) props.onElement(createTextarea());
-            else if (entry.id === "element:select" && props.onElement) props.onElement(createSelect());
-            else if (entry.id === "element:checkbox" && props.onElement) props.onElement(createCheckbox());
+            else if (entry.id === "element:form" && props.onElement && formControlsVisible(props.adapter)) props.onElement(createForm());
+            else if (entry.id === "element:input" && props.onElement && formControlsVisible(props.adapter)) props.onElement(createInput());
+            else if (entry.id === "element:textarea" && props.onElement && formControlsVisible(props.adapter)) props.onElement(createTextarea());
+            else if (entry.id === "element:select" && props.onElement && formControlsVisible(props.adapter)) props.onElement(createSelect());
+            else if (entry.id === "element:checkbox" && props.onElement && formControlsVisible(props.adapter)) props.onElement(createCheckbox());
             else props.onChoose(entry);
           }}
         >

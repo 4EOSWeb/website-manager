@@ -174,7 +174,7 @@ export function Inspector(props: {
         </div>
       ) : null}
       <div className="ed-inspector-body" id="inspector-panel" role={tabs.length > 1 ? "tabpanel" : undefined} aria-labelledby={tabs.length > 1 ? `tab-${active}` : undefined}>
-        {props.generated && props.onGeneratedName ? <GeneratedInspector node={props.generated} tokens={adapterColorTokens(api.adapter)} registered={props.registered} slots={props.inspectorSlots} experience={props.experience} onName={props.onGeneratedName} onProp={props.onGeneratedProp} onStyle={props.onGeneratedStyle} /> : null}
+        {props.generated && props.onGeneratedName ? <GeneratedInspector node={props.generated} tokens={adapterColorTokens(api.adapter)} adapter={api.adapter} registered={props.registered} slots={props.inspectorSlots} experience={props.experience} onName={props.onGeneratedName} onProp={props.onGeneratedProp} onStyle={props.onGeneratedStyle} /> : null}
         {props.sectionLayout && layoutModeName(props.sectionLayout.layout) ? (
           <LayoutFields
             mode={layoutModeName(props.sectionLayout.layout) as LayoutModeName}

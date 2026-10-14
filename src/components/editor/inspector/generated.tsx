@@ -9,6 +9,7 @@ import { colorTokenOptions, designDefinitionFor, generatedName, isContentProp, v
 import { inspectorSlot, type RegisteredInspector } from "@/components/editor/inspector/registered-model";
 import { FieldError, useFieldIssues } from "@/components/editor/inspector/errors";
 import { issuesFromProps, type FieldIssue } from "@/components/editor/inspector/errors-model";
+import { formComponent, formControlsVisible, themeControlsVisible } from "@/components/editor/inspector/capability-gate";
 
 /** Name, id, and component for a generic node, plus the descriptors from its props schema. */
 const colorKeys = new Set(["color", "background", "border"]);
@@ -17,7 +18,7 @@ function labelFor(key: string) {
   return key.charAt(0).toUpperCase() + key.slice(1);
 }
 
-export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: string; value: string }[]; registered?: RegisteredInspector[]; slots?: Record<string, { label: string }>; experience?: string; onName: (name: string) => void; onProp?: (prop: string, value: string) => void; onStyle?: (key: string, value: string) => void }) {
+export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: string; value: string }[]; adapter?: unknown; registered?: RegisteredInspector[]; slots?: Record<string, { label: string }>; experience?: string; onName: (name: string) => void; onProp?: (prop: string, value: string) => void; onStyle?: (key: string, value: string) => void }) {
   const schema = propsSchemaFor(props.node.componentId);
   const generated = schema ? inspectorFields(schema) : { fields: [], warnings: [] };
   const content = generated.fields.filter((field) => isContentProp(field.prop, field.control));
@@ -25,6 +26,8 @@ export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: 
   const design = designDefinitionFor(props.node.componentId);
   const designKeys = design ? visibleDesignKeys(design) : [];
   const tokens = colorTokenOptions(props.tokens ?? []);
+  const themeEditing = themeControlsVisible(props.adapter);
+  const showFormFields = !formComponent(props.node.componentId) || formControlsVisible(props.adapter);
   const registered = props.registered?.find((item) => item.componentId === props.node.componentId);
   const slot = inspectorSlot(registered?.customInspectorId, props.slots ?? {}, props.experience ?? "basic");
   const checked = schema ? validateProps({ propsSchema: schema, propsSchemaId: props.node.componentId }, props.node.props) : null;
@@ -53,7 +56,7 @@ export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: 
       <Field label="Component">
         <input className="ed-input" aria-label="Component" value={props.node.componentId} readOnly />
       </Field>
-      {content.length > 0 ? (
+      {content.length > 0 && showFormFields ? (
         <div role="tabpanel" data-generated-tab="content" aria-label="Content">
           <div className="ed-tabs" role="tablist" aria-label="Generated groups">
             <button type="button" role="tab" aria-selected={true}>Content</button>
@@ -85,7 +88,7 @@ export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: 
             const label = labelFor(key);
             return (
               <Field key={key} label={label}>
-                {colorKeys.has(key) ? (
+                {colorKeys.has(key) && themeEditing ? (
                   <>
                     <select
                       className="ed-input"
@@ -106,7 +109,7 @@ export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: 
           })}
         </div>
       ) : null}
-      {registered ? (
+      {registered && showFormFields ? (
         <div data-registered-fields={registered.componentId}>
           {registered.fields.map((field) => {
             const stored = props.node.props[field.prop];
@@ -122,7 +125,7 @@ export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: 
           {slot.status === "missing" ? <p role="alert">{slot.warning}</p> : null}
         </div>
       ) : null}
-      {rest.map((field) => (
+      {showFormFields ? rest.map((field) => (
         field.control === "skipped" ? (
           <p key={field.prop} className="ed-hint" data-generated-prop={field.prop}>{field.warning}</p>
         ) : (
@@ -131,7 +134,7 @@ export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: 
             <FieldError issue={issueFor(field.prop)} />
           </Field>
         )
-      ))}
+      )) : null}
     </div>
   );
 }
