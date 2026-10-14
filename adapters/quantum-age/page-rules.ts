@@ -1,4 +1,4 @@
-/** Reserved addresses are the union of the editor constants. Those constants stay until step 14.10. */
+/** Reserved addresses for this site. The editor reads this list. */
 
 export const quantumAgePageRules = {
   canCreate: true,

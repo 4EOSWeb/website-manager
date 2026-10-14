@@ -111,6 +111,7 @@ import { createImage, writeImage } from "@/platform/elements/image";
 import { createGallery, writeGallery } from "@/platform/elements/gallery";
 import { acceptVideoUrl, createVideo, writeVideoUrl } from "@/platform/elements/video";
 import { createCustom, type CustomDefinition } from "@/platform/elements/custom";
+import { reservedRoutesOf } from "@/platform/pages/reserved";
 import { createHeading } from "@/platform/elements/heading";
 import { createLink, writeLinkHref } from "@/platform/elements/link";
 import { createParagraph } from "@/platform/elements/paragraph";
@@ -785,7 +786,7 @@ export function EditorShell(props: {
   }
 
   async function createPageFrom(form: PageForm) {
-    const result = createPage(site, form);
+    const result = createPage(site, form, reservedRoutesOf(adapter));
     if (result.error) return result.error;
     const created = result.site.pages[result.site.pages.length - 1];
     const ok = await persistSite(result.site);
@@ -800,7 +801,7 @@ export function EditorShell(props: {
   }
 
   async function changeCurrentRoute(to: string) {
-    const result = changePageRoute(site, path, to);
+    const result = changePageRoute(site, path, to, reservedRoutesOf(adapter));
     if (result.error || !result.route) return result.error ?? "This page keeps its address.";
     if (result.route === path) return "";
     const ok = await persistSite(result.site);
@@ -815,7 +816,7 @@ export function EditorShell(props: {
 
   function duplicateCurrentPage() {
     if (!page) return;
-    const result = duplicatePage(site, page.route);
+    const result = duplicatePage(site, page.route, reservedRoutesOf(adapter));
     if (result.error || !result.route) {
       notify(result.error ?? "This page cannot be duplicated.", "error");
       return;

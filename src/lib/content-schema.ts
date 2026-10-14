@@ -466,23 +466,6 @@ export const sectionSchema = z.discriminatedUnion("type", [
 
 export type Section = z.infer<typeof sectionSchema>;
 
-/** Removal is step 14.10 after the editor reads the adapter. */
-export const BUILT_IN_ROUTES = new Set([
-  "/",
-  "/about",
-  "/approach",
-  "/solutions",
-  "/team",
-  "/references",
-  "/insights",
-  "/contact",
-  "/privacy",
-  "/terms",
-  "/prototype-notes",
-]);
-
-const CUSTOM_TEMPLATES = new Set(["blank", "landing", "service", "resource", "insights-landing"]);
-
 export const pageDocumentSchema = z
   .object({
     id: blockId,
@@ -529,9 +512,6 @@ export const siteDraftSchema = z
       if (routes.has(page.route)) ctx.addIssue({ code: "custom", message: "Two pages cannot share a web address." });
       routes.add(page.route);
       if (page.route === "/" && page.archived) ctx.addIssue({ code: "custom", message: "The homepage cannot be archived." });
-      if (CUSTOM_TEMPLATES.has(page.template) && BUILT_IN_ROUTES.has(page.route)) {
-        ctx.addIssue({ code: "custom", message: "That address is already used by this website." });
-      }
       const ids = new Set<string>();
       for (const section of page.sections) {
         if (ids.has(section.id)) ctx.addIssue({ code: "custom", message: "Each section needs its own place on the page." });

@@ -8,6 +8,7 @@ import { setArchived, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
 import type { EditorApi } from "@/components/editor/types";
 import { Field, Group, Select, TextArea, TextInput, Toggle } from "@/components/editor/ui";
 import { pageCapabilityFlags, showBody, showHeaderToggle, showMetadata } from "@/components/editor/inspector/page-controls";
+import { routeReserved } from "@/platform/pages/reserved";
 
 export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: PageDocument; onDuplicate: () => void }) {
   const flags = pageCapabilityFlags(api.adapter, page);
@@ -23,8 +24,8 @@ export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: Page
             <Field label="Page name" hint="Shown in the editor and used as the menu label unless you set one below.">
               <TextInput value={page.title} disabled={disabled} maxLength={80} onChange={(value) => api.commitText(updatePageMeta(api.site, page.route, { title: value }), `${page.route}:title`, true)} />
             </Field>
-            {page.template === "home" || page.template === "marketing" || page.template === "legal" ? (
-              <Field label="Web address" hint="Built-in pages keep their address.">
+            {routeReserved(page.route, api.adapter) ? (
+              <Field label="Web address" hint="This page keeps its address.">
                 <TextInput value={page.route} disabled onChange={() => undefined} />
               </Field>
             ) : (

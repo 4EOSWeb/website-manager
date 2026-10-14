@@ -497,9 +497,6 @@ export function setImageSource(site: SiteDraft, route: string, sectionId: string
   });
 }
 
-/** Removal is step 14.10 after the editor reads the adapter. */
-export const RESERVED = new Set(["/", "/about", "/approach", "/solutions", "/team", "/references", "/insights", "/contact", "/privacy", "/terms", "/prototype-notes"]);
-
 export function slugify(title: string) {
   const slug = title
     .toLowerCase()
@@ -510,18 +507,19 @@ export function slugify(title: string) {
 }
 
 /** Returns why a page address can't be used, or "" when it can. */
-export function routeProblem(site: SiteDraft, route: string, current?: string) {
+export function routeProblem(site: SiteDraft, route: string, current?: string, reserved: readonly string[] = []) {
   if (!/^\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(route)) return "Use a short address such as /new-service.";
-  if (route !== current && (RESERVED.has(route) || site.pages.some((page) => page.route === route))) return "That address is already used.";
+  if (route !== current && (reserved.includes(route) || site.pages.some((page) => page.route === route))) return "That address is already used.";
   return "";
 }
 
 export function createPage(
   site: SiteDraft,
   input: { title: string; route: string; template: PageDocument["template"]; navVisible: boolean; seoTitle: string; metaDescription: string },
+  reserved: readonly string[] = [],
 ): { site: SiteDraft; error?: string } {
   const route = input.route.startsWith("/") ? input.route : `/${input.route}`;
-  const problem = routeProblem(site, route);
+  const problem = routeProblem(site, route, undefined, reserved);
   if (problem) return { site, error: problem };
   const next: PageDocument = {
     id: createId("page"),
@@ -538,12 +536,12 @@ export function createPage(
   return { site: { ...site, pages: [...site.pages, next] }, error: undefined };
 }
 
-export function duplicatePage(site: SiteDraft, route: string): { site: SiteDraft; route?: string; error?: string } {
+export function duplicatePage(site: SiteDraft, route: string, reserved: readonly string[] = []): { site: SiteDraft; route?: string; error?: string } {
   const page = pageByRoute(site, route);
   if (!page || page.locked || page.route === "/") return { site, error: "This page cannot be duplicated." };
   let copyRoute = `${page.route}-copy`;
   let n = 2;
-  while (site.pages.some((item) => item.route === copyRoute) || RESERVED.has(copyRoute)) {
+  while (site.pages.some((item) => item.route === copyRoute) || reserved.includes(copyRoute)) {
     copyRoute = `${page.route}-copy-${n}`;
     n += 1;
   }
@@ -563,12 +561,12 @@ export function duplicatePage(site: SiteDraft, route: string): { site: SiteDraft
 }
 
 /** Moves a page you created to a new address, and points its sub-pages and on-site links there. */
-export function changePageRoute(site: SiteDraft, from: string, input: string): { site: SiteDraft; route?: string; error?: string } {
+export function changePageRoute(site: SiteDraft, from: string, input: string, reserved: readonly string[] = []): { site: SiteDraft; route?: string; error?: string } {
   const page = pageByRoute(site, from);
-  if (!page || page.locked || RESERVED.has(from)) return { site, error: "This page keeps its address." };
+  if (!page || page.locked || reserved.includes(from)) return { site, error: "This page keeps its address." };
   const route = input.trim().startsWith("/") ? input.trim() : `/${input.trim()}`;
   if (route === from) return { site, route };
-  const problem = routeProblem(site, route, from);
+  const problem = routeProblem(site, route, from, reserved);
   if (problem) return { site, error: problem };
   const relink = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(relink);
