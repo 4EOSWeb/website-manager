@@ -36,6 +36,7 @@ import {
   saveSectionTemplate,
   setBlockHidden,
   setImageSource,
+  setEditorName,
   setSectionHidden,
   updatePageMeta,
 } from "@/lib/editor-ops";
@@ -71,6 +72,8 @@ import { reparent } from "@/platform/drag/reparent";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
 import { LibraryBrowser } from "@/components/editor/library";
 import { Inspector } from "@/components/editor/inspector";
+import { renameGeneratedNode, type GeneratedNode } from "@/components/editor/inspector/generated-model";
+import { renameVisualNode } from "@/components/editor/layers/rename-name";
 import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTargetForNode, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
 import { selectNodeId } from "@/components/editor/state/selection";
 import type { NodeDocument } from "@/platform/document/node";
@@ -191,6 +194,7 @@ export function EditorShell(props: {
   const [rail, setRail] = useState<RailPanel | null>("pages");
   const [selection, setSelection] = useState<Selection>(emptySelection);
   const [nodeIds, setNodeIds] = useState<string[]>([]);
+  const [genericByBlock, setGenericByBlock] = useState<Record<string, GeneratedNode>>({});
   const [version, setVersion] = useState(0);
   const [publications, setPublications] = useState(props.publications);
   const [progress, setProgress] = useState<number | null>(null);
@@ -862,15 +866,23 @@ export function EditorShell(props: {
     }
     rememberLibrary(libraryId);
     const label = block.text?.text ?? "Item";
+    let ownerId = section?.id ?? "";
     let next: SiteDraft;
     if (!at && section?.type === "flow" && !selection.locked) {
+      ownerId = section.id;
       next = insertFlowBlock(site, path, section.id, block, selection.itemId || undefined);
     } else {
       const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: label, layout: "stack", blocks: [block] };
+      ownerId = created.id;
       const index = at ? (at.beforeId ? page.sections.findIndex((item) => item.id === at.beforeId) : page.sections.length) : section ? page.sections.findIndex((item) => item.id === section.id) + 1 : page.sections.length;
       next = insertSection(site, path, index < 0 ? page.sections.length : index, created);
     }
     commit(next, true, nextVisual ?? undefined);
+    setGenericByBlock((current) => ({
+      ...current,
+      [block.id]: { id: node.id, componentId: node.componentId, metadata: { ...node.metadata }, props: { ...node.props } },
+    }));
+    setSelection({ ...emptySelection, sectionId: ownerId, itemId: block.id, itemIds: [block.id], kind: block.kind });
     pinnedNode.current = node.id;
     setNodeIds(selectNodeId(node.id).nodeIds);
     setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
@@ -1914,6 +1926,17 @@ export function EditorShell(props: {
           onClear={clearSelection}
           managedRoute={managedRoute}
           overflow={contentOverflow}
+          generated={genericByBlock[selection.itemId] ?? null}
+          onGeneratedName={(name) => {
+            const blockId = selection.itemId;
+            const current = genericByBlock[blockId];
+            const sectionId = selection.sectionId;
+            if (!current || !sectionId) return;
+            const renamed = renameGeneratedNode(current, name);
+            setGenericByBlock((items) => ({ ...items, [blockId]: renamed }));
+            const nextVisual = renameVisualNode(visualDocument, current.id, name);
+            commit(setEditorName(site, path, sectionId, name, blockId), false, nextVisual ?? undefined);
+          }}
         />
       </div>
       <StatusBar message={statusMessage} viewport={viewport} scale={scale} zoom={zoom} onZoom={setZoom} role={props.role} editing={editing} onShortcuts={() => setShortcuts(true)} />

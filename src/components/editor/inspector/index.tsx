@@ -9,6 +9,8 @@ import { BlockVisibility, ButtonContent, ButtonStyle, ImageContent, ImageStyle, 
 import { SectionAdvanced, SectionContent, SectionLayoutTab, SectionStyleTab, sectionHasContent, sectionName } from "@/components/editor/inspector/section";
 import { PageTab, PostTab, SeoTab } from "@/components/editor/inspector/page";
 import { FooterInspector, FreeformInspector, HeaderInspector, NavInspector } from "@/components/editor/inspector/chrome";
+import { GeneratedInspector } from "@/components/editor/inspector/generated";
+import type { GeneratedNode } from "@/components/editor/inspector/generated-model";
 
 const BLOCK_LABELS: Record<string, string> = {
   eyebrow: "Small heading",
@@ -57,6 +59,8 @@ export function Inspector(props: {
   onClear: () => void;
   managedRoute: boolean;
   overflow?: string | null;
+  generated?: GeneratedNode | null;
+  onGeneratedName?: (name: string) => void;
 }) {
   const { api } = props;
   const selection = api.selection;
@@ -141,6 +145,7 @@ export function Inspector(props: {
         </div>
       ) : null}
       <div className="ed-inspector-body" id="inspector-panel" role={tabs.length > 1 ? "tabpanel" : undefined} aria-labelledby={tabs.length > 1 ? `tab-${active}` : undefined}>
+        {props.generated && props.onGeneratedName ? <GeneratedInspector node={props.generated} onName={props.onGeneratedName} /> : null}
         {mode.kind === "none" ? (
           props.managedRoute ? (
             <Empty title="This page is managed for you">Articles, search results, and system pages come from your website provider. Choose a page on the left to edit it.</Empty>
