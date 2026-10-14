@@ -27,7 +27,7 @@ function placedBox(item: FreeformItem, viewport: Viewport): OverlapBox {
 
 export function HeaderInspector({ api }: { api: EditorApi }) {
   const chrome = api.site.chrome;
-  const disabled = !api.canEdit || pageCapabilityFlags(api.adapter, api.page ?? {}).editHeader !== true;
+  const disabled = !api.canEdit || pageCapabilityFlags(api.adapter, api.page ?? {}, api.path).editHeader !== true;
   const header = (patch: Partial<typeof chrome.header>) => api.commit(patchChrome(api.site, { ...chrome, header: { ...chrome.header, ...patch } }), true);
   const announcement = (patch: Partial<typeof chrome.announcement>) => api.commit(patchChrome(api.site, { ...chrome, announcement: { ...chrome.announcement, ...patch } }), true);
   return (

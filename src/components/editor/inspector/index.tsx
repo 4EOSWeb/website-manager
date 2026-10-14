@@ -7,13 +7,14 @@ import type { EditorApi } from "@/components/editor/types";
 import { Empty } from "@/components/editor/ui";
 import { BlockVisibility, ButtonContent, ButtonStyle, ImageContent, ImageStyle, TEXT_KINDS, TextContent, TextStyleTab } from "@/components/editor/inspector/blocks";
 import { SectionAdvanced, SectionContent, SectionLayoutTab, SectionStyleTab, sectionHasContent, sectionName } from "@/components/editor/inspector/section";
-import { PageTab, PostTab, SeoTab } from "@/components/editor/inspector/page";
+import { ArticleRegions, PageTab, PostTab, SeoTab } from "@/components/editor/inspector/page";
 import { FooterInspector, FreeformInspector, HeaderInspector, NavInspector } from "@/components/editor/inspector/chrome";
 import { GeneratedInspector } from "@/components/editor/inspector/generated";
 import type { RegisteredInspector } from "@/components/editor/inspector/registered-model";
 import { adapterColorTokens, type GeneratedNode } from "@/components/editor/inspector/generated-model";
 import { LayoutFields } from "@/components/editor/inspector/layout-fields";
 import { pageCapabilityFlags } from "@/components/editor/inspector/page-controls";
+import { isArticleRoute } from "@/platform/pages/route-flags";
 import { layoutModeName, type LayoutModeName, type LayoutNode } from "@/components/editor/inspector/layout-model";
 import { VisibilityFields } from "@/components/editor/inspector/visibility-fields";
 import type { VisibilityDevice, VisibilityState } from "@/components/editor/inspector/visibility-model";
@@ -48,7 +49,8 @@ type Mode =
   | { kind: "section" }
   | { kind: "freeform"; item?: FreeformItem }
   | { kind: "page" }
-  | { kind: "post" };
+  | { kind: "post" }
+  | { kind: "article" };
 
 const TABS: Record<string, { id: string; label: string }[]> = {
   text: [{ id: "content", label: "Content" }, { id: "design", label: "Design" }, { id: "layout", label: "Layout" }],
@@ -97,19 +99,24 @@ export function Inspector(props: {
   const { api } = props;
   const selection = api.selection;
   const page = api.page;
+  const flags = pageCapabilityFlags(api.adapter, page ?? {}, api.path);
+  const onArticle = isArticleRoute(api.adapter, api.path) && !page;
   const section = page?.sections.find((item) => item.id === selection.sectionId);
   const block = section?.type === "flow" ? section.blocks.find((item) => item.id === selection.itemId) : undefined;
   const zoneItems = section?.type === "freeform" ? section.items : section?.type === "preset" && selection.overlay ? section.overlay ?? [] : [];
   const zoneItem = zoneItems.find((item) => item.id === selection.itemId);
 
   let mode: Mode = { kind: "none" };
-  if (selection.locked) mode = { kind: "locked", label: section ? sectionName(section) : "This part" };
-  else if (selection.navRoute) mode = { kind: "nav", route: selection.navRoute };
+  if (selection.navRoute) mode = { kind: "nav", route: selection.navRoute };
   else if (selection.chrome === "header" || selection.chrome === "footer") mode = { kind: selection.chrome };
+  else if (selection.locked && onArticle && !flags.providerManaged) mode = { kind: "article" };
+  else if (selection.locked && flags.providerManaged && page) mode = { kind: "page" };
+  else if (selection.locked) mode = { kind: "locked", label: section ? sectionName(section) : "This part" };
   else if (block?.locked) mode = { kind: "locked", label: BLOCK_LABELS[block.kind] ?? "Item" };
   else if (block) mode = { kind: block.kind === "button" ? "button" : block.kind === "image" ? "image" : (TEXT_KINDS as readonly string[]).includes(block.kind) ? "text" : "block-other" };
   else if (section && (section.type === "freeform" || selection.overlay)) mode = { kind: "freeform", item: zoneItem };
   else if (section) mode = { kind: "section" };
+  else if (onArticle) mode = { kind: "article" };
   else if (props.post) mode = { kind: "post" };
   else if (page) mode = { kind: "page" };
 
@@ -139,6 +146,7 @@ export function Inspector(props: {
 
   const title =
     mode.kind === "page" ? page?.title ?? "Page"
+    : mode.kind === "article" ? "Article"
     : mode.kind === "post" ? props.post?.title ?? "Insights post"
     : mode.kind === "header" ? "Header"
     : mode.kind === "footer" ? "Footer"
@@ -156,7 +164,7 @@ export function Inspector(props: {
           {page ? (
             <button type="button" onClick={props.onClear}>{page.title}</button>
           ) : (
-            <span>{props.post ? "Insights" : "Page"}</span>
+            <span>{onArticle ? "Article" : props.post ? "Insights" : "Page"}</span>
           )}
           {section && (block || zoneItem) ? (
             <>
@@ -194,7 +202,7 @@ export function Inspector(props: {
           <LayoutFields
             mode={layoutModeName(props.sectionLayout.layout) as LayoutModeName}
             allowed={props.layoutAllowed !== false}
-            locked={pageCapabilityFlags(api.adapter, api.page ?? {}).lockLayout}
+            locked={flags.lockLayout}
             layout={props.sectionLayout.layout}
             onConfirm={(mode) => props.onLayoutMode?.(mode)}
             onSetting={(key, value) => props.onLayoutSetting?.(key, value)}
@@ -206,7 +214,7 @@ export function Inspector(props: {
         ) : null}
         {mode.kind === "none" ? (
           props.managedRoute ? (
-            <Empty title="This page is managed for you">Articles, search results, and system pages come from your website provider. Choose a page on the left to edit it.</Empty>
+            <Empty title="This page is managed for you">Search results and system pages come from your website provider. Choose a page on the left to edit it.</Empty>
           ) : (
             <Empty title="Select something to edit">Click any text, image, or section on the page. Double-click text to type.</Empty>
           )
@@ -304,6 +312,7 @@ export function Inspector(props: {
             {active === "seo" ? <SeoTab api={api} page={page} /> : null}
           </>
         ) : null}
+        {mode.kind === "article" ? <ArticleRegions api={api} /> : null}
         {mode.kind === "post" && props.post ? <PostTab api={api} post={props.post} onPost={props.onPost} onBlock={props.onPostBlock} /> : null}
       </div>
     </aside>

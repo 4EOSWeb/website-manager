@@ -24,6 +24,7 @@ import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
 import { layerIdText, layoutModeLabel, managedLabel, typeLabel, type LayerExperience } from "@/components/editor/layers/labels";
 import { defaultOpenIds, legacyTarget, visualPageRoot } from "@/components/editor/layers/rows";
 import { listedPages, pageGroups } from "@/components/editor/page-list";
+import { articleRouteFor } from "@/components/editor/state/page";
 
 export function PagesPanel(props: {
   site: SiteDraft;
@@ -32,6 +33,7 @@ export function PagesPanel(props: {
   path: string;
   canEdit: boolean;
   onOpen: (route: string) => void;
+  articlePattern?: string | null;
   onAddPage: () => void;
   onNewPost: () => void;
   onSettings: (route: string) => void;
@@ -85,6 +87,23 @@ export function PagesPanel(props: {
           </Group>
         ) : null,
       )}
+      {props.articlePattern && props.posts.length ? (
+        <Group title="Articles">
+          <ul className="ed-tree">
+            {props.posts.filter((post) => match(`${post.title} ${post.slug}`)).map((post) => {
+              const route = articleRouteFor(props.articlePattern ?? "", post.slug);
+              return (
+                <li key={post.slug} className={props.path === route ? "is-active" : ""}>
+                  <button type="button" className="ed-tree-main" aria-current={props.path === route ? "page" : undefined} onClick={() => props.onOpen(route)}>
+                    <FileText size={14} aria-hidden="true" />
+                    <span className="truncate">{post.title}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </Group>
+      ) : null}
       {pages.length === 0 ? <Empty title="No pages match">Try part of the page name or its address.</Empty> : null}
     </div>
   );

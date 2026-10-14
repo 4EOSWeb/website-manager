@@ -8,11 +8,12 @@ import { applyText, setArchived, setNavVisible, updatePageMeta } from "@/lib/edi
 import type { EditorApi } from "@/components/editor/types";
 import { Field, Group, Select, TextArea, TextInput, Toggle } from "@/components/editor/ui";
 import { navigationEditingEnabled, pageCapabilityFlags, showBody, showHeaderToggle, showMetadata } from "@/components/editor/inspector/page-controls";
+import { articleBodyKind } from "@/platform/pages/route-flags";
 import { routeReserved } from "@/platform/pages/reserved";
 import { seoHost } from "@/platform/pages/seo-host";
 
 export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: PageDocument; onDuplicate: () => void }) {
-  const flags = pageCapabilityFlags(api.adapter, page);
+  const flags = pageCapabilityFlags(api.adapter, page, page.route);
   const body = showBody(flags);
   const canEditNav = navigationEditingEnabled(api.adapter);
   const disabled = !api.canEdit || page.locked || !body;
@@ -80,7 +81,7 @@ export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: Page
 }
 
 export function SeoTab({ api, page }: { api: EditorApi; page: PageDocument }) {
-  const flags = pageCapabilityFlags(api.adapter, page);
+  const flags = pageCapabilityFlags(api.adapter, page, page.route);
   if (!showMetadata(flags)) return null;
   const disabled = !api.canEdit;
   const title = page.seoTitle || page.title;
@@ -102,6 +103,23 @@ export function SeoTab({ api, page }: { api: EditorApi; page: PageDocument }) {
         </div>
       </Group>
     </div>
+  );
+}
+
+export function ArticleRegions({ api }: { api: EditorApi }) {
+  const flags = pageCapabilityFlags(api.adapter, api.page ?? {}, api.path);
+  const preserved = articleBodyKind(api.adapter) === "html-preserved";
+  return (
+    <>
+      {flags.providerManaged ? <p className="ed-note" data-provider-managed="article">This page is managed for you. You can still change its menu label and search details.</p> : null}
+      {preserved ? <p className="ed-note" data-article-body="preserved">This article body stays as published HTML.</p> : null}
+      {flags.editMetadata ? (
+        <Group title="Search details">
+          <p className="ed-hint" data-article-region="metadata">Search title and description can change.</p>
+        </Group>
+      ) : null}
+      {flags.editHeader ? <p className="ed-note" data-article-region="header">The header on this page can change.</p> : null}
+    </>
   );
 }
 

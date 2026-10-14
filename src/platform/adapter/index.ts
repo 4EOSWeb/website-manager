@@ -37,6 +37,7 @@ export function composeAdapterSchema() {
     routes: staticRoutesSchema,
     pageRules: pageRulesSchema,
     pageCapabilities: pageCapabilitySchema,
+    routeCapabilities: z.record(z.string(), pageCapabilitySchema).optional(),
     navigation: navigationSchema,
     theme: themeSchema,
     fonts: fontsSchema,
@@ -92,6 +93,10 @@ export function parseAdapter(value: unknown): Result<AdapterContract> {
   if (!publish.ok) return reject(publish.error);
   const pageCapabilities = resolvePageCapabilities(parsed.data.level, parsed.data.pageCapabilities);
   if (!pageCapabilities.ok) return reject(pageCapabilities.error);
+  for (const flags of Object.values(parsed.data.routeCapabilities ?? {})) {
+    const routeFlags = resolvePageCapabilities(parsed.data.level, flags);
+    if (!routeFlags.ok) return reject(routeFlags.error);
+  }
   return ok({
     ...parsed.data,
     validateDocument: parsed.data.validateDocument ?? defaultValidateDocumentHook,

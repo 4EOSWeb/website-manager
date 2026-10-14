@@ -115,6 +115,7 @@ import { layoutChangeRefused } from "@/components/editor/inspector/layout-lock";
 import { headerChromeField } from "@/platform/pages/regions";
 import { reservedRoutesOf } from "@/platform/pages/reserved";
 import { pageCapabilityFlags } from "@/components/editor/inspector/page-controls";
+import { articleBodyKind, isArticleRoute } from "@/platform/pages/route-flags";
 import { createHeading } from "@/platform/elements/heading";
 import { createLink, writeLinkHref } from "@/platform/elements/link";
 import { createParagraph } from "@/platform/elements/paragraph";
@@ -267,7 +268,9 @@ export function EditorShell(props: {
     site.pages.map((item) => ({ id: item.id, route: item.route, title: item.title })),
   );
   const activePost = articleRoute ? posts.find((item) => articleSlug(articleRoute, path) === item.slug) : undefined;
-  const managedRoute = !page && !activePost;
+  const onArticle = isArticleRoute(adapter, path);
+  const preservedArticle = onArticle && articleBodyKind(adapter) === "html-preserved";
+  const managedRoute = !page && !onArticle;
   const section = page?.sections.find((item) => item.id === selection.sectionId);
 
   useEffect(() => {
@@ -902,7 +905,7 @@ export function EditorShell(props: {
 
   function insertPreviewNode(node: NodeDocument, block: FlowBlock, libraryId: string, nextVisual: unknown | null, at?: Insert) {
     if (!page || !props.canEdit) {
-      notify(managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
+      notify(preservedArticle ? "This article body stays as published HTML." : managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
       return;
     }
     if (page.locked) {
@@ -996,7 +999,7 @@ export function EditorShell(props: {
 
   function insertPreviewSection(node: NodeDocument, created: Section, libraryId: string, nextVisual: unknown | null, trackLayout = false) {
     if (!page || !props.canEdit) {
-      notify(managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
+      notify(preservedArticle ? "This article body stays as published HTML." : managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
       return;
     }
     if (page.locked) {
@@ -1323,7 +1326,7 @@ export function EditorShell(props: {
       return;
     }
     if (!page || !props.canEdit) {
-      notify(managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
+      notify(preservedArticle ? "This article body stays as published HTML." : managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
       return;
     }
     rememberLibrary(entry.id);
@@ -1484,7 +1487,7 @@ export function EditorShell(props: {
         setEditing(Boolean(data.active));
         break;
       case "4eos-text": {
-        const flags = pageCapabilityFlags(adapter, page ?? {});
+        const flags = pageCapabilityFlags(adapter, page ?? {}, path);
         if (flags.lockContent === true) return;
         const target = page?.sections.find((item) => item.id === text("sectionId"));
         if (target?.editorName === "Sidebar" ? flags.editSidebar !== true : flags.editBody !== true) return;
@@ -1501,7 +1504,7 @@ export function EditorShell(props: {
         break;
       case "4eos-chrome": {
         const field = text("field");
-        if (headerChromeField(field) && pageCapabilityFlags(adapter, page ?? {}).editHeader !== true) return;
+        if (headerChromeField(field) && pageCapabilityFlags(adapter, page ?? {}, path).editHeader !== true) return;
         const value = text("value");
         const chrome = structuredClone(site.chrome);
         if (field === "buttonLabel") chrome.header.buttonLabel = value;
@@ -1524,7 +1527,7 @@ export function EditorShell(props: {
         dragActive.current = false;
         const fromSection = text("sectionId");
         const toSection = text("targetSectionId") || fromSection;
-        const layoutReason = layoutChangeRefused(pageCapabilityFlags(adapter, page ?? {}), fromSection === toSection);
+        const layoutReason = layoutChangeRefused(pageCapabilityFlags(adapter, page ?? {}, path), fromSection === toSection);
         if (layoutReason) {
           setDragReason(layoutReason);
           break;
@@ -1796,7 +1799,9 @@ export function EditorShell(props: {
   const pageTitle = pageState?.title ?? page?.title ?? activePost?.title ?? (path === "/" ? "Home" : path);
   const statusMessage = !props.canEdit
     ? "You can look around, but this account cannot change the site."
-    : managedRoute
+    : preservedArticle
+      ? "This article body stays as published HTML. Search details and the header can still change."
+      : managedRoute
       ? "This page is managed for you. Pick a page on the left to edit."
       : selection.locked
         ? "This part is managed for you."
@@ -1934,6 +1939,7 @@ export function EditorShell(props: {
                 canEdit={props.canEdit}
                 onOpen={openPage}
                 onAddPage={() => setAddingPage(true)}
+                articlePattern={articleRoute}
                 onNewPost={() => void createInsight()}
                 onSettings={(route) => {
                   if (route !== path) openPage(route);
