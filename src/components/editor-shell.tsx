@@ -80,6 +80,7 @@ import { acceptLink } from "@/components/editor/inspector/link-model";
 import { replaceImageSrc } from "@/components/editor/inspector/image-model";
 import { buttonFlowPatch, writeButtonState } from "@/components/editor/inspector/button-model";
 import { textStylePatch } from "@/components/editor/inspector/text-model";
+import type { RegisteredInspector } from "@/components/editor/inspector/registered-model";
 import { renameVisualNode } from "@/components/editor/layers/rename-name";
 import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTargetForNode, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
 import { selectNodeId } from "@/components/editor/state/selection";
@@ -166,6 +167,8 @@ export function EditorShell(props: {
   userName: string;
   previewAccess: string;
   publications: Publication[];
+  registered?: RegisteredInspector[];
+  inspectorSlots?: Record<string, { label: string }>;
 }) {
   const [siteState] = useState(() => createSiteState(props.siteContext));
   const [adapterId] = useState(props.adapterId);
@@ -1981,7 +1984,7 @@ export function EditorShell(props: {
             if (!current || !sectionId) return;
             const nextNode = writeGeneratedProp(current, prop, value);
             setGenericByBlock((items) => ({ ...items, [blockId]: nextNode }));
-            if (prop !== "text" && prop !== "label" && prop !== "quote" && prop !== "title") return;
+            if (prop !== "text" && prop !== "label" && prop !== "quote" && prop !== "title" && prop !== "heading" && prop !== "intro" && prop !== "tagline" && prop !== "positioning") return;
             commitText(applyText(site, path, sectionId, "text", value, blockId), `${blockId}:${prop}`, true);
           }}
           onGeneratedStyle={(key, value) => {
@@ -2091,6 +2094,9 @@ export function EditorShell(props: {
             if (!blockId || !sectionId || !patch) return;
             commit(patchFlowBlock(site, path, sectionId, blockId, { textStyle: patch }), true);
           }}
+          registered={props.registered}
+          inspectorSlots={props.inspectorSlots}
+          experience={experience}
         />
       </div>
       <StatusBar message={statusMessage} viewport={viewport} scale={scale} zoom={zoom} onZoom={setZoom} role={props.role} editing={editing} onShortcuts={() => setShortcuts(true)} />

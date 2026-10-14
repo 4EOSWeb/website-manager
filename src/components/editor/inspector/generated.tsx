@@ -5,6 +5,7 @@ import { inspectorFields } from "@/platform/registry/inspector-fields";
 import { propsSchemaFor } from "@/platform/elements/props-schemas";
 import { Field } from "@/components/editor/ui";
 import { colorTokenOptions, designDefinitionFor, generatedName, isContentProp, visibleDesignKeys, type GeneratedNode } from "@/components/editor/inspector/generated-model";
+import { inspectorSlot, type RegisteredInspector } from "@/components/editor/inspector/registered-model";
 
 /** Name, id, and component for a generic node, plus the descriptors from its props schema. */
 const colorKeys = new Set(["color", "background", "border"]);
@@ -13,7 +14,7 @@ function labelFor(key: string) {
   return key.charAt(0).toUpperCase() + key.slice(1);
 }
 
-export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: string; value: string }[]; onName: (name: string) => void; onProp?: (prop: string, value: string) => void; onStyle?: (key: string, value: string) => void }) {
+export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: string; value: string }[]; registered?: RegisteredInspector[]; slots?: Record<string, { label: string }>; experience?: string; onName: (name: string) => void; onProp?: (prop: string, value: string) => void; onStyle?: (key: string, value: string) => void }) {
   const schema = propsSchemaFor(props.node.componentId);
   const generated = schema ? inspectorFields(schema) : { fields: [], warnings: [] };
   const content = generated.fields.filter((field) => isContentProp(field.prop, field.control));
@@ -21,6 +22,8 @@ export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: 
   const design = designDefinitionFor(props.node.componentId);
   const designKeys = design ? visibleDesignKeys(design) : [];
   const tokens = colorTokenOptions(props.tokens ?? []);
+  const registered = props.registered?.find((item) => item.componentId === props.node.componentId);
+  const slot = inspectorSlot(registered?.customInspectorId, props.slots ?? {}, props.experience ?? "basic");
   const stored = generatedName(props.node);
   const [name, setName] = useState(stored);
   useEffect(() => setName(stored), [stored, props.node.id]);
@@ -92,6 +95,21 @@ export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: 
               </Field>
             );
           })}
+        </div>
+      ) : null}
+      {registered ? (
+        <div data-registered-fields={registered.componentId}>
+          {registered.fields.map((field) => {
+            const stored = props.node.props[field.prop];
+            const value = typeof stored === "string" ? stored : "";
+            return (
+              <Field key={field.prop} label={field.label}>
+                <input className="ed-input" aria-label={field.label} value={value} data-generated-prop={field.prop} onChange={(event) => props.onProp?.(field.prop, event.target.value)} />
+              </Field>
+            );
+          })}
+          {slot.status === "ready" && registered.customInspectorId ? <div data-custom-inspector={registered.customInspectorId}>{slot.label}</div> : null}
+          {slot.status === "missing" ? <p role="alert">{slot.warning}</p> : null}
         </div>
       ) : null}
       {rest.map((field) => (

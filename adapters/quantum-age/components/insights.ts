@@ -1,8 +1,15 @@
+import { z } from "zod";
+
 /**
  * Summary block for the article index.
  * The library id `section:insights-summary` stays until step 14.1.
  * Registered custom items leave the library in step 9.27.
  */
+
+export const quantumAgeInsightsSummaryProps = z.object({
+  heading: z.string(),
+  intro: z.string(),
+}).strict();
 
 export const quantumAgeInsightsSummary = {
   id: "quantum-age.insights-summary",

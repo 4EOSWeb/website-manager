@@ -16,6 +16,7 @@ export const componentDefinitionSchema = z.object({
   defaultProps: z.record(z.string(), z.unknown()),
   propsSchemaId: z.string().min(1),
   inspector: z.string().min(1),
+  customInspectorId: z.string().min(1).optional(),
   acceptsChildren: z.boolean(),
   allowedParents: z.array(z.string().min(1)),
   capabilities: z.record(z.string(), z.boolean()),

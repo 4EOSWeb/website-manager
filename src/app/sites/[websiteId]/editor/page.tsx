@@ -6,7 +6,7 @@ import { blogDraftSchema } from "@/lib/content-schema";
 import { imageSize, mediaRoot } from "@/lib/media";
 import { canUseAdministrator } from "@/components/editor/state/experience";
 import { draftForSite } from "@/components/editor/state/site";
-import { editorAdapterForSite } from "@/lib/editor-adapter";
+import { editorAdapterForSite, registeredInspectorPlan } from "@/lib/editor-adapter";
 import { normalizeSiteDraft } from "@/lib/page-documents";
 import { mintPreviewAccess } from "@/lib/preview-access";
 import { prisma } from "@/lib/prisma";
@@ -41,6 +41,7 @@ export default async function EditorPage({ params }: { params: Promise<{ website
   const ownedDraft = draftForSite(websiteId, draft);
   const site = normalizeSiteDraft(ownedDraft?.draftData);
   const adapter = await editorAdapterForSite(websiteId);
+  const inspectorPlan = registeredInspectorPlan(adapter?.fields ?? null);
   const storedPosts = await prisma.blogPost.findMany({
     where: { websiteId, status: { in: ["DRAFT", "SCHEDULED"] } },
     orderBy: { updatedAt: "desc" },
@@ -95,6 +96,8 @@ export default async function EditorPage({ params }: { params: Promise<{ website
         reviewUrl: item.pullRequestUrl,
         createdAt: item.createdAt.toISOString(),
       }))}
+      registered={inspectorPlan.registered}
+      inspectorSlots={inspectorPlan.slots}
     />
   );
 }

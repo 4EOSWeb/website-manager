@@ -10,6 +10,7 @@ import { SectionAdvanced, SectionContent, SectionLayoutTab, SectionStyleTab, sec
 import { PageTab, PostTab, SeoTab } from "@/components/editor/inspector/page";
 import { FooterInspector, FreeformInspector, HeaderInspector, NavInspector } from "@/components/editor/inspector/chrome";
 import { GeneratedInspector } from "@/components/editor/inspector/generated";
+import type { RegisteredInspector } from "@/components/editor/inspector/registered-model";
 import { adapterColorTokens, type GeneratedNode } from "@/components/editor/inspector/generated-model";
 import { LayoutFields } from "@/components/editor/inspector/layout-fields";
 import { layoutModeName, type LayoutModeName, type LayoutNode } from "@/components/editor/inspector/layout-model";
@@ -86,6 +87,9 @@ export function Inspector(props: {
   onButton?: (key: string, value: string) => void;
   onButtonState?: (state: ButtonStateName, key: string, value: string) => void;
   onTextStyle?: (key: string, value: string) => void;
+  registered?: RegisteredInspector[];
+  inspectorSlots?: Record<string, { label: string }>;
+  experience?: string;
 }) {
   const { api } = props;
   const selection = api.selection;
@@ -170,7 +174,7 @@ export function Inspector(props: {
         </div>
       ) : null}
       <div className="ed-inspector-body" id="inspector-panel" role={tabs.length > 1 ? "tabpanel" : undefined} aria-labelledby={tabs.length > 1 ? `tab-${active}` : undefined}>
-        {props.generated && props.onGeneratedName ? <GeneratedInspector node={props.generated} tokens={adapterColorTokens(api.adapter)} onName={props.onGeneratedName} onProp={props.onGeneratedProp} onStyle={props.onGeneratedStyle} /> : null}
+        {props.generated && props.onGeneratedName ? <GeneratedInspector node={props.generated} tokens={adapterColorTokens(api.adapter)} registered={props.registered} slots={props.inspectorSlots} experience={props.experience} onName={props.onGeneratedName} onProp={props.onGeneratedProp} onStyle={props.onGeneratedStyle} /> : null}
         {props.sectionLayout && layoutModeName(props.sectionLayout.layout) ? (
           <LayoutFields
             mode={layoutModeName(props.sectionLayout.layout) as LayoutModeName}

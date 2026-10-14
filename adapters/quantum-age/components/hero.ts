@@ -54,6 +54,7 @@ export const quantumAgeHero = {
   defaultProps: emptyHero,
   propsSchemaId: "quantum-age.hero",
   inspector: "hero",
+  customInspectorId: "site.hero.panel",
   acceptsChildren: false,
   allowedParents: ["page"],
   capabilities: {},
