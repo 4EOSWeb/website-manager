@@ -15,6 +15,7 @@ export type PageForm = { title: string; route: string; template: PageDocument["t
 /** Removal is step 14.8, when Add page reads adapter templates. */
 const TEMPLATES = [
   { value: "blank", label: "Blank page" },
+  { value: "canvas", label: "Blank canvas" },
   { value: "landing", label: "Landing page" },
   { value: "service", label: "Service page" },
   { value: "resource", label: "Resource page" },
