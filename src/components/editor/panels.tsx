@@ -20,7 +20,7 @@ import { setLayerVisibility } from "@/components/editor/layers/visibility-node";
 import { LayerReparentNote } from "@/components/editor/layers/reparent";
 import { applyLayerReparent, decideLayerDrop } from "@/components/editor/layers/reparent-drop";
 import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
-import { layerIdText, layoutModeLabel, typeLabel, type LayerExperience } from "@/components/editor/layers/labels";
+import { layerIdText, layoutModeLabel, managedLabel, typeLabel, type LayerExperience } from "@/components/editor/layers/labels";
 import { defaultOpenIds, legacyTarget, visualPageRoot } from "@/components/editor/layers/rows";
 
 export function PagesPanel(props: {
@@ -242,6 +242,14 @@ export function LayersPanel(props: { api: EditorApi; experience: LayerExperience
           <button type="button" className="ed-tree-main" onClick={() => props.onChrome("header")}><PanelTop size={14} aria-hidden="true" /> Header <Lock size={12} aria-label="Locked" className="ed-muted-icon" /></button>
           {layerUnlockAllowed("header", layerRole(api.role)) ? null : <LayerUnlockButton allowed={false} reason={LAYER_UNLOCK_REASON} onUnlock={() => {}} />}
         </li>
+        {api.page?.locked ? (
+          <li role="treeitem" aria-selected={false} data-layer-id={api.page.id} data-provider-managed="true">
+            <div className="ed-tree-row">
+              <span className="ed-tree-main">{api.page.title}</span>
+              <span className="ed-managed">{managedLabel(true)}</span>
+            </div>
+          </li>
+        ) : null}
         {sections.map((section) => {
           const activeSection = api.selection.sectionId === section.id && !api.selection.itemId;
           const locked = section.type === "preset" && section.providerLocked;
@@ -256,6 +264,7 @@ export function LayersPanel(props: { api: EditorApi; experience: LayerExperience
                     <span className="truncate">{sectionName(section)}</span>
                     {sectionLayoutText(section) ? <span className="ed-layout">{sectionLayoutText(section)}</span> : null}
                     {locked ? <Lock size={12} aria-label="Managed for you" className="ed-muted-icon" /> : null}
+                    {managedLabel(locked) ? <span className="ed-managed">{managedLabel(locked)}</span> : null}
                   </button>
                 )}
                 {!locked && api.canEdit ? (

@@ -700,6 +700,12 @@
   text-transform: capitalize;
 }
 
+.ed-managed {
+  flex: none;
+  color: var(--ed-muted);
+  font-size: 11px;
+}
+
 .ed-layout {
   flex: none;
   color: var(--ed-muted);

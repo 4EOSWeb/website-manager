@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { quantumAgeHero } from "../../adapters/quantum-age/components/hero.ts";
-import { labeledNodeTypes, layerIdText, layerNodeLabel, layoutModeLabel, typeLabel } from "../../src/components/editor/layers/labels.ts";
+import { labeledNodeTypes, layerIdText, layerNodeLabel, layoutModeLabel, managedLabel, typeLabel } from "../../src/components/editor/layers/labels.ts";
 import { nodeTypes } from "../../src/platform/document/node-type.ts";
 
 test("a heading row says Heading unless it was renamed", () => {
@@ -50,4 +50,9 @@ test("containers show a layout mode and other nodes do not", () => {
   assert.equal(layoutModeLabel({ type: "section", layout: { mode: "flow" } }), "Flow");
   assert.equal(layoutModeLabel({ type: "paragraph" }), "");
   assert.equal(typeLabel("heading"), "Heading");
+});
+
+test("provider-managed rows say Managed and a paragraph does not", () => {
+  assert.equal(managedLabel(true), "Managed");
+  assert.equal(managedLabel(false), "");
 });

@@ -68,6 +68,11 @@ export function layoutModeLabel(node: { type?: string; layout?: { mode?: string;
   return "";
 }
 
+/** Provider-managed rows stay visible and say Managed in every experience, including Basic. */
+export function managedLabel(providerManaged: boolean): string {
+  return providerManaged ? "Managed" : "";
+}
+
 /** Advanced and Administrator can copy the component id. Basic rows omit it. */
 export function layerIdText(mode: LayerExperience, node: { id?: string; componentId?: string | null }): string {
   if (mode === "basic") return "";
