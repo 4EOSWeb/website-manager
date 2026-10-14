@@ -1915,6 +1915,7 @@ export function EditorShell(props: {
               <PagesPanel
                 site={site}
                 posts={posts}
+                visualDocument={visualDocument}
                 path={path}
                 canEdit={props.canEdit}
                 onOpen={openPage}

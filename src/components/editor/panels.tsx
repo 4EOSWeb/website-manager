@@ -23,10 +23,12 @@ import { useLayerKeyboard } from "@/components/editor/layers/keyboard";
 import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
 import { layerIdText, layoutModeLabel, managedLabel, typeLabel, type LayerExperience } from "@/components/editor/layers/labels";
 import { defaultOpenIds, legacyTarget, visualPageRoot } from "@/components/editor/layers/rows";
+import { listedPages, pageGroups } from "@/components/editor/page-list";
 
 export function PagesPanel(props: {
   site: SiteDraft;
   posts: BlogDraft[];
+  visualDocument?: unknown;
   path: string;
   canEdit: boolean;
   onOpen: (route: string) => void;
@@ -37,13 +39,8 @@ export function PagesPanel(props: {
 }) {
   const [query, setQuery] = useState("");
   const match = (text: string) => text.toLowerCase().includes(query.trim().toLowerCase());
-  const pages = props.site.pages.filter((page) => match(`${page.title} ${page.route}`));
-  const groups = [
-    { title: "In the menu", items: pages.filter((page) => !page.archived && page.navVisible) },
-    { title: "Not in the menu", items: pages.filter((page) => !page.archived && !page.navVisible) },
-    { title: "Archived", items: pages.filter((page) => page.archived) },
-  ];
-  const posts = props.posts.filter((post) => match(post.title));
+  const pages = listedPages(props.visualDocument, props.site.pages).filter((page) => match(`${page.title} ${page.navLabel ?? ""} ${page.route}`));
+  const groups = pageGroups(pages);
   return (
     <div className="ed-panel">
       <div className="ed-panel-head">
@@ -88,23 +85,7 @@ export function PagesPanel(props: {
           </Group>
         ) : null,
       )}
-      <Group title="Insights drafts" action={props.canEdit ? <button type="button" className="ed-icon is-small" aria-label="New Insights post" data-tip="New post" onClick={props.onNewPost}><Plus size={14} aria-hidden="true" /></button> : null}>
-        {posts.length ? (
-          <ul className="ed-tree">
-            {posts.map((post) => (
-              <li key={post.slug} className={props.path === `/insights/${post.slug}` ? "is-active" : ""}>
-                <button type="button" className="ed-tree-main" onClick={() => props.onOpen(`/insights/${post.slug}`)}>
-                  <FileText size={14} aria-hidden="true" />
-                  <span className="truncate">{post.title}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="ed-hint ed-pad">No drafts yet. The 115 published articles are managed for you.</p>
-        )}
-      </Group>
-      {pages.length === 0 && posts.length === 0 ? <Empty title="No pages match">Try part of the page name or its address.</Empty> : null}
+      {pages.length === 0 ? <Empty title="No pages match">Try part of the page name or its address.</Empty> : null}
     </div>
   );
 }
