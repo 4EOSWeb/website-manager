@@ -50,6 +50,24 @@ export const labeledNodeTypes: readonly string[] = [...nodeTypes, "paragraph", "
 
 export type LayerExperience = "basic" | "advanced" | "administrator";
 
+const containerTypes = new Set(["page", "section", "container", "stack", "grid", "group", "canvas"]);
+
+/** Flow, Stack, Grid, or Canvas for a container. Other nodes have no layout label. */
+export function layoutModeLabel(node: { type?: string; layout?: { mode?: string; display?: string } | null }): string {
+  if (node.type && !containerTypes.has(node.type)) return "";
+  const mode = node.layout?.mode;
+  const display = node.layout?.display;
+  if (mode === "canvas") return "Canvas";
+  if (display === "grid") return "Grid";
+  if (display === "flex") return "Stack";
+  if (mode === "flow") return "Flow";
+  if (node.type === "canvas") return "Canvas";
+  if (node.type === "grid") return "Grid";
+  if (node.type === "stack") return "Stack";
+  if (node.type === "section" || node.type === "container" || node.type === "group" || node.type === "page") return "Flow";
+  return "";
+}
+
 /** Advanced and Administrator can copy the component id. Basic rows omit it. */
 export function layerIdText(mode: LayerExperience, node: { id?: string; componentId?: string | null }): string {
   if (mode === "basic") return "";

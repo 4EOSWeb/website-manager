@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { quantumAgeHero } from "../../adapters/quantum-age/components/hero.ts";
-import { labeledNodeTypes, layerIdText, layerNodeLabel, typeLabel } from "../../src/components/editor/layers/labels.ts";
+import { labeledNodeTypes, layerIdText, layerNodeLabel, layoutModeLabel, typeLabel } from "../../src/components/editor/layers/labels.ts";
 import { nodeTypes } from "../../src/platform/document/node-type.ts";
 
 test("a heading row says Heading unless it was renamed", () => {
@@ -41,4 +41,13 @@ test("basic layers hide component ids and advanced layers show them", () => {
   assert.equal(layerIdText("administrator", button), "generic.button");
   assert.equal(layerIdText("advanced", { id: "blk_who_h" }), "blk_who_h");
   assert.equal(layerIdText("basic", { id: "blk_who_h", componentId: "generic.button" }), "");
+});
+
+test("containers show a layout mode and other nodes do not", () => {
+  assert.equal(layoutModeLabel({ type: "section", layout: { mode: "canvas" } }), "Canvas");
+  assert.equal(layoutModeLabel({ type: "section", layout: { mode: "layout", display: "flex" } }), "Stack");
+  assert.equal(layoutModeLabel({ type: "section", layout: { mode: "layout", display: "grid" } }), "Grid");
+  assert.equal(layoutModeLabel({ type: "section", layout: { mode: "flow" } }), "Flow");
+  assert.equal(layoutModeLabel({ type: "paragraph" }), "");
+  assert.equal(typeLabel("heading"), "Heading");
 });

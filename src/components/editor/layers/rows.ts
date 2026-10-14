@@ -5,6 +5,7 @@ export type LayerNode = {
   id: string;
   type: string;
   componentId?: string;
+  layout?: { mode?: string; display?: string };
   metadata?: Record<string, unknown>;
   children?: LayerNode[];
   locked?: { locked?: boolean };

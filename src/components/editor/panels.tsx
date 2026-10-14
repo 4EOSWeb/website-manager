@@ -20,7 +20,7 @@ import { setLayerVisibility } from "@/components/editor/layers/visibility-node";
 import { LayerReparentNote } from "@/components/editor/layers/reparent";
 import { applyLayerReparent, decideLayerDrop } from "@/components/editor/layers/reparent-drop";
 import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
-import { layerIdText, typeLabel, type LayerExperience } from "@/components/editor/layers/labels";
+import { layerIdText, layoutModeLabel, typeLabel, type LayerExperience } from "@/components/editor/layers/labels";
 import { defaultOpenIds, legacyTarget, visualPageRoot } from "@/components/editor/layers/rows";
 
 export function PagesPanel(props: {
@@ -106,6 +106,14 @@ export function PagesPanel(props: {
       {pages.length === 0 && posts.length === 0 ? <Empty title="No pages match">Try part of the page name or its address.</Empty> : null}
     </div>
   );
+}
+
+function sectionLayoutText(section: { type: string; layout?: string }): string {
+  if (section.type === "freeform") return layoutModeLabel({ type: "section", layout: { mode: "canvas" } });
+  if (section.type !== "flow") return "";
+  if (section.layout === "split" || section.layout === "cards") return layoutModeLabel({ type: "section", layout: { mode: "layout", display: "grid" } });
+  if (section.layout === "stack" || section.layout === "list") return layoutModeLabel({ type: "section", layout: { mode: "layout", display: "flex" } });
+  return layoutModeLabel({ type: "section", layout: { mode: "flow" } });
 }
 
 export function LayersPanel(props: { api: EditorApi; experience: LayerExperience; chromeFocus: string; onSelect: (sectionId: string, itemId?: string) => void; onChrome: (part: "header" | "footer") => void }) {
@@ -246,6 +254,7 @@ export function LayersPanel(props: { api: EditorApi; experience: LayerExperience
                   <button type="button" className={`ed-tree-main ${section.hidden ? "is-hidden" : ""}`} onClick={() => props.onSelect(section.id)} onDoubleClick={() => api.canEdit && setRenaming(section.id)}>
                     <span className="ed-layer-dot" aria-hidden="true" />
                     <span className="truncate">{sectionName(section)}</span>
+                    {sectionLayoutText(section) ? <span className="ed-layout">{sectionLayoutText(section)}</span> : null}
                     {locked ? <Lock size={12} aria-label="Managed for you" className="ed-muted-icon" /> : null}
                   </button>
                 )}

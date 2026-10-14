@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { LayerNode } from "@/components/editor/layers/rows";
-import { layerIdText, type LayerExperience } from "@/components/editor/layers/labels";
+import { layerIdText, layoutModeLabel, type LayerExperience } from "@/components/editor/layers/labels";
 import { layerLabel, layerRowSelected, layerStorageKey, type LayerSelection } from "@/components/editor/layers/rows";
 import { Lock } from "lucide-react";
 import { LayerLockButton, LayerUnlockButton } from "@/components/editor/layers/lock";
@@ -60,6 +60,7 @@ function Branch(props: {
 }) {
   const { node, experience, parentId, depth, open, onToggle, selection, onSelect, renamingId, onRenameStart, onRename, onRenameCancel, onLock, onUnlock, unlockAllowed, unlockReason, onPointerDown, dropHint } = props;
   const componentId = layerIdText(experience, node);
+  const layoutText = layoutModeLabel({ type: node.type, layout: node.layout });
   const children = node.children ?? [];
   const expanded = children.length > 0 && open.has(node.id);
   const selected = layerRowSelected(node, selection);
@@ -87,6 +88,7 @@ function Branch(props: {
               <span className="truncate">{layerLabel(node)}</span>
               {node.locked?.locked ? <Lock size={12} aria-label="Locked" className="ed-muted-icon" /> : null}
             </button>
+            {layoutText ? <span className="ed-layout">{layoutText}</span> : null}
             {componentId ? <span className="ed-layer-id">{componentId}</span> : null}
           </>
         )}

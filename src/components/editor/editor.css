@@ -700,6 +700,12 @@
   text-transform: capitalize;
 }
 
+.ed-layout {
+  flex: none;
+  color: var(--ed-muted);
+  font-size: 11px;
+}
+
 .ed-layer-id {
   flex: none;
   max-width: 9rem;
