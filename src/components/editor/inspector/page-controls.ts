@@ -7,12 +7,13 @@ function levelOf(adapter: unknown): AdapterLevel {
 }
 
 /** Adapter flags, with a locked page treated as provider-managed. Routes are not listed here. */
-export function pageCapabilityFlags(adapter: unknown, page: { locked?: boolean }): PageCapabilities {
+export function pageCapabilityFlags(adapter: unknown, page: { locked?: boolean; editHeader?: boolean }): PageCapabilities {
   const record = adapter && typeof adapter === "object" ? (adapter as { pageCapabilities?: unknown }) : {};
   const resolved = resolvePageCapabilities(levelOf(adapter), record.pageCapabilities ?? {});
   const flags = resolved.ok ? resolved.value : defaultPageCapabilities(levelOf(adapter));
-  if (page.locked !== true) return flags;
-  return { ...flags, providerManaged: true, editBody: false, lockLayout: true, lockContent: true };
+  const withPage = page.editHeader === true ? { ...flags, editHeader: true } : page.editHeader === false ? { ...flags, editHeader: false } : flags;
+  if (page.locked !== true) return withPage;
+  return { ...withPage, providerManaged: true, editBody: false, lockLayout: true, lockContent: true };
 }
 
 export function showMetadata(flags: PageCapabilities): boolean {

@@ -481,6 +481,7 @@ export const pageDocumentSchema = z
     parentRoute: z.string().max(80).optional(),
     shareImage: mediaPath.optional(),
     hideHeader: z.boolean().optional(),
+    editHeader: z.boolean().optional(),
     sections: z.array(sectionSchema).max(80),
   })
   .strict();

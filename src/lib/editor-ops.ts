@@ -532,6 +532,7 @@ export function createPage(
     seoTitle: input.seoTitle,
     metaDescription: input.metaDescription,
     sections: templateSections(input.template),
+    ...(input.template === "article" ? { editHeader: true } : {}),
   };
   return { site: { ...site, pages: [...site.pages, next] }, error: undefined };
 }

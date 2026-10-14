@@ -111,7 +111,9 @@ import { createImage, writeImage } from "@/platform/elements/image";
 import { createGallery, writeGallery } from "@/platform/elements/gallery";
 import { acceptVideoUrl, createVideo, writeVideoUrl } from "@/platform/elements/video";
 import { createCustom, type CustomDefinition } from "@/platform/elements/custom";
+import { headerChromeField } from "@/platform/pages/regions";
 import { reservedRoutesOf } from "@/platform/pages/reserved";
+import { pageCapabilityFlags } from "@/components/editor/inspector/page-controls";
 import { createHeading } from "@/platform/elements/heading";
 import { createLink, writeLinkHref } from "@/platform/elements/link";
 import { createParagraph } from "@/platform/elements/paragraph";
@@ -1494,6 +1496,7 @@ export function EditorShell(props: {
         break;
       case "4eos-chrome": {
         const field = text("field");
+        if (headerChromeField(field) && pageCapabilityFlags(adapter, page ?? {}).editHeader !== true) return;
         const value = text("value");
         const chrome = structuredClone(site.chrome);
         if (field === "buttonLabel") chrome.header.buttonLabel = value;

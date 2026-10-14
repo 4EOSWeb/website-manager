@@ -18,6 +18,7 @@ import { CanvasFields } from "@/components/editor/inspector/canvas-fields";
 import { canvasPercents, writeCanvasPercent, type CanvasAnchor } from "@/components/editor/inspector/canvas-model";
 import { canvasControlsVisible } from "@/components/editor/inspector/capability-gate";
 import { fieldVisible } from "@/components/editor/inspector/mode-filter";
+import { pageCapabilityFlags } from "@/components/editor/inspector/page-controls";
 
 function placedBox(item: FreeformItem, viewport: Viewport): OverlapBox {
   const box = viewport === "tablet" ? item.tablet ?? item.desktop : viewport === "mobile" ? item.mobile ?? item.desktop : item.desktop;
@@ -26,7 +27,7 @@ function placedBox(item: FreeformItem, viewport: Viewport): OverlapBox {
 
 export function HeaderInspector({ api }: { api: EditorApi }) {
   const chrome = api.site.chrome;
-  const disabled = !api.canEdit;
+  const disabled = !api.canEdit || pageCapabilityFlags(api.adapter, api.page ?? {}).editHeader !== true;
   const header = (patch: Partial<typeof chrome.header>) => api.commit(patchChrome(api.site, { ...chrome, header: { ...chrome.header, ...patch } }), true);
   const announcement = (patch: Partial<typeof chrome.announcement>) => api.commit(patchChrome(api.site, { ...chrome, announcement: { ...chrome.announcement, ...patch } }), true);
   return (
