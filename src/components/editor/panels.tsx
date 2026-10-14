@@ -20,6 +20,7 @@ import { setLayerVisibility } from "@/components/editor/layers/visibility-node";
 import { LayerReparentNote } from "@/components/editor/layers/reparent";
 import { applyLayerReparent, decideLayerDrop } from "@/components/editor/layers/reparent-drop";
 import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
+import { typeLabel } from "@/components/editor/layers/labels";
 import { defaultOpenIds, legacyTarget, visualPageRoot } from "@/components/editor/layers/rows";
 
 export function PagesPanel(props: {
@@ -270,7 +271,7 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
                             <LayerRename value={block.editorName || ""} label="Item name" onCommit={(value) => rename(section.id, value, block.id)} onCancel={() => setRenaming("")} />
                           ) : (
                             <button type="button" className={`ed-tree-main ${block.hidden ? "is-hidden" : ""}`} onClick={() => props.onSelect(section.id, block.id)} onDoubleClick={() => api.canEdit && setRenaming(block.id)}>
-                              <span className="ed-kind">{block.kind === "brand-mark" ? "Logo" : block.kind}</span>
+                              <span className="ed-kind">{block.kind === "brand-mark" ? "Logo" : typeLabel(block.kind)}</span>
                               <span className="truncate">{label}</span>
                               {block.locked ? <Lock size={12} aria-label="Locked" className="ed-muted-icon" /> : null}
                             </button>

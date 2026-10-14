@@ -1,3 +1,5 @@
+import { layerNodeLabel } from "@/components/editor/layers/labels";
+
 /** A visual node, as stored: children are nested, and a lock does not remove the node. */
 export type LayerNode = {
   id: string;
@@ -41,11 +43,12 @@ export function layerRowSelected(node: LayerNode, selection: LayerSelection): bo
   return target.itemId === "";
 }
 
-/** The display name, or the node type when the page has not named it. */
-export function layerLabel(node: LayerNode): string {
-  const name = node.metadata?.name;
-  if (typeof name === "string" && name.trim()) return name.trim();
-  return node.type;
+/** The display name, or the generic type word when the page has not named it. */
+export function layerLabel(node: LayerNode, registryName?: string | null): string {
+  return layerNodeLabel(
+    { type: node.type, metadata: node.metadata ? { name: node.metadata.name } : undefined },
+    registryName,
+  );
 }
 
 /** Every node under the page root, including locked and provider-managed nodes. */

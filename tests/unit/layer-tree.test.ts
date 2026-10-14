@@ -24,7 +24,7 @@ const root: LayerNode = {
 test("every node has a row, including a provider-managed node", () => {
   const rows = layerRows(root);
   assert.deepEqual(rows.map((row) => row.id), ["node_root", "node_heading", "node_managed"]);
-  assert.equal(rows[1]?.label, "heading");
+  assert.equal(rows[1]?.label, "Heading");
   assert.equal(rows[2]?.label, "Provider block");
   assert.equal(rows[2]?.locked, true);
   assert.equal(rows[2]?.providerManaged, true);
