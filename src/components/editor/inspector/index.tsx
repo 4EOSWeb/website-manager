@@ -13,6 +13,7 @@ import { GeneratedInspector } from "@/components/editor/inspector/generated";
 import type { RegisteredInspector } from "@/components/editor/inspector/registered-model";
 import { adapterColorTokens, type GeneratedNode } from "@/components/editor/inspector/generated-model";
 import { LayoutFields } from "@/components/editor/inspector/layout-fields";
+import { pageCapabilityFlags } from "@/components/editor/inspector/page-controls";
 import { layoutModeName, type LayoutModeName, type LayoutNode } from "@/components/editor/inspector/layout-model";
 import { VisibilityFields } from "@/components/editor/inspector/visibility-fields";
 import type { VisibilityDevice, VisibilityState } from "@/components/editor/inspector/visibility-model";
@@ -193,6 +194,7 @@ export function Inspector(props: {
           <LayoutFields
             mode={layoutModeName(props.sectionLayout.layout) as LayoutModeName}
             allowed={props.layoutAllowed !== false}
+            locked={pageCapabilityFlags(api.adapter, api.page ?? {}).lockLayout}
             layout={props.sectionLayout.layout}
             onConfirm={(mode) => props.onLayoutMode?.(mode)}
             onSetting={(key, value) => props.onLayoutSetting?.(key, value)}

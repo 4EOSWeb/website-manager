@@ -111,6 +111,7 @@ import { createImage, writeImage } from "@/platform/elements/image";
 import { createGallery, writeGallery } from "@/platform/elements/gallery";
 import { acceptVideoUrl, createVideo, writeVideoUrl } from "@/platform/elements/video";
 import { createCustom, type CustomDefinition } from "@/platform/elements/custom";
+import { layoutChangeRefused } from "@/components/editor/inspector/layout-lock";
 import { headerChromeField } from "@/platform/pages/regions";
 import { reservedRoutesOf } from "@/platform/pages/reserved";
 import { pageCapabilityFlags } from "@/components/editor/inspector/page-controls";
@@ -1522,6 +1523,11 @@ export function EditorShell(props: {
         dragActive.current = false;
         const fromSection = text("sectionId");
         const toSection = text("targetSectionId") || fromSection;
+        const layoutReason = layoutChangeRefused(pageCapabilityFlags(adapter, page ?? {}), fromSection === toSection);
+        if (layoutReason) {
+          setDragReason(layoutReason);
+          break;
+        }
         if (fromSection === toSection) {
           const next = moveFlowBlockById(site, path, fromSection, text("itemId"), text("targetId"), Boolean(data.after));
           const nextVisual = flowReorder(visualDocument, text("itemId"), text("targetId"), Boolean(data.after));

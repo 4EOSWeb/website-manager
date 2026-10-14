@@ -20,12 +20,14 @@ function readSetting(layout: LayoutSettings | undefined, key: string): string {
 export function LayoutFields(props: {
   mode: LayoutModeName;
   allowed: boolean;
+  locked?: boolean;
   layout?: LayoutSettings;
   onConfirm: (mode: LayoutModeName) => void;
   onSetting: (key: string, value: string | number | boolean) => void;
 }) {
   const [pending, setPending] = useState<LayoutModeName | null>(null);
   if (!props.allowed) return null;
+  if (props.locked) return <p className="ed-note" data-layout-lock="mode">This page keeps its layout.</p>;
   const keys = layoutSettingKeys(props.mode);
   return (
     <div data-layout-fields="mode">

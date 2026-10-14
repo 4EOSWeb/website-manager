@@ -22,6 +22,7 @@ export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: Page
   return (
     <>
       {flags.providerManaged ? <p className="ed-note">This page is managed for you. You can still change its menu label and search details.</p> : null}
+      {flags.lockLayout ? <p className="ed-note" data-layout-lock="page">This page keeps its layout.</p> : null}
       <Group title="Page">
         {body ? (
           <div data-page-control="body">
