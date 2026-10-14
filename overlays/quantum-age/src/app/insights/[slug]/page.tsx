@@ -75,6 +75,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   }
   const article = getArticle(slug);
   if (!article) notFound();
+  const preserved = { source: { externalRef: article.slug }, metadata: { htmlPreserved: true as const }, html: article.body };
   const related = getRelatedArticles(slug, 3);
 
   return (
@@ -145,7 +146,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             )}
             <div data-locked="provider">
               <p className="mb-6 border border-stone bg-[#efebe4] px-4 py-3 text-sm">This article is kept as it was published. New Insights posts are edited as structured drafts. This one stays as it is.</p>
-              <div id="article-body" className="prose-article" dangerouslySetInnerHTML={{ __html: article.body }} />
+              {preserved.metadata.htmlPreserved ? <StructuredArticle preserved={{ htmlPreserved: true, html: preserved.html }} /> : null}
             </div>
             <ReadingProgress targetId="article-body" />
           </div>
