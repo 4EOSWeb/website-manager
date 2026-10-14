@@ -4,14 +4,23 @@ import { useEffect, useState } from "react";
 import { inspectorFields } from "@/platform/registry/inspector-fields";
 import { propsSchemaFor } from "@/platform/elements/props-schemas";
 import { Field } from "@/components/editor/ui";
-import { generatedName, isContentProp, type GeneratedNode } from "@/components/editor/inspector/generated-model";
+import { colorTokenOptions, designDefinitionFor, generatedName, isContentProp, visibleDesignKeys, type GeneratedNode } from "@/components/editor/inspector/generated-model";
 
 /** Name, id, and component for a generic node, plus the descriptors from its props schema. */
-export function GeneratedInspector(props: { node: GeneratedNode; onName: (name: string) => void; onProp?: (prop: string, value: string) => void }) {
+const colorKeys = new Set(["color", "background", "border"]);
+
+function labelFor(key: string) {
+  return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: string; value: string }[]; onName: (name: string) => void; onProp?: (prop: string, value: string) => void; onStyle?: (key: string, value: string) => void }) {
   const schema = propsSchemaFor(props.node.componentId);
   const generated = schema ? inspectorFields(schema) : { fields: [], warnings: [] };
   const content = generated.fields.filter((field) => isContentProp(field.prop, field.control));
   const rest = generated.fields.filter((field) => !isContentProp(field.prop, field.control));
+  const design = designDefinitionFor(props.node.componentId);
+  const designKeys = design ? visibleDesignKeys(design) : [];
+  const tokens = colorTokenOptions(props.tokens ?? []);
   const stored = generatedName(props.node);
   const [name, setName] = useState(stored);
   useEffect(() => setName(stored), [stored, props.node.id]);
@@ -50,6 +59,39 @@ export function GeneratedInspector(props: { node: GeneratedNode; onName: (name: 
               />
             </Field>
           ))}
+        </div>
+      ) : null}
+      {designKeys.length > 0 ? (
+        <div role="tabpanel" data-generated-tab="design" aria-label="Design">
+          <div className="ed-tabs" role="tablist" aria-label="Generated design">
+            <button type="button" role="tab" aria-selected={true}>Design</button>
+          </div>
+          {designKeys.map((key) => {
+            const stored = props.node.styles?.[key] ?? "";
+            const tokenId = stored.startsWith("token:") ? stored.slice(6) : "";
+            const hex = stored.startsWith("#") ? stored : "";
+            const label = labelFor(key);
+            return (
+              <Field key={key} label={label}>
+                {colorKeys.has(key) ? (
+                  <>
+                    <select
+                      className="ed-input"
+                      aria-label={`${label} token`}
+                      value={tokenId}
+                      onChange={(event) => props.onStyle?.(key, event.target.value ? `token:${event.target.value}` : hex)}
+                    >
+                      <option value="">Custom</option>
+                      {tokens.map((id) => <option key={id} value={id}>{id}</option>)}
+                    </select>
+                    <input className="ed-input" aria-label={`${label} hex`} value={hex} placeholder="#000000" data-generated-style={key} onChange={(event) => props.onStyle?.(key, event.target.value)} />
+                  </>
+                ) : (
+                  <input className="ed-input" aria-label={label} value={stored} data-generated-style={key} onChange={(event) => props.onStyle?.(key, event.target.value)} />
+                )}
+              </Field>
+            );
+          })}
         </div>
       ) : null}
       {rest.map((field) => (

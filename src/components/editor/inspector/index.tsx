@@ -10,7 +10,7 @@ import { SectionAdvanced, SectionContent, SectionLayoutTab, SectionStyleTab, sec
 import { PageTab, PostTab, SeoTab } from "@/components/editor/inspector/page";
 import { FooterInspector, FreeformInspector, HeaderInspector, NavInspector } from "@/components/editor/inspector/chrome";
 import { GeneratedInspector } from "@/components/editor/inspector/generated";
-import type { GeneratedNode } from "@/components/editor/inspector/generated-model";
+import { adapterColorTokens, type GeneratedNode } from "@/components/editor/inspector/generated-model";
 
 const BLOCK_LABELS: Record<string, string> = {
   eyebrow: "Small heading",
@@ -62,6 +62,7 @@ export function Inspector(props: {
   generated?: GeneratedNode | null;
   onGeneratedName?: (name: string) => void;
   onGeneratedProp?: (prop: string, value: string) => void;
+  onGeneratedStyle?: (key: string, value: string) => void;
 }) {
   const { api } = props;
   const selection = api.selection;
@@ -146,7 +147,7 @@ export function Inspector(props: {
         </div>
       ) : null}
       <div className="ed-inspector-body" id="inspector-panel" role={tabs.length > 1 ? "tabpanel" : undefined} aria-labelledby={tabs.length > 1 ? `tab-${active}` : undefined}>
-        {props.generated && props.onGeneratedName ? <GeneratedInspector node={props.generated} onName={props.onGeneratedName} onProp={props.onGeneratedProp} /> : null}
+        {props.generated && props.onGeneratedName ? <GeneratedInspector node={props.generated} tokens={adapterColorTokens(api.adapter)} onName={props.onGeneratedName} onProp={props.onGeneratedProp} onStyle={props.onGeneratedStyle} /> : null}
         {mode.kind === "none" ? (
           props.managedRoute ? (
             <Empty title="This page is managed for you">Articles, search results, and system pages come from your website provider. Choose a page on the left to edit it.</Empty>

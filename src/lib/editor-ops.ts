@@ -693,7 +693,7 @@ export function insertSectionCopy(site: SiteDraft, route: string, afterSectionId
   return insertSection(site, route, at < 0 ? sections.length : at + 1, cloneSection(section));
 }
 
-type BlockPatch = Partial<Pick<FlowBlock, "kind" | "href" | "alt" | "fit" | "focal" | "textStyle" | "variant" | "size" | "align" | "target" | "icon" | "width" | "listStyle" | "editorName">>;
+type BlockPatch = Partial<Pick<FlowBlock, "kind" | "href" | "alt" | "fit" | "focal" | "textStyle" | "variant" | "size" | "align" | "target" | "icon" | "width" | "listStyle" | "editorName" | "background">>;
 
 export function patchFlowBlock(site: SiteDraft, route: string, sectionId: string, blockId: string, patch: BlockPatch): SiteDraft {
   return mapSection(site, route, sectionId, (section) => {

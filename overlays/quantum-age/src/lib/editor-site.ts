@@ -45,6 +45,7 @@ export type EditorSection = {
     locked?: boolean;
     pin?: boolean;
     textStyle?: TextStyle;
+    background?: string;
     variant?: "filled" | "outline" | "text";
     size?: "s" | "m" | "l";
     align?: "start" | "center" | "end";

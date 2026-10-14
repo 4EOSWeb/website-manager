@@ -28,6 +28,7 @@ import {
   insertSectionCopy,
   moveBlockToSection,
   moveFlowBlockById,
+  patchFlowBlock,
   moveSectionById,
   pageByRoute,
   patchChrome,
@@ -72,7 +73,7 @@ import { reparent } from "@/platform/drag/reparent";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
 import { LibraryBrowser } from "@/components/editor/library";
 import { Inspector } from "@/components/editor/inspector";
-import { renameGeneratedNode, writeGeneratedProp, type GeneratedNode } from "@/components/editor/inspector/generated-model";
+import { adapterColorTokens, renameGeneratedNode, writeGeneratedProp, writeGeneratedStyle, type GeneratedNode } from "@/components/editor/inspector/generated-model";
 import { renameVisualNode } from "@/components/editor/layers/rename-name";
 import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTargetForNode, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
 import { selectNodeId } from "@/components/editor/state/selection";
@@ -1946,6 +1947,17 @@ export function EditorShell(props: {
             setGenericByBlock((items) => ({ ...items, [blockId]: nextNode }));
             if (prop !== "text" && prop !== "label" && prop !== "quote" && prop !== "title") return;
             commitText(applyText(site, path, sectionId, "text", value, blockId), `${blockId}:${prop}`, true);
+          }}
+          onGeneratedStyle={(key, value) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            const current = genericByBlock[blockId];
+            if (!current || !sectionId) return;
+            setGenericByBlock((items) => ({ ...items, [blockId]: writeGeneratedStyle(current, key, value) }));
+            const resolved = value.startsWith("token:") ? adapterColorTokens(adapter).find((token) => token.id === value.slice(6))?.value ?? "" : value;
+            if (!/^#[0-9a-fA-F]{6}$/.test(resolved)) return;
+            if (key === "background") commit(patchFlowBlock(site, path, sectionId, blockId, { background: resolved }), true);
+            if (key === "color") commit(patchFlowBlock(site, path, sectionId, blockId, { textStyle: { color: resolved } }), true);
           }}
         />
       </div>

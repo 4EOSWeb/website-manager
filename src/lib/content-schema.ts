@@ -241,6 +241,7 @@ export const flowBlockSchema = z
     tablet: placementSchema.optional(),
     mobile: placementSchema.optional(),
     textStyle: textStyleSchema.optional(),
+    background: hexColor.optional(),
     variant: z.enum(["filled", "outline", "text"]).optional(),
     size: z.enum(["s", "m", "l"]).optional(),
     align: z.enum(["start", "center", "end"]).optional(),
