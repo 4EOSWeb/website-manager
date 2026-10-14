@@ -34,4 +34,6 @@ export type ComponentDefinition = {
   capabilities: Readonly<Record<string, boolean>>;
   locking: RegistryLock;
   renderer: RegistryRenderer;
+  /** Omitted means conversion is allowed. False hides the layout mode select. */
+  allowLayoutConversion?: boolean;
 };

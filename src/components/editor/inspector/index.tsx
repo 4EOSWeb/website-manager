@@ -11,6 +11,8 @@ import { PageTab, PostTab, SeoTab } from "@/components/editor/inspector/page";
 import { FooterInspector, FreeformInspector, HeaderInspector, NavInspector } from "@/components/editor/inspector/chrome";
 import { GeneratedInspector } from "@/components/editor/inspector/generated";
 import { adapterColorTokens, type GeneratedNode } from "@/components/editor/inspector/generated-model";
+import { LayoutFields } from "@/components/editor/inspector/layout-fields";
+import { layoutModeName, type LayoutModeName, type LayoutNode } from "@/components/editor/inspector/layout-model";
 
 const BLOCK_LABELS: Record<string, string> = {
   eyebrow: "Small heading",
@@ -63,6 +65,10 @@ export function Inspector(props: {
   onGeneratedName?: (name: string) => void;
   onGeneratedProp?: (prop: string, value: string) => void;
   onGeneratedStyle?: (key: string, value: string) => void;
+  sectionLayout?: LayoutNode | null;
+  layoutAllowed?: boolean;
+  onLayoutMode?: (mode: LayoutModeName) => void;
+  onLayoutSetting?: (key: string, value: string | number | boolean) => void;
 }) {
   const { api } = props;
   const selection = api.selection;
@@ -148,6 +154,15 @@ export function Inspector(props: {
       ) : null}
       <div className="ed-inspector-body" id="inspector-panel" role={tabs.length > 1 ? "tabpanel" : undefined} aria-labelledby={tabs.length > 1 ? `tab-${active}` : undefined}>
         {props.generated && props.onGeneratedName ? <GeneratedInspector node={props.generated} tokens={adapterColorTokens(api.adapter)} onName={props.onGeneratedName} onProp={props.onGeneratedProp} onStyle={props.onGeneratedStyle} /> : null}
+        {props.sectionLayout && layoutModeName(props.sectionLayout.layout) ? (
+          <LayoutFields
+            mode={layoutModeName(props.sectionLayout.layout) as LayoutModeName}
+            allowed={props.layoutAllowed !== false}
+            layout={props.sectionLayout.layout}
+            onConfirm={(mode) => props.onLayoutMode?.(mode)}
+            onSetting={(key, value) => props.onLayoutSetting?.(key, value)}
+          />
+        ) : null}
         {mode.kind === "none" ? (
           props.managedRoute ? (
             <Empty title="This page is managed for you">Articles, search results, and system pages come from your website provider. Choose a page on the left to edit it.</Empty>

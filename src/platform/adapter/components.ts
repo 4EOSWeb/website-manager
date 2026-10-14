@@ -26,6 +26,7 @@ export const componentDefinitionSchema = z.object({
   renderer: z.object({
     exportName: z.string().min(1),
   }).strict(),
+  allowLayoutConversion: z.boolean().optional(),
 }).strict();
 
 export const componentsSchema = z.object({

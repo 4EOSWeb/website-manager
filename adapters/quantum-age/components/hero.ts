@@ -59,4 +59,5 @@ export const quantumAgeHero = {
   capabilities: {},
   locking: { locked: false },
   renderer: { exportName: "FlowSection" },
+  allowLayoutConversion: false,
 };

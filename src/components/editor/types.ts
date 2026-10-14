@@ -1,4 +1,5 @@
 import type { BlogDraft, PageDocument, SiteDraft } from "@/lib/content-schema";
+import type { LayoutNode } from "@/components/editor/inspector/layout-model";
 import type { SiteContext } from "@/platform/context";
 
 export type MediaItem = {
@@ -24,7 +25,7 @@ export type Selection = {
   kind: string;
 };
 
-export type Snapshot = { site: SiteDraft; posts: BlogDraft[] };
+export type Snapshot = { site: SiteDraft; posts: BlogDraft[]; layouts?: Record<string, LayoutNode> };
 
 export type Viewport = "desktop" | "tablet" | "mobile";
 

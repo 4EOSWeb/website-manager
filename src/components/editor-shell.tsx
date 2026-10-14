@@ -74,6 +74,7 @@ import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/e
 import { LibraryBrowser } from "@/components/editor/library";
 import { Inspector } from "@/components/editor/inspector";
 import { adapterColorTokens, renameGeneratedNode, writeGeneratedProp, writeGeneratedStyle, type GeneratedNode } from "@/components/editor/inspector/generated-model";
+import { applySectionLayout, componentDefinitions, confirmLayoutMode, definitionAllowsLayout, writeLayoutSetting, type LayoutNode } from "@/components/editor/inspector/layout-model";
 import { renameVisualNode } from "@/components/editor/layers/rename-name";
 import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTargetForNode, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
 import { selectNodeId } from "@/components/editor/state/selection";
@@ -196,6 +197,7 @@ export function EditorShell(props: {
   const [selection, setSelection] = useState<Selection>(emptySelection);
   const [nodeIds, setNodeIds] = useState<string[]>([]);
   const [genericByBlock, setGenericByBlock] = useState<Record<string, GeneratedNode>>({});
+  const [genericBySection, setGenericBySection] = useState<Record<string, LayoutNode>>({});
   const [version, setVersion] = useState(0);
   const [publications, setPublications] = useState(props.publications);
   const [progress, setProgress] = useState<number | null>(null);
@@ -276,8 +278,12 @@ export function EditorShell(props: {
     window.setTimeout(() => setToasts((items) => items.filter((item) => item.id !== id)), tone === "error" ? 9000 : action ? 7000 : 4000);
   }, []);
 
+  function currentSnapshot(): Snapshot {
+    return { site, posts, layouts: genericBySection };
+  }
+
   function rememberHistory() {
-    history.record({ site, posts }, visualDocument);
+    history.record(currentSnapshot(), visualDocument);
   }
 
   function commit(next: SiteDraft, reload: boolean, nextVisual?: unknown) {
@@ -291,7 +297,7 @@ export function EditorShell(props: {
 
   function commitText(next: SiteDraft, key: string, reload = false) {
     if (!props.canEdit || JSON.stringify(next) === JSON.stringify(site)) return;
-    history.recordText({ site, posts }, key, visualDocument);
+    history.recordText(currentSnapshot(), key, visualDocument);
     const blockId = key.split(":")[0] ?? "";
     const field = key.split(":")[1] ?? "";
     const nodeId = buttonBlocks.current.get(blockId);
@@ -314,6 +320,7 @@ export function EditorShell(props: {
     pinnedNode.current = null;
     setSite(previous.value.site);
     setPosts(previous.value.posts);
+    if (previous.value.layouts) setGenericBySection(previous.value.layouts);
     setVisualDocument(previous.visualDocument);
     setVisualNodeIds(nodeIdsIn(previous.visualDocument));
     setNodeIds(nodeIdsFromLegacy(selection).nodeIds);
@@ -327,6 +334,7 @@ export function EditorShell(props: {
     pinnedNode.current = null;
     setSite(next.value.site);
     setPosts(next.value.posts);
+    if (next.value.layouts) setGenericBySection(next.value.layouts);
     setVisualDocument(next.visualDocument);
     setVisualNodeIds(nodeIdsIn(next.visualDocument));
     setNodeIds(nodeIdsFromLegacy(selection).nodeIds);
@@ -664,7 +672,7 @@ export function EditorShell(props: {
   function updateBlog(field: string, index: unknown, value: string) {
     if (!activePost) return;
     const key = `blog:${field}:${String(index ?? "")}`;
-    history.recordText({ site, posts }, key, visualDocument);
+    history.recordText(currentSnapshot(), key, visualDocument);
     setPosts((items) =>
       items.map((post) => {
         if (post.slug !== activePost.slug) return post;
@@ -705,7 +713,7 @@ export function EditorShell(props: {
   function updatePost(next: BlogDraft) {
     if (!props.canEdit) return;
     const key = `post:${next.slug}`;
-    history.recordText({ site, posts }, key, visualDocument);
+    history.recordText(currentSnapshot(), key, visualDocument);
     setPosts((items) => items.map((item) => (item.slug === next.slug ? next : item)));
   }
 
@@ -950,7 +958,7 @@ export function EditorShell(props: {
     insertPreviewNode(node, block, node.componentId === "generic.icon-button" ? "element:icon-button" : "element:button", insertAfter(visualDocument, path, afterId, node), at);
   }
 
-  function insertPreviewSection(node: NodeDocument, created: Section, libraryId: string, nextVisual: unknown | null) {
+  function insertPreviewSection(node: NodeDocument, created: Section, libraryId: string, nextVisual: unknown | null, trackLayout = false) {
     if (!page || !props.canEdit) {
       notify(managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
       return;
@@ -963,6 +971,19 @@ export function EditorShell(props: {
     const index = section ? page.sections.findIndex((item) => item.id === section.id) + 1 : page.sections.length;
     const next = insertSection(site, path, index < 0 ? page.sections.length : index, created);
     commit(next, true, nextVisual ?? undefined);
+    if (trackLayout) {
+      setGenericBySection((current) => ({
+        ...current,
+        [created.id]: {
+          id: node.id,
+          componentId: node.componentId,
+          metadata: { ...node.metadata },
+          props: { ...node.props },
+          ...(node.layout ? { layout: node.layout } : {}),
+          allowLayoutConversion: true,
+        },
+      }));
+    }
     pinnedNode.current = node.id;
     setNodeIds(selectNodeId(node.id).nodeIds);
     setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
@@ -1087,31 +1108,31 @@ export function EditorShell(props: {
   function insertCreatedGroup(node: NodeDocument) {
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
     const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Group", layout: "stack", blocks: [] };
-    insertPreviewSection(node, created, "element:group", insertAfter(visualDocument, path, afterId, node));
+    insertPreviewSection(node, created, "element:group", insertAfter(visualDocument, path, afterId, node), true);
   }
 
   function insertCreatedCanvas(node: NodeDocument) {
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
     const created: Section = { id: createId("sec"), type: "freeform", hidden: false, name: "Canvas", items: [] };
-    insertPreviewSection(node, created, "element:canvas", insertAfter(visualDocument, path, afterId, node));
+    insertPreviewSection(node, created, "element:canvas", insertAfter(visualDocument, path, afterId, node), true);
   }
 
   function insertCreatedGrid(node: NodeDocument) {
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
     const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Grid", layout: "grid", blocks: [] };
-    insertPreviewSection(node, created, "element:grid", insertAfter(visualDocument, path, afterId, node));
+    insertPreviewSection(node, created, "element:grid", insertAfter(visualDocument, path, afterId, node), true);
   }
 
   function insertCreatedStack(node: NodeDocument) {
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
     const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Stack", layout: "stack", blocks: [] };
-    insertPreviewSection(node, created, "element:stack", insertAfter(visualDocument, path, afterId, node));
+    insertPreviewSection(node, created, "element:stack", insertAfter(visualDocument, path, afterId, node), true);
   }
 
   function insertCreatedContainer(node: NodeDocument) {
     const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
     const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Container", layout: "stack", blocks: [] };
-    insertPreviewSection(node, created, "element:container", insertAfter(visualDocument, path, afterId, node));
+    insertPreviewSection(node, created, "element:container", insertAfter(visualDocument, path, afterId, node), true);
   }
 
   function insertCreatedSpacer(node: NodeDocument) {
@@ -1958,6 +1979,24 @@ export function EditorShell(props: {
             if (!/^#[0-9a-fA-F]{6}$/.test(resolved)) return;
             if (key === "background") commit(patchFlowBlock(site, path, sectionId, blockId, { background: resolved }), true);
             if (key === "color") commit(patchFlowBlock(site, path, sectionId, blockId, { textStyle: { color: resolved } }), true);
+          }}
+          sectionLayout={!selection.itemId ? genericBySection[selection.sectionId] ?? null : null}
+          layoutAllowed={definitionAllowsLayout(componentDefinitions(adapter), genericBySection[selection.sectionId]?.componentId ?? "", genericBySection[selection.sectionId]?.allowLayoutConversion)}
+          onLayoutMode={(mode) => {
+            const sectionId = selection.sectionId;
+            const current = genericBySection[sectionId];
+            if (!current?.layout) return;
+            const nextNode = confirmLayoutMode(current, mode);
+            commit(applySectionLayout(site, path, sectionId, mode), true);
+            setGenericBySection((items) => ({ ...items, [sectionId]: nextNode }));
+          }}
+          onLayoutSetting={(key, value) => {
+            const sectionId = selection.sectionId;
+            setGenericBySection((items) => {
+              const current = items[sectionId];
+              if (!current) return items;
+              return { ...items, [sectionId]: writeLayoutSetting(current, key, value) };
+            });
           }}
         />
       </div>
