@@ -10,6 +10,7 @@ import { inspectorSlot, type RegisteredInspector } from "@/components/editor/ins
 import { FieldError, useFieldIssues } from "@/components/editor/inspector/errors";
 import { issuesFromProps, type FieldIssue } from "@/components/editor/inspector/errors-model";
 import { formComponent, formControlsVisible, themeControlsVisible } from "@/components/editor/inspector/capability-gate";
+import { fieldVisible } from "@/components/editor/inspector/mode-filter";
 
 /** Name, id, and component for a generic node, plus the descriptors from its props schema. */
 const colorKeys = new Set(["color", "background", "border"]);
@@ -50,12 +51,16 @@ export function GeneratedInspector(props: { node: GeneratedNode; tokens?: { id: 
           }}
         />
       </Field>
-      <Field label="Id">
-        <input className="ed-input" aria-label="Id" value={props.node.id} readOnly />
-      </Field>
-      <Field label="Component">
-        <input className="ed-input" aria-label="Component" value={props.node.componentId} readOnly />
-      </Field>
+      {fieldVisible("componentId", props.experience ?? "basic") ? (
+        <>
+          <Field label="Id">
+            <input className="ed-input" aria-label="Id" value={props.node.id} readOnly />
+          </Field>
+          <Field label="Component">
+            <input className="ed-input" aria-label="Component" value={props.node.componentId} readOnly />
+          </Field>
+        </>
+      ) : null}
       {content.length > 0 && showFormFields ? (
         <div role="tabpanel" data-generated-tab="content" aria-label="Content">
           <div className="ed-tabs" role="tablist" aria-label="Generated groups">

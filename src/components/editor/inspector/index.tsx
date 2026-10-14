@@ -279,7 +279,7 @@ export function Inspector(props: {
         {mode.kind === "freeform" && section ? (
           <>
             {props.overflow ? <p className="ed-callout" role="status">{props.overflow}</p> : null}
-            <FreeformInspector api={api} section={section} item={mode.item} tab={active} />
+            <FreeformInspector api={api} section={section} item={mode.item} tab={active} experience={props.experience ?? "basic"} />
           </>
         ) : null}
         {mode.kind === "page" && page ? (

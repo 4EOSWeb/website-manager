@@ -17,6 +17,7 @@ import { LinkPicker } from "@/components/editor/inspector/shared";
 import { CanvasFields } from "@/components/editor/inspector/canvas-fields";
 import { canvasPercents, writeCanvasPercent, type CanvasAnchor } from "@/components/editor/inspector/canvas-model";
 import { canvasControlsVisible } from "@/components/editor/inspector/capability-gate";
+import { fieldVisible } from "@/components/editor/inspector/mode-filter";
 
 function placedBox(item: FreeformItem, viewport: Viewport): OverlapBox {
   const box = viewport === "tablet" ? item.tablet ?? item.desktop : viewport === "mobile" ? item.mobile ?? item.desktop : item.desktop;
@@ -88,7 +89,7 @@ export function NavInspector({ api, route, onOpen }: { api: EditorApi; route: st
   );
 }
 
-export function FreeformInspector({ api, section, item, tab }: { api: EditorApi; section: Section; item?: FreeformItem; tab: string }) {
+export function FreeformInspector({ api, section, item, tab, experience = "basic" }: { api: EditorApi; section: Section; item?: FreeformItem; tab: string; experience?: string }) {
   const disabled = !api.canEdit;
   const overlay = api.selection.overlay;
   if (!item) {
@@ -110,7 +111,7 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
       mobile: item.mobile ? { box: item.mobile } : undefined,
     },
   };
-  const responsive = (
+  const responsive = fieldVisible("strategy", experience) ? (
     <ResponsiveFields
       visible={responsiveFieldsVisible({ mode: "canvas" })}
       strategy={item.strategy}
@@ -124,7 +125,7 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
         api.commit(clearItemBreakpoint(api.site, api.path, section.id, item.id, api.viewport, overlay), true, reset ?? undefined);
       }}
     />
-  );
+  ) : null;
   const siblings = section.type === "freeform" ? section.items : section.type === "preset" ? section.overlay ?? [] : [];
   const warning = overlapWarning(placedBox(item, api.viewport), siblings.filter((other) => other.id !== item.id).map((other) => placedBox(other, api.viewport)));
   const notice = warning ? <p className="ed-callout" role="status">{warning}</p> : null;
@@ -159,7 +160,9 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
     return (
       <>
         <CanvasFields
-          visible={canvasControlsVisible(api.adapter)}
+          visible={canvasControlsVisible(api.adapter) && (fieldVisible("position", experience) || fieldVisible("zIndex", experience))}
+          showPosition={fieldVisible("position", experience)}
+          showOrder={fieldVisible("zIndex", experience)}
           x={percents.x}
           y={percents.y}
           w={percents.w}
@@ -200,7 +203,7 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
           <p className="ed-hint">Aligns inside the zone on {api.viewport === "mobile" ? "phones" : api.viewport}. Use the arrow keys to nudge; hold Shift for bigger steps.</p>
         </Group>
         <Group title="Order and lock">
-          <div className="ed-row">
+          {fieldVisible("zIndex", experience) ? <div className="ed-row" data-field="z-index">
             <button type="button" className="ed-button" disabled={disabled} onClick={() => {
               const ordered = bringForwardCanvas(api.visualDocument, item.id);
               api.commit(bringForwardItems(api.site, api.path, section.id, item.id, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
@@ -222,7 +225,7 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
               const ordered = sendToBackCanvas(api.visualDocument, item.id);
               api.commit(sendToBackItems(api.site, api.path, section.id, item.id, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
             }}>Send to back</button>
-          </div>
+          </div> : null}
           <Toggle label="Lock position" checked={item.locked} disabled={disabled} onChange={(value) => set({ locked: value })} />
           <Toggle label="Show on the website" checked={!item.hidden} disabled={disabled} onChange={(value) => set({ hidden: !value })} />
         </Group>
