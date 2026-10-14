@@ -9,6 +9,7 @@ import type { EditorApi } from "@/components/editor/types";
 import { Field, Group, Select, TextArea, TextInput, Toggle } from "@/components/editor/ui";
 import { navigationEditingEnabled, pageCapabilityFlags, showBody, showHeaderToggle, showMetadata } from "@/components/editor/inspector/page-controls";
 import { routeReserved } from "@/platform/pages/reserved";
+import { seoHost } from "@/platform/pages/seo-host";
 
 export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: PageDocument; onDuplicate: () => void }) {
   const flags = pageCapabilityFlags(api.adapter, page);
@@ -81,7 +82,7 @@ export function SeoTab({ api, page }: { api: EditorApi; page: PageDocument }) {
       </Group>
       <Group title="Preview">
         <div className="ed-serp" aria-label="How this page may look in search results">
-          <span className="ed-serp-url">testsite.4eos.com{page.route === "/" ? "" : page.route}</span>
+          <span className="ed-serp-url">{seoHost(api.adapter)}{page.route === "/" ? "" : page.route}</span>
           <span className="ed-serp-title">{title}</span>
           <span className="ed-serp-desc">{page.metaDescription || "Add a description so search engines don't pick a random sentence."}</span>
         </div>
