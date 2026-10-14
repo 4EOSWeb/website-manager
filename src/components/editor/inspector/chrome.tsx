@@ -2,7 +2,7 @@
 
 import { ExternalLink } from "lucide-react";
 import type { FreeformItem, Section } from "@/lib/content-schema";
-import { alignItems, applyText, bringForwardItems, bringToFrontItems, clearItemBreakpoint, distributeItems, patchChrome, patchItem, renameZone, sendBackwardItems, sendToBackItems, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
+import { alignItems, applyText, bringForwardItems, bringToFrontItems, clearItemBreakpoint, distributeItems, patchChrome, patchItem, placeItems, renameZone, sendBackwardItems, sendToBackItems, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
 import { alignCanvas, type AlignMode } from "@/platform/canvas/align";
 import { distributeCanvas, type DistributeAxis } from "@/platform/canvas/distribute";
 import { alreadyInFront, bringForwardCanvas, bringToFrontCanvas, sendBackwardCanvas, sendToBackCanvas } from "@/platform/canvas/z-order";
@@ -14,6 +14,8 @@ import { Field, Group, TextArea, TextInput, Toggle } from "@/components/editor/u
 import { ResponsiveFields } from "@/components/editor/inspector/responsive-fields";
 import { responsiveFieldsVisible } from "@/components/editor/inspector/responsive-model";
 import { LinkPicker } from "@/components/editor/inspector/shared";
+import { CanvasFields } from "@/components/editor/inspector/canvas-fields";
+import { canvasPercents, writeCanvasPercent, type CanvasAnchor } from "@/components/editor/inspector/canvas-model";
 
 function placedBox(item: FreeformItem, viewport: Viewport): OverlapBox {
   const box = viewport === "tablet" ? item.tablet ?? item.desktop : viewport === "mobile" ? item.mobile ?? item.desktop : item.desktop;
@@ -131,8 +133,45 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
   const mixedNote = mixed ? <p className="ed-callout">Mixed</p> : null;
   if (tab === "arrange") {
     const ids = api.selection.itemIds.length ? api.selection.itemIds : [item.id];
+    const box = api.viewport === "tablet" ? item.tablet ?? item.desktop : api.viewport === "mobile" ? item.mobile ?? item.desktop : item.desktop;
+    const percents = canvasPercents(box);
+    const order = (action: "forward" | "front" | "backward" | "back") => {
+      if (action === "forward") {
+        const ordered = bringForwardCanvas(api.visualDocument, item.id);
+        api.commit(bringForwardItems(api.site, api.path, section.id, item.id, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
+      } else if (action === "front") {
+        const front = bringToFrontItems(api.site, api.path, section.id, item.id, overlay);
+        if (front.refused) {
+          api.notify(alreadyInFront);
+          return;
+        }
+        const ordered = bringToFrontCanvas(api.visualDocument, item.id);
+        api.commit(front.site, true, ordered && ordered.ok && !ordered.refused ? ordered.document : undefined);
+      } else if (action === "backward") {
+        const ordered = sendBackwardCanvas(api.visualDocument, item.id);
+        api.commit(sendBackwardItems(api.site, api.path, section.id, item.id, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
+      } else {
+        const ordered = sendToBackCanvas(api.visualDocument, item.id);
+        api.commit(sendToBackItems(api.site, api.path, section.id, item.id, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
+      }
+    };
     return (
       <>
+        <CanvasFields
+          visible
+          x={percents.x}
+          y={percents.y}
+          w={percents.w}
+          h={percents.h}
+          anchor={item.anchor ?? "top-left"}
+          onPercent={(key, raw) => {
+            const next = writeCanvasPercent(box, key, raw);
+            if (!next) return;
+            api.commit(placeItems(api.site, api.path, section.id, api.viewport, [{ id: item.id, placement: next }], overlay), true);
+          }}
+          onAnchor={(anchor: CanvasAnchor) => set({ anchor })}
+          onOrder={order}
+        />
         {responsive}
         {notice}
         {mixedNote}
