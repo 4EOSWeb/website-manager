@@ -13,8 +13,7 @@ test("quantum age templates include insights-landing only outside the platform",
     ["home", "marketing", "legal", "insights-landing"],
   );
   const dialog = readFileSync(new URL("../../src/components/editor/dialogs.tsx", import.meta.url), "utf8");
-  assert.equal(dialog.includes("insights-landing"), true);
-  assert.equal(dialog.includes("step 14.8"), true);
+  assert.equal(dialog.includes("insights-landing"), false);
   const scan = spawnSync("rg", ["insights-landing", "src/platform"], { encoding: "utf8" });
   assert.equal(scan.stdout, "");
   assert.equal(scan.status, 1);

@@ -523,7 +523,6 @@ export function createPage(
   const route = input.route.startsWith("/") ? input.route : `/${input.route}`;
   const problem = routeProblem(site, route);
   if (problem) return { site, error: problem };
-  if (input.template === "home" || input.template === "marketing" || input.template === "legal") return { site, error: "Choose a starting layout." };
   const next: PageDocument = {
     id: createId("page"),
     route,

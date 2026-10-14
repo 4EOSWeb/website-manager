@@ -9,21 +9,12 @@ import type { MediaItem, Publication } from "@/components/editor/types";
 import { Dialog, Field, Kbd, Select, TextArea, TextInput, Toggle } from "@/components/editor/ui";
 import { LibraryBrowser } from "@/components/editor/library";
 import type { CustomDefinition } from "@/platform/elements/custom";
+import { templateChoices } from "@/platform/templates/catalog";
 
 export type PageForm = { title: string; route: string; template: PageDocument["template"]; navVisible: boolean; seoTitle: string; metaDescription: string };
 
-/** Removal is step 14.8, when Add page reads adapter templates. */
-const TEMPLATES = [
-  { value: "blank", label: "Blank page" },
-  { value: "canvas", label: "Blank canvas" },
-  { value: "landing", label: "Landing page" },
-  { value: "service", label: "Service page" },
-  { value: "resource", label: "Resource page" },
-  { value: "insights-landing", label: "Insights landing page" },
-  { value: "article", label: "Article" },
-] as const;
-
-export function AddPageDialog(props: { site: SiteDraft; onCreate: (form: PageForm) => Promise<string | undefined>; onClose: () => void }) {
+export function AddPageDialog(props: { site: SiteDraft; adapter: Record<string, unknown> | null; onCreate: (form: PageForm) => Promise<string | undefined>; onClose: () => void }) {
+  const choices = templateChoices(props.adapter);
   const [form, setForm] = useState<PageForm>({ title: "", route: "", template: "landing", navVisible: true, seoTitle: "", metaDescription: "" });
   const [routeTouched, setRouteTouched] = useState(false);
   const [error, setError] = useState("");
@@ -59,7 +50,7 @@ export function AddPageDialog(props: { site: SiteDraft; onCreate: (form: PageFor
           <TextInput value={route} placeholder="/our-services" onChange={(value) => { setError(""); setRouteTouched(true); setForm({ ...form, route: value }); }} />
         </Field>
         <Field label="Starting layout">
-          <Select label="Starting layout" value={form.template as (typeof TEMPLATES)[number]["value"]} options={TEMPLATES} onChange={(template) => setForm({ ...form, template })} />
+          <Select label="Starting layout" value={form.template} options={choices.map((item) => ({ value: item.id as PageForm["template"], label: item.name }))} onChange={(template) => setForm({ ...form, template })} />
         </Field>
         <Toggle label="Show in the menu" checked={form.navVisible} onChange={(navVisible) => setForm({ ...form, navVisible })} />
         <Field label="Title in search results" count={{ value: form.seoTitle.length, max: 60 }}>

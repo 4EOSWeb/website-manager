@@ -1,6 +1,5 @@
 /**
- * Page templates used by this site. The Add page dialog still lists its own
- * constant in dialogs.tsx. Remove that constant in step 14.8.
+ * Page templates used by this site. Add page reads this list beside the generic starters.
  */
 
 function starter(pageId: string, nodeId: string, route: string, title: string) {

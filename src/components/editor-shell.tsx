@@ -2162,7 +2162,7 @@ export function EditorShell(props: {
           onClose={() => setInsert(null)}
         />
       ) : null}
-      {addingPage ? <AddPageDialog site={site} onCreate={createPageFrom} onClose={() => setAddingPage(false)} /> : null}
+      {addingPage ? <AddPageDialog site={site} adapter={adapter} onCreate={createPageFrom} onClose={() => setAddingPage(false)} /> : null}
       {picker ? <ImagePickerDialog websiteId={props.websiteId} media={mediaWithUse} progress={progress} onChoose={chooseImage} onUpload={uploadOnly} onClose={() => setPicker(false)} /> : null}
       {crop ? (
         <CropDialog
