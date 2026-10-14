@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { LayerNode } from "@/components/editor/layers/rows";
 import { layerLabel, layerRowSelected, layerStorageKey, type LayerSelection } from "@/components/editor/layers/rows";
 import { Lock } from "lucide-react";
-import { LayerLockButton } from "@/components/editor/layers/lock";
+import { LayerLockButton, LayerUnlockButton } from "@/components/editor/layers/lock";
 import { LayerRename } from "@/components/editor/layers/rename";
 
 /** Remembers which rows are open for this website and page. */
@@ -50,10 +50,13 @@ function Branch(props: {
   onRename: (node: LayerNode, name: string) => void;
   onRenameCancel: () => void;
   onLock?: (node: LayerNode) => void;
+  onUnlock?: (node: LayerNode) => void;
+  unlockAllowed?: (node: LayerNode) => boolean;
+  unlockReason?: string;
   onPointerDown?: (event: React.PointerEvent<HTMLLIElement>) => void;
   dropHint?: { id: string; after: boolean } | null;
 }) {
-  const { node, parentId, depth, open, onToggle, selection, onSelect, renamingId, onRenameStart, onRename, onRenameCancel, onLock, onPointerDown, dropHint } = props;
+  const { node, parentId, depth, open, onToggle, selection, onSelect, renamingId, onRenameStart, onRename, onRenameCancel, onLock, onUnlock, unlockAllowed, unlockReason, onPointerDown, dropHint } = props;
   const children = node.children ?? [];
   const expanded = children.length > 0 && open.has(node.id);
   const selected = layerRowSelected(node, selection);
@@ -82,6 +85,7 @@ function Branch(props: {
           </button>
         )}
         {onLock && !node.locked?.locked ? <LayerLockButton label={`Lock ${layerLabel(node)}`} onLock={() => onLock(node)} /> : null}
+        {node.locked?.locked && onUnlock ? <LayerUnlockButton allowed={unlockAllowed ? unlockAllowed(node) : false} reason={unlockReason || "Only an administrator can unlock this."} onUnlock={() => onUnlock(node)} /> : null}
         {children.length > 0 ? (
           <button type="button" className="ed-icon is-small" aria-label={expanded ? "Collapse" : "Expand"} data-layer-toggle={node.id} onClick={() => onToggle(node.id)}>
             {expanded ? "–" : "+"}
@@ -91,7 +95,7 @@ function Branch(props: {
       {expanded ? (
         <ul role="group">
           {children.map((child) => (
-            <Branch key={child.id} node={child} parentId={node.id} depth={depth + 1} open={open} onToggle={onToggle} selection={selection} onSelect={onSelect} renamingId={renamingId} onRenameStart={onRenameStart} onRename={onRename} onRenameCancel={onRenameCancel} onLock={onLock} onPointerDown={onPointerDown} dropHint={dropHint} />
+            <Branch key={child.id} node={child} parentId={node.id} depth={depth + 1} open={open} onToggle={onToggle} selection={selection} onSelect={onSelect} renamingId={renamingId} onRenameStart={onRenameStart} onRename={onRename} onRenameCancel={onRenameCancel} onLock={onLock} onUnlock={onUnlock} unlockAllowed={unlockAllowed} unlockReason={unlockReason} onPointerDown={onPointerDown} dropHint={dropHint} />
           ))}
         </ul>
       ) : null}
@@ -111,6 +115,9 @@ export function LayerTree(props: {
   onRename: (node: LayerNode, name: string) => void;
   onRenameCancel: () => void;
   onLock?: (node: LayerNode) => void;
+  onUnlock?: (node: LayerNode) => void;
+  unlockAllowed?: (node: LayerNode) => boolean;
+  unlockReason?: string;
   onPointerDown?: (event: React.PointerEvent<HTMLLIElement>) => void;
   dropHint?: { id: string; after: boolean } | null;
 }) {
@@ -128,6 +135,9 @@ export function LayerTree(props: {
       onRename={props.onRename}
       onRenameCancel={props.onRenameCancel}
       onLock={props.onLock}
+      onUnlock={props.onUnlock}
+      unlockAllowed={props.unlockAllowed}
+      unlockReason={props.unlockReason}
       onPointerDown={props.onPointerDown}
       dropHint={props.dropHint}
     />

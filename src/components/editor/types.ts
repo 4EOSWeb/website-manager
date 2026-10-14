@@ -49,6 +49,7 @@ export type EditorApi = {
   path: string;
   page?: PageDocument;
   canEdit: boolean;
+  role: string;
   viewport: Viewport;
   selection: Selection;
   visualDocument: unknown;

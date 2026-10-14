@@ -12,8 +12,9 @@ import { LayerRename } from "@/components/editor/layers/rename";
 import { renameVisualNode } from "@/components/editor/layers/rename-name";
 import { useLayerReorder } from "@/components/editor/layers/reorder";
 import { reorderLayerSiblings, siblingBeforeId } from "@/components/editor/layers/reorder-drop";
-import { LayerLockButton } from "@/components/editor/layers/lock";
+import { LayerLockButton, LayerUnlockButton } from "@/components/editor/layers/lock";
 import { lockFlowBlock, lockVisualNode } from "@/components/editor/layers/lock-node";
+import { applyLayerUnlock, LAYER_UNLOCK_REASON, layerRole, layerUnlockAllowed } from "@/components/editor/layers/unlock-policy";
 import { LayerReparentNote } from "@/components/editor/layers/reparent";
 import { applyLayerReparent, decideLayerDrop } from "@/components/editor/layers/reparent-drop";
 import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
@@ -197,6 +198,15 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
               if (nextVisual) api.commit(nextSite, false, nextVisual);
               else if (target?.itemId) api.commit(nextSite, false);
             } : undefined}
+            onUnlock={api.canEdit ? (node) => {
+              const target = legacyTarget(node.metadata?.legacyId);
+              if (!target?.itemId) return;
+              const applied = applyLayerUnlock(api.site, api.path, target.sectionId, target.itemId, node.type, layerRole(api.role), api.visualDocument);
+              if (!applied.ok) return;
+              api.commit(applied.site, false, applied.visual ?? undefined);
+            } : undefined}
+            unlockAllowed={(node) => layerUnlockAllowed(node.type, layerRole(api.role))}
+            unlockReason={LAYER_UNLOCK_REASON}
             onPointerDown={layersDrag.onPointerDown}
             dropHint={layersDrag.drop}
           />
@@ -212,8 +222,9 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
       <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it. Drag a row to reorder it, or onto another section to move it.</p>
       <LayerReparentNote reason={reject} />
       <ul className="ed-tree is-layers" role="tree" aria-label="Page layers" data-layer-source="version3">
-        <li role="treeitem" aria-selected={props.chromeFocus === "header"} className={props.chromeFocus === "header" ? "is-active" : ""} data-layer-id="header" data-layer-parent="chrome" data-layer-drop={layersDrag.drop?.id === "header" ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
-          <button type="button" className="ed-tree-main" onClick={() => props.onChrome("header")}><PanelTop size={14} aria-hidden="true" /> Header</button>
+        <li role="treeitem" aria-selected={props.chromeFocus === "header"} className={props.chromeFocus === "header" ? "is-active" : ""} data-layer-id="header" data-layer-parent="chrome" data-locked="true" data-layer-drop={layersDrag.drop?.id === "header" ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
+          <button type="button" className="ed-tree-main" onClick={() => props.onChrome("header")}><PanelTop size={14} aria-hidden="true" /> Header <Lock size={12} aria-label="Locked" className="ed-muted-icon" /></button>
+          {layerUnlockAllowed("header", layerRole(api.role)) ? null : <LayerUnlockButton allowed={false} reason={LAYER_UNLOCK_REASON} onUnlock={() => {}} />}
         </li>
         {sections.map((section) => {
           const activeSection = api.selection.sectionId === section.id && !api.selection.itemId;
@@ -258,7 +269,16 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
                               {block.locked ? <Lock size={12} aria-label="Locked" className="ed-muted-icon" /> : null}
                             </button>
                           )}
-                          {!block.locked && api.canEdit ? <LayerLockButton label={`Lock ${label}`} onLock={() => lockBlock(section.id, block.id)} /> : null}
+                          {block.locked ? (
+                            <LayerUnlockButton
+                              allowed={layerUnlockAllowed(block.kind, layerRole(api.role))}
+                              reason={LAYER_UNLOCK_REASON}
+                              onUnlock={() => {
+                                const applied = applyLayerUnlock(api.site, api.path, section.id, block.id, block.kind, layerRole(api.role), api.visualDocument);
+                                if (applied.ok) api.commit(applied.site, false, applied.visual ?? undefined);
+                              }}
+                            />
+                          ) : api.canEdit ? <LayerLockButton label={`Lock ${label}`} onLock={() => lockBlock(section.id, block.id)} /> : null}
                           {!block.locked && api.canEdit ? (
                             <button type="button" className="ed-icon is-small" aria-label={block.hidden ? "Show" : "Hide"} data-tip={block.hidden ? "Show" : "Hide"} onClick={() => api.commit(setBlockHidden(api.site, api.path, section.id, block.id, !block.hidden), true)}>
                               {block.hidden ? <EyeOff size={13} aria-hidden="true" /> : <Eye size={13} aria-hidden="true" />}
@@ -273,8 +293,9 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
             </li>
           );
         })}
-        <li role="treeitem" aria-selected={props.chromeFocus === "footer"} className={props.chromeFocus === "footer" ? "is-active" : ""} data-layer-id="footer" data-layer-parent="chrome" data-layer-drop={layersDrag.drop?.id === "footer" ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
-          <button type="button" className="ed-tree-main" onClick={() => props.onChrome("footer")}><PanelBottom size={14} aria-hidden="true" /> Footer</button>
+        <li role="treeitem" aria-selected={props.chromeFocus === "footer"} className={props.chromeFocus === "footer" ? "is-active" : ""} data-layer-id="footer" data-layer-parent="chrome" data-locked="true" data-layer-drop={layersDrag.drop?.id === "footer" ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
+          <button type="button" className="ed-tree-main" onClick={() => props.onChrome("footer")}><PanelBottom size={14} aria-hidden="true" /> Footer <Lock size={12} aria-label="Locked" className="ed-muted-icon" /></button>
+          {layerUnlockAllowed("footer", layerRole(api.role)) ? null : <LayerUnlockButton allowed={false} reason={LAYER_UNLOCK_REASON} onUnlock={() => {}} />}
         </li>
       </ul>
       {sections.length === 0 ? <Empty title="This page has no sections yet">Use Add to put your first section on the page.</Empty> : null}

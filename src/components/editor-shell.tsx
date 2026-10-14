@@ -1674,6 +1674,7 @@ export function EditorShell(props: {
     path,
     page,
     canEdit: props.canEdit,
+    role: props.role,
     viewport,
     selection,
     visualDocument,
