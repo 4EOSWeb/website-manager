@@ -2,7 +2,7 @@
 
 import { Eye, EyeOff } from "lucide-react";
 
-/** Hides or shows a row. The row stays in the tree either way. */
+/** Hide sets visibility.hidden. Show clears it and leaves breakpoint hideOn to the inspector. One click is one undo step. */
 export function LayerVisibilityButton(props: { hidden: boolean; label: string; onChange: (hidden: boolean) => void }) {
   return (
     <button

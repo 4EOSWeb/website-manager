@@ -25,4 +25,8 @@ test("hiding a node sets visibility.hidden and keeps hideOn", () => {
   assert.equal(children.find((child) => child.id === "blk_h")?.visibility?.hidden, false);
   const source = document.pages[0]?.root.children[0];
   assert.equal(source?.visibility?.hidden, false);
+  const shown = setLayerVisibility(next, "blk_p", false) as typeof next;
+  const shownNode = shown.pages[0]?.root.children.find((child) => child.id === "blk_p");
+  assert.equal(shownNode?.visibility?.hidden, false);
+  assert.deepEqual(shownNode?.visibility?.hideOn, ["mobile"]);
 });
