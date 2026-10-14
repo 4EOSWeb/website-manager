@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { fieldTier, fieldVisible } from "../../src/components/editor/inspector/mode-filter.ts";
+import { fieldTier, fieldVisible, visibleFields } from "../../src/components/editor/inspector/mode-filter.ts";
 
 test("basic mode hides strategy, z-index, and component ids", () => {
   assert.equal(fieldVisible("strategy", "basic"), false);
@@ -16,6 +16,14 @@ test("basic mode hides strategy, z-index, and component ids", () => {
   assert.equal(fieldVisible("delete", "basic"), true);
   assert.equal(fieldTier("strategy"), "advanced");
   assert.equal(fieldTier("componentId"), "administrator");
+  const advanced = visibleFields("advanced");
+  assert.equal(advanced.includes("position"), true);
+  assert.equal(advanced.includes("zIndex"), true);
+  assert.equal(advanced.includes("strategy"), true);
+  assert.equal(advanced.includes("label"), true);
+  assert.equal(advanced.includes("adapterPath"), false);
+  assert.equal(advanced.includes("lockId"), false);
+  assert.equal(advanced.includes("componentId"), false);
   const shell = readFileSync("src/components/editor-shell.tsx", "utf8");
   assert.equal(shell.includes('useState<ExperienceMode>("basic")'), true);
   const lowered = readFileSync("src/components/editor/inspector/mode-filter.ts", "utf8").toLowerCase();
