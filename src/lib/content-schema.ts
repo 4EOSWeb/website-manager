@@ -488,7 +488,7 @@ export const pageDocumentSchema = z
     id: blockId,
     route: z.string().regex(/^\/(?:[a-z0-9]+(?:-[a-z0-9]+)*)?$/, "Use a short address such as /new-service."),
     title: z.string().trim().min(1).max(80),
-    template: z.enum(["home", "marketing", "legal", "blank", "landing", "service", "resource", "insights-landing", "canvas"]),
+    template: z.enum(["home", "marketing", "legal", "blank", "landing", "service", "resource", "insights-landing", "canvas", "article"]),
     navVisible: z.boolean(),
     archived: z.boolean(),
     seoTitle: z.string().max(70),

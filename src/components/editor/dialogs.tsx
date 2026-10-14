@@ -20,6 +20,7 @@ const TEMPLATES = [
   { value: "service", label: "Service page" },
   { value: "resource", label: "Resource page" },
   { value: "insights-landing", label: "Insights landing page" },
+  { value: "article", label: "Article" },
 ] as const;
 
 export function AddPageDialog(props: { site: SiteDraft; onCreate: (form: PageForm) => Promise<string | undefined>; onClose: () => void }) {

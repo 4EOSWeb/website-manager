@@ -187,6 +187,17 @@ export function templateSections(template: PageDocument["template"]): Section[] 
   if (template === "insights-landing") {
     return [withText("heading", "Insights"), withText("paragraph", "Introduce the latest writing from your team."), createSection("image")];
   }
+  if (template === "article") {
+    const id = createId("sec");
+    return [{
+      id,
+      type: "flow",
+      hidden: false,
+      editorName: "Article",
+      layout: "stack",
+      blocks: [{ id: createId("blk"), kind: "paragraph", hidden: false, text: { text: "Write the article", marks: [] } }],
+    }];
+  }
   if (template === "canvas") return [createSection("freeform", "Canvas")];
   if (template === "blank") {
     const id = createId("sec");
