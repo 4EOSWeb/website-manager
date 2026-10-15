@@ -1,4 +1,5 @@
 import { HarborPillButton } from "@/components/harbor-button";
+import { harborProjects, WorkCard } from "@/components/work-card";
 import { HarborHero } from "@/components/harbor-hero";
 import { HarborNav } from "@/components/harbor-nav";
 
@@ -13,11 +14,11 @@ export default function HomePage() {
       </section>
       <section aria-label="Selected work">
         <h2>Selected work</h2>
-        <ul>
-          <li>North Pier</li>
-          <li>Salt Room</li>
-          <li>Lantern Walk</li>
-        </ul>
+        <div className="harbor-work-list">
+          {harborProjects.map((project) => (
+            <WorkCard key={project.name} name={project.name} year={project.year} place={project.place} />
+          ))}
+        </div>
       </section>
       <section>
         <h2>Visit the shed</h2>

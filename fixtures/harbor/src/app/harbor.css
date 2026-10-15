@@ -19,6 +19,21 @@ a {
   text-underline-offset: 0.2rem;
 }
 
+.harbor-work-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.harbor-work-card {
+  width: 100%;
+  background: #E6D3B1;
+  padding: 1.25rem 1.5rem;
+}
+
 .harbor-pill-button {
   display: inline-block;
   background: #E26D5A;
