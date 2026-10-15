@@ -201,10 +201,10 @@ async function waitForPreview(port: number, token: string, child: ChildProcess) 
   throw new Error("The website preview did not start. Please try again in a moment.");
 }
 
-function nextPort() {
+async function nextPort() {
   const used = new Set([...previews.values()].map((preview) => preview.port));
   let port = 4600;
-  while (used.has(port)) port += 1;
+  while (used.has(port) || (await portInUse(port))) port += 1;
   return port;
 }
 
@@ -220,7 +220,7 @@ export async function startPreview(websiteId: string) {
   const dir = await ensureWorkspace(websiteId);
   const stale = lockPid(dir);
   if (stale && stale !== process.pid) await stopProcess(stale);
-  const port = nextPort();
+  const port = await nextPort();
   await waitForPort(port, true);
   if (await portInUse(port)) {
     throw new Error("The website preview port is still busy.");

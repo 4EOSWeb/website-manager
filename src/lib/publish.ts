@@ -11,6 +11,7 @@ import { installationClient, pushBranch } from "@/lib/github";
 import { mediaRoot } from "@/lib/media";
 import { prisma } from "@/lib/prisma";
 import { commitAllowedChanges, openPullRequest } from "@/lib/publish-git";
+import { editorAdapterForSite } from "@/lib/editor-adapter";
 import { ensureWorkspace, writePreviewContent } from "@/lib/workspace";
 import { assertAllowed } from "@/platform/adapter/allowlist";
 import { discoverAdapters } from "@/platform/discover-adapters";
@@ -152,6 +153,8 @@ function mediaFiles(websiteId: string, names: Set<string>) {
 
 export async function syncDraftToWorkspace(websiteId: string, site: SiteDraft, posts: BlogDraft[]) {
   const dir = await ensureWorkspace(websiteId);
+  const adapter = await editorAdapterForSite(websiteId);
+  if (adapter?.fields.workspace) return dir;
   const home = heroFields(site);
   const names = collectMedia(site);
   for (const post of posts) collectMedia(post, names);
