@@ -1,3 +1,5 @@
+import { harborRegistry } from "./registry";
+
 const adapter = {
   version: 1 as const,
   level: 2 as const,
@@ -89,7 +91,7 @@ const adapter = {
       { id: "mobile" as const, width: 390, label: "Phone" },
     ],
   },
-  components: { components: [] as const },
+  components: { components: harborRegistry },
   templates: { templates: [] as const },
   sharedLayout: { header: "optional" as const, footer: "optional" as const },
   articles: { enabled: false, routePattern: "/journal/:slug", body: "structured" as const },
