@@ -10,7 +10,9 @@ import { landingPage } from "../../src/platform/templates/landing.ts";
 test("a landing call to action is editable only when the page allows it", () => {
   const document = landingPage();
   assert.equal(validateDocument(document).ok, true);
-  assert.equal(findRegion(document.pages[0]?.root, "cta")?.metadata.region, "cta");
+  const page = document.pages[0];
+  assert.ok(page);
+  assert.equal(findRegion(page.root, "cta")?.metadata?.region, "cta");
   const landing = createPage(defaultSiteDocument(), {
     title: "Offer",
     route: "/offer",

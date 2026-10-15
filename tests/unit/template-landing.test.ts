@@ -13,7 +13,7 @@ test("a landing page uses generic nodes and neutral copy", () => {
   assert.equal(serialized.includes("Describe the offer"), true);
   assert.equal(serialized.includes("Get started"), true);
   assert.equal(serialized.includes("quantum-age."), false);
-  const ids = serialized.match(/generic\.[a-z]+/g) ?? [];
+  const ids: string[] = serialized.match(/generic\.[a-z]+/g) ?? [];
   assert.equal(ids.includes("generic.heading"), true);
   assert.equal(ids.includes("generic.button"), true);
   assert.equal(ids.includes("generic.card"), true);

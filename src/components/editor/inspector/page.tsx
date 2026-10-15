@@ -55,12 +55,12 @@ export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: Page
           </Field>
         ) : null}
         {showHeaderToggle(flags) ? <Toggle label="Hide the site header on this page" checked={Boolean(page.hideHeader)} disabled={disabled} onChange={(value) => api.commit(updatePageMeta(api.site, page.route, { hideHeader: value }), true)} /> : null}
-        {sidebar ? (
+        {sidebar && "text" in sidebar ? (
           <Field label="Sidebar text">
             <TextArea rows={3} value={sidebar.text} disabled={!api.canEdit || flags.editSidebar !== true} onChange={(value) => api.commitText(applyText(api.site, page.route, sidebar.id, "text", value), `${sidebar.id}:text`, true)} />
           </Field>
         ) : null}
-        {cta ? (
+        {cta && "label" in cta ? (
           <Field label="Call to action">
             <TextInput value={cta.label} disabled={!api.canEdit || flags.editCta !== true} maxLength={80} onChange={(value) => api.commitText(applyText(api.site, page.route, cta.id, "label", value), `${cta.id}:label`, true)} />
           </Field>

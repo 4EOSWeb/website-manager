@@ -53,12 +53,20 @@ export async function loadEditorAdapter(
   websiteId: string,
   options?: { root?: string; bundled?: readonly unknown[] },
 ): Promise<EditorAdapterView | null> {
-  const root = options?.root ?? path.join(process.cwd(), "adapters");
-  try {
-    const fromDisk = await viewFromDisk(websiteId, root);
-    if (fromDisk) return fromDisk;
-  } catch (error) {
-    if (!importUnavailable(error)) throw error;
+  const roots = options?.root
+    ? [options.root]
+    : [path.join(process.cwd(), "adapters"), path.join(process.cwd(), "fixtures")];
+  let unavailable = false;
+  for (const root of roots) {
+    try {
+      const fromDisk = await viewFromDisk(websiteId, root);
+      if (fromDisk) return fromDisk;
+    } catch (error) {
+      if (!importUnavailable(error)) throw error;
+      unavailable = true;
+    }
+  }
+  if (unavailable) {
     const fromBundle = viewFromList(websiteId, options?.bundled ?? []);
     if (fromBundle) return fromBundle;
   }

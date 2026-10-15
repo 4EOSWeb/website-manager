@@ -6,6 +6,8 @@ import net from "node:net";
 import path from "node:path";
 import { promisify } from "node:util";
 import { redact } from "@/lib/redact";
+import { workspacePath } from "@/platform/adapter/serialize";
+import { editorAdapterForSite } from "@/lib/editor-adapter";
 
 const exec = promisify(execFile);
 
@@ -72,7 +74,29 @@ function syncCanvasRuntime(destination: string) {
   }
 }
 
+function adapterWorkspaceRoot(workspace: unknown) {
+  if (!workspace || typeof workspace !== "object") return null;
+  const root = (workspace as { root?: unknown }).root;
+  if (typeof root !== "string") return null;
+  const checked = workspacePath(root);
+  if (!checked.ok) return null;
+  const resolved = path.resolve(process.cwd(), checked.value);
+  const hub = path.resolve(process.cwd());
+  if (resolved !== hub && !resolved.startsWith(`${hub}${path.sep}`)) return null;
+  if (!fs.existsSync(path.join(resolved, "package.json"))) return null;
+  return resolved;
+}
+
 export async function ensureWorkspace(websiteId: string) {
+  const adapter = await editorAdapterForSite(websiteId);
+  const mapped = adapterWorkspaceRoot(adapter?.fields.workspace);
+  if (mapped) {
+    syncCanvasRuntime(mapped);
+    if (!fs.existsSync(path.join(mapped, "node_modules", "next"))) {
+      await exec("npm", ["ci"], { cwd: mapped, env: safeEnv({}) });
+    }
+    return mapped;
+  }
   const dir = workspaceDir(websiteId);
   if (!fs.existsSync(path.join(dir, ".git"))) {
     fs.mkdirSync(path.dirname(dir), { recursive: true });

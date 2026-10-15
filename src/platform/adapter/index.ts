@@ -25,6 +25,7 @@ import { templatesSchema } from "./templates";
 import { themeSchema } from "./theme";
 import { defaultValidateDocumentHook, type ValidateDocumentHook } from "./validate-hook";
 import { supportedAdapterVersions } from "./version";
+import { workspaceSchema } from "./workspace";
 
 export function composeAdapterSchema() {
   return z.object({
@@ -49,6 +50,7 @@ export function composeAdapterSchema() {
     media: mediaSchema,
     drafts: draftsSchema,
     preview: previewSchema,
+    workspace: workspaceSchema.optional(),
     publish: publicationSchema,
     validateDocument: z.custom<ValidateDocumentHook>((value) => typeof value === "function").optional(),
     serialize: z.custom<SerializeHook>((value) => typeof value === "function").optional(),

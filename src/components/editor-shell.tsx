@@ -1529,7 +1529,7 @@ export function EditorShell(props: {
         const toSection = text("targetSectionId") || fromSection;
         const layoutReason = layoutChangeRefused(pageCapabilityFlags(adapter, page ?? {}, path), fromSection === toSection);
         if (layoutReason) {
-          setDragReason(layoutReason);
+          setDragReason("locked");
           break;
         }
         if (fromSection === toSection) {

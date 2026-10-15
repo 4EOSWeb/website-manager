@@ -102,6 +102,7 @@ const adapter = {
     format: "visual-document-v1" as const,
   },
   preview: { transport: "iframe-postmessage" as const, protocol: 1 as const, readyEvent: "4eos-ready" as const },
+  workspace: { root: "fixtures/harbor" },
   publish: { mode: "disabled" as const, allowlist: [] as string[] },
 };
 

@@ -40,6 +40,7 @@
     "adapter.ts",
     "registry.ts",
     "templates.ts",
-    "serialize.ts"
+    "serialize.ts",
+    "src/platform"
   ]
 }

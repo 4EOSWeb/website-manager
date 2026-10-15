@@ -1,10 +1,11 @@
 import quantumAgeAdapter from "../../adapters/quantum-age/adapter";
+import harborAdapter from "../../fixtures/harbor/adapter";
 import { quantumAgeInspectorSlots, quantumAgePropsSchemas } from "../../adapters/quantum-age/inspector-schemas";
 import { fieldsForRegistered, type RegisteredInspector } from "@/components/editor/inspector/registered-model";
 import { loadEditorAdapter } from "@/platform/editor-adapter";
 
 /** Bundled copy for the Next server, which cannot dynamically import an adapter module. */
-const bundled = [quantumAgeAdapter];
+const bundled = [quantumAgeAdapter, harborAdapter];
 
 export function editorAdapterForSite(websiteId: string) {
   return loadEditorAdapter(websiteId, { bundled });

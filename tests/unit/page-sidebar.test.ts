@@ -11,9 +11,10 @@ import { defaultSiteDocument } from "../../src/lib/flow-seed.ts";
 test("a sidebar can be edited only when the page has one and allows it", () => {
   const document = articlePage();
   assert.equal(validateDocument(document).ok, true);
-  const root = document.pages[0]?.root;
-  assert.equal(findRegion(root, "sidebar")?.metadata.region, "sidebar");
-  assert.equal(bodyNodes(root).some((node) => node.metadata?.region === "sidebar"), false);
+  const page = document.pages[0];
+  assert.ok(page);
+  assert.equal(findRegion(page.root, "sidebar")?.metadata?.region, "sidebar");
+  assert.equal(bodyNodes(page.root).some((node) => node.metadata?.region === "sidebar"), false);
   const article = createPage(defaultSiteDocument(), {
     title: "Note",
     route: "/column",

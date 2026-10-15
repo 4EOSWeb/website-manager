@@ -1,4 +1,5 @@
 type Tree = {
+  id?: string;
   metadata?: Record<string, unknown>;
   children?: unknown[];
   locked?: boolean | { locked?: boolean };
