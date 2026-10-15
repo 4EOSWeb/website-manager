@@ -1,8 +1,10 @@
 import { authorize, authzResponse } from "@/lib/authorize";
 import { recordAudit } from "@/lib/audit";
-import { blogDraftSchema, siteDraftSchema, zodFieldErrors } from "@/lib/content-schema";
+import { blogDraftSchema } from "@/lib/content-schema";
+import { dropSaveData, readDraftPut } from "@/lib/draft-put";
 import { normalizeSiteDraft, stripEmbeds } from "@/lib/page-documents";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import { syncDraftToWorkspace } from "@/lib/publish";
 import { randomBytes } from "node:crypto";
 
@@ -16,11 +18,14 @@ export async function PUT(request: Request, { params }: Params) {
   const { websiteId } = await params;
   try {
     const actor = await authorize(websiteId, "draft.save");
-    const parsed = siteDraftSchema.safeParse(await request.json());
-    if (!parsed.success) {
-      return Response.json({ message: zodFieldErrors(parsed.error) }, { status: 400 });
-    }
-    const site = stripEmbeds(normalizeSiteDraft(parsed.data), canEmbed(actor.platformRole, actor.membershipRole));
+    const parsed = readDraftPut(websiteId, await request.json());
+    if (!parsed.ok) return Response.json({ message: parsed.message }, { status: parsed.status });
+    const site = stripEmbeds(normalizeSiteDraft(parsed.site), canEmbed(actor.platformRole, actor.membershipRole));
+    // A version 3 save always writes draft_data. visual_document stays until step 19.25 when this request omits it.
+    const saved = dropSaveData(site, parsed.visualDocument);
+    const update = saved.visualDocument === undefined
+      ? { draftData: site }
+      : { draftData: site, visualDocument: saved.visualDocument as Prisma.InputJsonValue };
     const home = await prisma.page.findUnique({ where: { websiteId_route: { websiteId, route: "/" } } });
     await prisma.workspaceDraft.upsert({
       where: {
@@ -32,8 +37,9 @@ export async function PUT(request: Request, { params }: Params) {
         userId: actor.user.id,
         pageId: home?.id,
         draftData: site,
+        ...(saved.visualDocument === undefined ? {} : { visualDocument: saved.visualDocument as Prisma.InputJsonValue }),
       },
-      update: { draftData: site },
+      update,
     });
     for (const page of site.pages) {
       if (page.route === "/") continue;

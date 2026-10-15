@@ -8,9 +8,12 @@ const ORIGINAL = "Quantum Age Collaborative mobilizes leading experts to help he
 
 type Mark = { start: number; end: number; kind: string; href?: string; color?: string };
 
+type DraftPage = { route: string; sections: { blocks?: { id: string; text?: { text: string; marks?: Mark[] } }[] }[] };
+
 function savedMarks(request: Request): Mark[] {
-  const site = request.postDataJSON() as { pages: { route: string; sections: { blocks?: { id: string; text?: { text: string; marks?: Mark[] } }[] }[] }[] };
-  const home = site.pages.find((page) => page.route === "/");
+  const body = request.postDataJSON() as { draft?: { pages: DraftPage[] }; pages?: DraftPage[] };
+  const pages = body.draft?.pages ?? body.pages ?? [];
+  const home = pages.find((page) => page.route === "/");
   const block = home?.sections.flatMap((section) => section.blocks ?? []).find((item) => item.id === BLOCK);
   if (!block?.text) throw new Error("The saved draft is missing the paragraph");
   expect(block.text.text).toBe(ORIGINAL);
@@ -176,7 +179,7 @@ test.describe("text formatting", () => {
     const input = canvas.getByRole("textbox", { name: "Link address" });
     await input.fill("javascript:alert(1)");
     await input.press("Enter");
-    await expect(canvas.locator(".eos-fmt .eos-note")).toHaveText(/Use a page path like \/contact/);
+    await expect(canvas.locator(".eos-fmt .eos-note")).toHaveText(/Use a page path like \/page/);
     await expect(field.locator("a")).toHaveCount(0);
     await input.press("Escape");
     await expect(canvas.locator('.eos-fmt [data-act="fmt-bold"]')).toBeVisible();

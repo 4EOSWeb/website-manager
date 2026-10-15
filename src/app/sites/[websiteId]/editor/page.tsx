@@ -4,6 +4,9 @@ import "@/components/editor/editor.css";
 import { AuthzError, authorize } from "@/lib/authorize";
 import { blogDraftSchema } from "@/lib/content-schema";
 import { imageSize, mediaRoot } from "@/lib/media";
+import { canUseAdministrator } from "@/components/editor/state/experience";
+import { draftForSite } from "@/components/editor/state/site";
+import { editorAdapterForSite, registeredInspectorPlan } from "@/lib/editor-adapter";
 import { normalizeSiteDraft } from "@/lib/page-documents";
 import { mintPreviewAccess } from "@/lib/preview-access";
 import { prisma } from "@/lib/prisma";
@@ -21,13 +24,24 @@ export default async function EditorPage({ params }: { params: Promise<{ website
     if (error instanceof AuthzError) notFound();
     throw error;
   }
+  if (actor.website.id !== websiteId) notFound();
+  const siteContext = {
+    clientId: actor.website.clientId,
+    websiteId: actor.website.id,
+    repository: `${actor.website.githubOwner}/${actor.website.githubRepository}`,
+    branch: actor.website.defaultBranch,
+    actorId: actor.user.id,
+  };
   const page = await prisma.page.findUnique({ where: { websiteId_route: { websiteId, route: "/" } } });
   const draft = page
     ? await prisma.workspaceDraft.findUnique({
         where: { websiteId_userId_pageId: { websiteId, userId: actor.user.id, pageId: page.id } },
       })
     : null;
-  const site = normalizeSiteDraft(draft?.draftData);
+  const ownedDraft = draftForSite(websiteId, draft);
+  const site = normalizeSiteDraft(ownedDraft?.draftData);
+  const adapter = await editorAdapterForSite(websiteId);
+  const inspectorPlan = registeredInspectorPlan(adapter?.fields ?? null);
   const storedPosts = await prisma.blogPost.findMany({
     where: { websiteId, status: { in: ["DRAFT", "SCHEDULED"] } },
     orderBy: { updatedAt: "desc" },
@@ -48,6 +62,10 @@ export default async function EditorPage({ params }: { params: Promise<{ website
   return (
     <EditorShell
       websiteId={websiteId}
+      siteContext={siteContext}
+      adapterId={adapter?.id ?? null}
+      adapter={adapter?.fields ?? null}
+      visualDocument={ownedDraft?.visualDocument ?? null}
       websiteName={actor.website.name}
       initialSite={site}
       initialPosts={posts.length > 0 ? posts : []}
@@ -68,6 +86,7 @@ export default async function EditorPage({ params }: { params: Promise<{ website
       canEdit={can(actions, "edit")}
       canPublish={can(actions, "publish.request")}
       canEmbed={canEmbed}
+      canAdminister={canUseAdministrator(actor.platformRole, actor.membershipRole)}
       role={roleLabel(actor.platformRole, actor.membershipRole)}
       userName={actor.user.displayName}
       previewAccess={mintPreviewAccess(websiteId, actor.user.id)}
@@ -77,6 +96,8 @@ export default async function EditorPage({ params }: { params: Promise<{ website
         reviewUrl: item.pullRequestUrl,
         createdAt: item.createdAt.toISOString(),
       }))}
+      registered={inspectorPlan.registered}
+      inspectorSlots={inspectorPlan.slots}
     />
   );
 }

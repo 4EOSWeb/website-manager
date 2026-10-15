@@ -146,12 +146,26 @@ model WorkspaceDraft {
   user          User     @relation(fields: [userId], references: [id])
   pageId        String?  @map("page_id")
   page          Page?    @relation(fields: [pageId], references: [id])
-  draftData     Json     @map("draft_data")
-  baseCommitSha String?  @map("base_commit_sha")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  draftData      Json     @map("draft_data")
+  /// Version 1 visual document. `draft_data` stays the version 3 draft until step 19.25.
+  visualDocument Json?    @map("visual_document")
+  baseCommitSha  String?  @map("base_commit_sha")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@unique([websiteId, userId, pageId])
   @@map("workspace_drafts")
+}
+
+model DraftBackup {
+  id            String   @id
+  websiteId     String   @map("website_id")
+  sourceDraftId String   @map("source_draft_id")
+  versionLabel  String   @map("version_label")
+  payload       Json
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([websiteId, sourceDraftId])
+  @@map("draft_backups")
 }
 
 model BlogPost {

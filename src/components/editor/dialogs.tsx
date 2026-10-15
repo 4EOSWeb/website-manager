@@ -8,27 +8,28 @@ import type { LibraryEntry } from "@/lib/library";
 import type { MediaItem, Publication } from "@/components/editor/types";
 import { Dialog, Field, Kbd, Select, TextArea, TextInput, Toggle } from "@/components/editor/ui";
 import { LibraryBrowser } from "@/components/editor/library";
+import type { CustomDefinition } from "@/platform/elements/custom";
+import { slugPatternOf, slugProblem } from "@/platform/pages/slug";
+import { templateChoices } from "@/platform/templates/catalog";
 
 export type PageForm = { title: string; route: string; template: PageDocument["template"]; navVisible: boolean; seoTitle: string; metaDescription: string };
 
-const TEMPLATES = [
-  { value: "blank", label: "Blank page" },
-  { value: "landing", label: "Landing page" },
-  { value: "service", label: "Service page" },
-  { value: "resource", label: "Resource page" },
-  { value: "insights-landing", label: "Insights landing page" },
-] as const;
-
-export function AddPageDialog(props: { site: SiteDraft; onCreate: (form: PageForm) => Promise<string | undefined>; onClose: () => void }) {
+export function AddPageDialog(props: { site: SiteDraft; adapter: Record<string, unknown> | null; onCreate: (form: PageForm) => Promise<string | undefined>; onClose: () => void }) {
+  const choices = templateChoices(props.adapter);
   const [form, setForm] = useState<PageForm>({ title: "", route: "", template: "landing", navVisible: true, seoTitle: "", metaDescription: "" });
   const [routeTouched, setRouteTouched] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const route = form.route || (form.title ? `/${slugify(form.title)}` : "");
   const taken = props.site.pages.some((page) => page.route === route);
+  const addressError = slugProblem(route, slugPatternOf(props.adapter));
   async function submit() {
     if (!form.title.trim()) {
       setError("Give the page a name.");
+      return;
+    }
+    if (addressError || taken) {
+      setError(addressError || "That address is already used.");
       return;
     }
     setBusy(true);
@@ -51,11 +52,11 @@ export function AddPageDialog(props: { site: SiteDraft; onCreate: (form: PageFor
         <Field label="Page name">
           <TextInput value={form.title} maxLength={80} placeholder="Our services" onChange={(title) => { setError(""); setForm({ ...form, title, route: routeTouched ? form.route : title ? `/${slugify(title)}` : "" }); }} />
         </Field>
-        <Field label="Web address" hint={taken ? "That address is already used." : "Lowercase words joined by dashes."}>
+        <Field label="Web address" hint={taken ? "That address is already used." : addressError || "Lowercase words joined by dashes."}>
           <TextInput value={route} placeholder="/our-services" onChange={(value) => { setError(""); setRouteTouched(true); setForm({ ...form, route: value }); }} />
         </Field>
         <Field label="Starting layout">
-          <Select label="Starting layout" value={form.template as (typeof TEMPLATES)[number]["value"]} options={TEMPLATES} onChange={(template) => setForm({ ...form, template })} />
+          <Select label="Starting layout" value={form.template} options={choices.map((item) => ({ value: item.id as PageForm["template"], label: item.name }))} onChange={(template) => setForm({ ...form, template })} />
         </Field>
         <Toggle label="Show in the menu" checked={form.navVisible} onChange={(navVisible) => setForm({ ...form, navVisible })} />
         <Field label="Title in search results" count={{ value: form.seoTitle.length, max: 60 }}>
@@ -355,13 +356,15 @@ export function InsertDialog(props: {
   recent: string[];
   recommended: string[];
   templates: { id: string; name: string }[];
+  adapter?: Record<string, unknown> | null;
   onChoose: (entry: LibraryEntry) => void;
+  onCustom?: (definition: CustomDefinition) => void;
   onTemplate: (id: string) => void;
   onClose: () => void;
 }) {
   return (
     <Dialog title="Add a section here" wide onClose={props.onClose}>
-      <LibraryBrowser canEmbed={props.canEmbed} recent={props.recent} recommended={props.recommended} templates={props.templates} onChoose={props.onChoose} onTemplate={props.onTemplate} />
+      <LibraryBrowser canEmbed={props.canEmbed} recent={props.recent} recommended={props.recommended} templates={props.templates} adapter={props.adapter} onChoose={props.onChoose} onCustom={props.onCustom} onTemplate={props.onTemplate} />
     </Dialog>
   );
 }

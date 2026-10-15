@@ -371,6 +371,18 @@
   color: white;
 }
 
+.ed-experience {
+  display: grid;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--ed-border-strong);
+}
+
+.ed-experience-mark {
+  width: 14px;
+  flex: none;
+}
+
 /* Segmented control */
 .ed-segmented {
   display: inline-flex;
@@ -599,6 +611,18 @@
   display: block;
 }
 
+.ed-tree.is-layers [data-layer-parent] > .ed-tree-row > .ed-tree-main {
+  cursor: grab;
+}
+
+.ed-tree.is-layers [data-layer-drop="before"] > .ed-tree-row {
+  box-shadow: inset 0 2px 0 var(--ed-accent);
+}
+
+.ed-tree.is-layers [data-layer-drop="after"] > .ed-tree-row {
+  box-shadow: inset 0 -2px 0 var(--ed-accent);
+}
+
 .ed-tree-row {
   display: flex;
   align-items: center;
@@ -674,6 +698,29 @@
   color: var(--ed-muted);
   font-size: 11px;
   text-transform: capitalize;
+}
+
+.ed-managed {
+  flex: none;
+  color: var(--ed-muted);
+  font-size: 11px;
+}
+
+.ed-layout {
+  flex: none;
+  color: var(--ed-muted);
+  font-size: 11px;
+}
+
+.ed-layer-id {
+  flex: none;
+  max-width: 9rem;
+  overflow: hidden;
+  color: var(--ed-muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  user-select: text;
+  cursor: text;
 }
 
 /* Form controls */
@@ -1133,6 +1180,15 @@
 
 .ed-tip p {
   flex: 1;
+}
+
+.ed-drag-status {
+  margin: 10px 16px 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--ed-raise);
+  color: var(--ed-strong);
+  line-height: 1.5;
 }
 
 .ed-tip strong {

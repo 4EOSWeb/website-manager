@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" role="img" aria-label="A flat sea and sky">
+  <rect width="1200" height="640" fill="#0F3D4C"/>
+  <path d="M0 430 C 200 390 280 470 480 430 C 700 386 820 470 1200 410 L 1200 640 L 0 640 Z" fill="#E6D3B1"/>
+  <path d="M0 500 C 240 460 360 540 600 500 C 860 456 980 540 1200 490 L 1200 640 L 0 640 Z" fill="#E26D5A"/>
+</svg>

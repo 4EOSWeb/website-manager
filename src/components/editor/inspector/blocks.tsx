@@ -6,6 +6,12 @@ import { applyText, patchFlowBlock, pinBlock, setBlockHidden, setBlockHideOn } f
 import type { EditorApi } from "@/components/editor/types";
 import { Field, Group, Segmented, Select, Swatches, TextArea, TextInput, Toggle } from "@/components/editor/ui";
 import { DeviceVisibility, LinkPicker, THEME_SWATCHES } from "@/components/editor/inspector/shared";
+import { pageCapabilityFlags } from "@/components/editor/inspector/page-controls";
+
+function editingDisabled(api: EditorApi) {
+  const flags = pageCapabilityFlags(api.adapter, api.page ?? {}, api.path);
+  return !api.canEdit || flags.editBody !== true || flags.lockContent === true;
+}
 
 type Flow = Extract<Section, { type: "flow" }>;
 
@@ -30,12 +36,13 @@ function style(api: EditorApi, section: Flow, block: FlowBlock, change: TextStyl
 }
 
 export function TextContent({ api, section, block }: { api: EditorApi; section: Flow; block: FlowBlock }) {
-  const disabled = !api.canEdit;
+  const disabled = editingDisabled(api);
   const text = words(block.text);
   const heroTitle = section.layout === "hero" && block.kind === "heading";
   const isTitle = !heroTitle && (block.kind === "eyebrow" || block.kind === "heading" || block.kind === "paragraph");
   return (
     <>
+      {pageCapabilityFlags(api.adapter, api.page ?? {}, api.path).lockContent ? <p className="ed-note">This content is locked.</p> : null}
       {heroTitle ? <p className="ed-note">This is the main title of the page, so it is always an H1.</p> : null}
       {isTitle ? (
         <Group title="Text type">
@@ -90,7 +97,7 @@ export function TextContent({ api, section, block }: { api: EditorApi; section: 
 }
 
 export function TextStyleTab({ api, section, block }: { api: EditorApi; section: Flow; block: FlowBlock }) {
-  const disabled = !api.canEdit;
+  const disabled = editingDisabled(api);
   const current = block.textStyle ?? {};
   return (
     <>
@@ -132,7 +139,7 @@ export function TextStyleTab({ api, section, block }: { api: EditorApi; section:
 }
 
 export function ButtonContent({ api, section, block }: { api: EditorApi; section: Flow; block: FlowBlock }) {
-  const disabled = !api.canEdit;
+  const disabled = editingDisabled(api);
   return (
     <>
       <Group title="Label">
@@ -164,7 +171,7 @@ export function ButtonContent({ api, section, block }: { api: EditorApi; section
 }
 
 export function ButtonStyle({ api, section, block }: { api: EditorApi; section: Flow; block: FlowBlock }) {
-  const disabled = !api.canEdit;
+  const disabled = editingDisabled(api);
   return (
     <>
       <Group title="Look">
@@ -181,7 +188,7 @@ export function ButtonStyle({ api, section, block }: { api: EditorApi; section: 
 }
 
 export function ImageContent({ api, section, block }: { api: EditorApi; section: Flow; block: FlowBlock }) {
-  const disabled = !api.canEdit;
+  const disabled = editingDisabled(api);
   const filename = block.src?.split("/").pop() ?? "";
   return (
     <>
@@ -243,7 +250,7 @@ function FileDetails({ api, filename }: { api: EditorApi; filename: string }) {
 const FOCAL: (NonNullable<FlowBlock["focal"]> | null)[] = [null, "top", null, "left", "center", "right", null, "bottom", null];
 
 export function ImageStyle({ api, section, block }: { api: EditorApi; section: Flow; block: FlowBlock }) {
-  const disabled = !api.canEdit;
+  const disabled = editingDisabled(api);
   const focal = block.focal ?? "center";
   return (
     <>
@@ -272,7 +279,7 @@ export function ImageStyle({ api, section, block }: { api: EditorApi; section: F
 }
 
 export function BlockVisibility({ api, section, block }: { api: EditorApi; section: Flow; block: FlowBlock }) {
-  const disabled = !api.canEdit;
+  const disabled = editingDisabled(api);
   return (
     <>
       <Group title="Visibility">

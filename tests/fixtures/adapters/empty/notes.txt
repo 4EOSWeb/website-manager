@@ -1,0 +1,1 @@
+This directory has no adapter module and must be ignored.

@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { THEME_COLORS } from "@/lib/rich-text";
 import { linkProblem } from "@/lib/links";
 import type { SiteDraft } from "@/lib/content-schema";
 import { Field, Select, TextInput, Toggle } from "@/components/editor/ui";
+import { FieldError, useFieldIssues } from "@/components/editor/inspector/errors";
+import { linkIssue } from "@/components/editor/inspector/errors-model";
 
 export const COLOR_NAMES: Record<string, string> = {
   "#1c1915": "Ink",
@@ -24,7 +26,9 @@ export function LinkPicker(props: { site: SiteDraft; value: string; onChange: (h
   const matches = pages.some((page) => page.route === props.value);
   const [custom, setCustom] = useState(!matches && props.value !== "");
   const [draft, setDraft] = useState(props.value);
-  const problem = custom ? linkProblem(draft) : "";
+  const issue = custom ? linkIssue(draft) : null;
+  const fieldId = useId();
+  useFieldIssues(fieldId, issue ? [issue] : []);
   return (
     <div className="ed-stack">
       <Field label={props.label ?? "Link to"}>
@@ -45,16 +49,18 @@ export function LinkPicker(props: { site: SiteDraft; value: string; onChange: (h
         />
       </Field>
       {custom ? (
-        <Field label="Address" hint={problem || "Opens exactly this address."}>
+        <Field label="Address" hint={issue ? undefined : "Opens exactly this address."}>
           <TextInput
             value={draft}
             placeholder="https://example.com or mailto:hello@example.com"
             disabled={props.disabled}
+            invalid={Boolean(issue)}
             onChange={(value) => {
               setDraft(value);
               if (!linkProblem(value)) props.onChange(value.trim());
             }}
           />
+          <FieldError issue={issue} />
         </Field>
       ) : null}
     </div>

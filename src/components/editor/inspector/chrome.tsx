@@ -2,14 +2,32 @@
 
 import { ExternalLink } from "lucide-react";
 import type { FreeformItem, Section } from "@/lib/content-schema";
-import { alignItems, applyText, patchChrome, patchItem, renameZone, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
-import type { EditorApi } from "@/components/editor/types";
+import { alignItems, applyText, bringForwardItems, bringToFrontItems, clearItemBreakpoint, distributeItems, patchChrome, patchItem, placeItems, renameZone, sendBackwardItems, sendToBackItems, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
+import { alignCanvas, type AlignMode } from "@/platform/canvas/align";
+import { distributeCanvas, type DistributeAxis } from "@/platform/canvas/distribute";
+import { alreadyInFront, bringForwardCanvas, bringToFrontCanvas, sendBackwardCanvas, sendToBackCanvas } from "@/platform/canvas/z-order";
+import { resetOverride } from "@/platform/canvas/reset-override";
+import { mixedProps } from "@/platform/canvas/multi-select";
+import { overlapWarning, type OverlapBox } from "@/platform/canvas/overlap";
+import type { EditorApi, Viewport } from "@/components/editor/types";
 import { Field, Group, TextArea, TextInput, Toggle } from "@/components/editor/ui";
+import { ResponsiveFields } from "@/components/editor/inspector/responsive-fields";
+import { responsiveFieldsVisible } from "@/components/editor/inspector/responsive-model";
 import { LinkPicker } from "@/components/editor/inspector/shared";
+import { CanvasFields } from "@/components/editor/inspector/canvas-fields";
+import { canvasPercents, writeCanvasPercent, type CanvasAnchor } from "@/components/editor/inspector/canvas-model";
+import { canvasControlsVisible } from "@/components/editor/inspector/capability-gate";
+import { fieldVisible } from "@/components/editor/inspector/mode-filter";
+import { pageCapabilityFlags } from "@/components/editor/inspector/page-controls";
+
+function placedBox(item: FreeformItem, viewport: Viewport): OverlapBox {
+  const box = viewport === "tablet" ? item.tablet ?? item.desktop : viewport === "mobile" ? item.mobile ?? item.desktop : item.desktop;
+  return { x: box.x * 100, y: box.y * 100, w: box.w * 100, h: box.h * 100, locked: item.locked, hidden: item.hidden };
+}
 
 export function HeaderInspector({ api }: { api: EditorApi }) {
   const chrome = api.site.chrome;
-  const disabled = !api.canEdit;
+  const disabled = !api.canEdit || pageCapabilityFlags(api.adapter, api.page ?? {}, api.path).editHeader !== true;
   const header = (patch: Partial<typeof chrome.header>) => api.commit(patchChrome(api.site, { ...chrome, header: { ...chrome.header, ...patch } }), true);
   const announcement = (patch: Partial<typeof chrome.announcement>) => api.commit(patchChrome(api.site, { ...chrome, announcement: { ...chrome.announcement, ...patch } }), true);
   return (
@@ -72,7 +90,7 @@ export function NavInspector({ api, route, onOpen }: { api: EditorApi; route: st
   );
 }
 
-export function FreeformInspector({ api, section, item, tab }: { api: EditorApi; section: Section; item?: FreeformItem; tab: string }) {
+export function FreeformInspector({ api, section, item, tab, experience = "basic" }: { api: EditorApi; section: Section; item?: FreeformItem; tab: string; experience?: string }) {
   const disabled = !api.canEdit;
   const overlay = api.selection.overlay;
   if (!item) {
@@ -87,25 +105,128 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
     );
   }
   const set = (patch: Partial<FreeformItem>, reload = true) => api.commit(patchItem(api.site, api.path, section.id, item.id, patch, overlay), reload);
+  const node = {
+    box: item.desktop,
+    responsive: {
+      tablet: item.tablet ? { box: item.tablet } : undefined,
+      mobile: item.mobile ? { box: item.mobile } : undefined,
+    },
+  };
+  const responsive = fieldVisible("strategy", experience) ? (
+    <ResponsiveFields
+      visible={responsiveFieldsVisible({ mode: "canvas" })}
+      strategy={item.strategy}
+      breakpoint={api.viewport}
+      node={node}
+      disabled={disabled}
+      onStrategy={(strategy) => set({ strategy })}
+      onReset={() => {
+        if (api.viewport !== "tablet" && api.viewport !== "mobile") return;
+        const reset = resetOverride(api.visualDocument, item.id, api.viewport);
+        api.commit(clearItemBreakpoint(api.site, api.path, section.id, item.id, api.viewport, overlay), true, reset ?? undefined);
+      }}
+    />
+  ) : null;
+  const siblings = section.type === "freeform" ? section.items : section.type === "preset" ? section.overlay ?? [] : [];
+  const warning = overlapWarning(placedBox(item, api.viewport), siblings.filter((other) => other.id !== item.id).map((other) => placedBox(other, api.viewport)));
+  const notice = warning ? <p className="ed-callout" role="status">{warning}</p> : null;
+  const chosenIds = api.selection.itemIds.length ? api.selection.itemIds : [item.id];
+  const chosen = siblings.filter((other) => chosenIds.includes(other.id));
+  const mixed = mixedProps(chosen.map((other) => `${other.kind}:${other.text ?? ""}:${other.alt ?? ""}:${other.href ?? ""}`));
+  const mixedNote = mixed ? <p className="ed-callout">Mixed</p> : null;
   if (tab === "arrange") {
     const ids = api.selection.itemIds.length ? api.selection.itemIds : [item.id];
+    const box = api.viewport === "tablet" ? item.tablet ?? item.desktop : api.viewport === "mobile" ? item.mobile ?? item.desktop : item.desktop;
+    const percents = canvasPercents(box);
+    const order = (action: "forward" | "front" | "backward" | "back") => {
+      if (action === "forward") {
+        const ordered = bringForwardCanvas(api.visualDocument, item.id);
+        api.commit(bringForwardItems(api.site, api.path, section.id, item.id, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
+      } else if (action === "front") {
+        const front = bringToFrontItems(api.site, api.path, section.id, item.id, overlay);
+        if (front.refused) {
+          api.notify(alreadyInFront);
+          return;
+        }
+        const ordered = bringToFrontCanvas(api.visualDocument, item.id);
+        api.commit(front.site, true, ordered && ordered.ok && !ordered.refused ? ordered.document : undefined);
+      } else if (action === "backward") {
+        const ordered = sendBackwardCanvas(api.visualDocument, item.id);
+        api.commit(sendBackwardItems(api.site, api.path, section.id, item.id, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
+      } else {
+        const ordered = sendToBackCanvas(api.visualDocument, item.id);
+        api.commit(sendToBackItems(api.site, api.path, section.id, item.id, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
+      }
+    };
     return (
       <>
+        <CanvasFields
+          visible={canvasControlsVisible(api.adapter) && (fieldVisible("position", experience) || fieldVisible("zIndex", experience))}
+          showPosition={fieldVisible("position", experience)}
+          showOrder={fieldVisible("zIndex", experience)}
+          x={percents.x}
+          y={percents.y}
+          w={percents.w}
+          h={percents.h}
+          anchor={item.anchor ?? "top-left"}
+          onPercent={(key, raw) => {
+            const next = writeCanvasPercent(box, key, raw);
+            if (!next) return;
+            api.commit(placeItems(api.site, api.path, section.id, api.viewport, [{ id: item.id, placement: next }], overlay), true);
+          }}
+          onAnchor={(anchor: CanvasAnchor) => set({ anchor })}
+          onOrder={order}
+        />
+        {responsive}
+        {notice}
+        {mixedNote}
         <Group title="Align">
           <div className="ed-row">
-            {(["left", "center", "right", "top", "middle"] as const).map((mode) => (
-              <button key={mode} type="button" className="ed-button" disabled={disabled} onClick={() => api.commit(alignItems(api.site, api.path, section.id, ids, api.viewport, mode, overlay), true)}>
+            {(["left", "center", "right", "top", "middle", "bottom"] as const satisfies readonly AlignMode[]).map((mode) => (
+              <button key={mode} type="button" className="ed-button" disabled={disabled} onClick={() => {
+                const aligned = alignCanvas(api.visualDocument, ids, mode);
+                api.commit(alignItems(api.site, api.path, section.id, ids, api.viewport, mode, overlay), true, aligned && aligned.ok ? aligned.document : undefined);
+              }}>
                 {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </button>
+            ))}
+          </div>
+          <div className="ed-row">
+            {(["horizontal", "vertical"] as const satisfies readonly DistributeAxis[]).map((axis) => (
+              <button key={axis} type="button" className="ed-button" disabled={disabled || ids.length < 3} onClick={() => {
+                const distributed = distributeCanvas(api.visualDocument, ids, axis);
+                api.commit(distributeItems(api.site, api.path, section.id, ids, api.viewport, axis, overlay), true, distributed && distributed.ok ? distributed.document : undefined);
+              }}>
+                {axis === "horizontal" ? "Distribute horizontally" : "Distribute vertically"}
               </button>
             ))}
           </div>
           <p className="ed-hint">Aligns inside the zone on {api.viewport === "mobile" ? "phones" : api.viewport}. Use the arrow keys to nudge; hold Shift for bigger steps.</p>
         </Group>
         <Group title="Order and lock">
-          <div className="ed-row">
-            <button type="button" className="ed-button" disabled={disabled} onClick={() => set({ zIndex: Math.min(200, item.zIndex + 1) })}>Bring forward</button>
-            <button type="button" className="ed-button" disabled={disabled} onClick={() => set({ zIndex: Math.max(0, item.zIndex - 1) })}>Send backward</button>
-          </div>
+          {fieldVisible("zIndex", experience) ? <div className="ed-row" data-field="z-index">
+            <button type="button" className="ed-button" disabled={disabled} onClick={() => {
+              const ordered = bringForwardCanvas(api.visualDocument, item.id);
+              api.commit(bringForwardItems(api.site, api.path, section.id, item.id, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
+            }}>Bring forward</button>
+            <button type="button" className="ed-button" disabled={disabled} onClick={() => {
+              const front = bringToFrontItems(api.site, api.path, section.id, item.id, overlay);
+              if (front.refused) {
+                api.notify(alreadyInFront);
+                return;
+              }
+              const ordered = bringToFrontCanvas(api.visualDocument, item.id);
+              api.commit(front.site, true, ordered && ordered.ok && !ordered.refused ? ordered.document : undefined);
+            }}>Bring to front</button>
+            <button type="button" className="ed-button" disabled={disabled} onClick={() => {
+              const ordered = sendBackwardCanvas(api.visualDocument, item.id);
+              api.commit(sendBackwardItems(api.site, api.path, section.id, item.id, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
+            }}>Send backward</button>
+            <button type="button" className="ed-button" disabled={disabled} onClick={() => {
+              const ordered = sendToBackCanvas(api.visualDocument, item.id);
+              api.commit(sendToBackItems(api.site, api.path, section.id, item.id, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
+            }}>Send to back</button>
+          </div> : null}
           <Toggle label="Lock position" checked={item.locked} disabled={disabled} onChange={(value) => set({ locked: value })} />
           <Toggle label="Show on the website" checked={!item.hidden} disabled={disabled} onChange={(value) => set({ hidden: !value })} />
         </Group>
@@ -113,20 +234,25 @@ export function FreeformInspector({ api, section, item, tab }: { api: EditorApi;
     );
   }
   return (
+    <>
+    {responsive}
+    {notice}
+    {mixedNote}
     <Group title="Content">
       {item.kind === "image" || item.kind === "graphic" ? (
         <>
           <button type="button" className="ed-button" disabled={disabled} onClick={api.openPicker}>{item.src ? "Replace image" : "Choose image"}</button>
           <Field label="Describe the picture">
-            <TextInput value={item.alt ?? ""} disabled={disabled} maxLength={200} onChange={(value) => api.commitText(patchItem(api.site, api.path, section.id, item.id, { alt: value }, overlay), `${item.id}:alt`, true)} />
+            <TextInput value={item.alt ?? ""} disabled={disabled || mixed} maxLength={200} onChange={(value) => { if (!mixed) api.commitText(patchItem(api.site, api.path, section.id, item.id, { alt: value }, overlay), `${item.id}:alt`, true); }} />
           </Field>
         </>
       ) : (
         <Field label="Text" hint="You can also double-click the text on the page.">
-          <TextArea value={item.text ?? ""} disabled={disabled} onChange={(value) => api.commitText(applyText(api.site, api.path, section.id, "text", value, item.id), `${item.id}:text`, true)} />
+          <TextArea value={item.text ?? ""} disabled={disabled || mixed} onChange={(value) => { if (!mixed) api.commitText(applyText(api.site, api.path, section.id, "text", value, item.id), `${item.id}:text`, true); }} />
         </Field>
       )}
-      {item.kind === "button" ? <LinkPicker key={item.id} site={api.site} value={item.href ?? ""} disabled={disabled} onChange={(href) => set({ href })} /> : null}
+      {item.kind === "button" && !mixed ? <LinkPicker key={item.id} site={api.site} value={item.href ?? ""} disabled={disabled} onChange={(href) => set({ href })} /> : null}
     </Group>
+    </>
   );
 }

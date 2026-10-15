@@ -1,0 +1,30 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { validateDocument } from "../../src/platform/document/document.ts";
+import { servicePage } from "../../src/platform/templates/service.ts";
+
+test("a service page uses generic nodes and a root address", () => {
+  const document = servicePage();
+  const parsed = validateDocument(document);
+  assert.equal(parsed.ok, true);
+  const serialized = JSON.stringify(document);
+  assert.equal(serialized.includes("Service"), true);
+  assert.equal(serialized.includes("Explain the work"), true);
+  assert.equal(serialized.includes("Next step"), true);
+  assert.equal(serialized.includes("quantum-age."), false);
+  assert.equal(serialized.includes("/contact"), false);
+  assert.equal(serialized.includes("/solutions"), false);
+  const ids: string[] = serialized.match(/generic\.[a-z]+/g) ?? [];
+  assert.equal(ids.includes("generic.heading"), true);
+  assert.equal(ids.includes("generic.card"), true);
+  assert.equal(ids.includes("generic.cta"), true);
+  const hrefs = [...serialized.matchAll(/"href":"([^"]*)"/g)].map((match) => match[1]);
+  assert.equal(hrefs.length > 0, true);
+  assert.equal(hrefs.every((href) => href === "/"), true);
+  const source = readFileSync("src/platform/templates/service.ts", "utf8").toLowerCase();
+  assert.equal(source.includes("quantum"), false);
+  assert.equal(source.includes("plum"), false);
+  assert.equal(source.includes("hero"), false);
+  assert.equal(source.includes("insights"), false);
+});

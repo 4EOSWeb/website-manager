@@ -1,19 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { DragRejectReason } from "@/components/editor/drag-status";
 import { ArrowDown, ArrowUp, Eye, EyeOff, FileText, Home, Lock, MoreHorizontal, PanelBottom, PanelTop, Plus, Search, Trash2, Upload } from "lucide-react";
 import type { BlogDraft, SiteDraft } from "@/lib/content-schema";
-import { reorderPages, setBlockHidden, setEditorName, setSectionHidden } from "@/lib/editor-ops";
+import { moveFlowBlockById, moveSectionById, reorderPages, setBlockHidden, setEditorName, setSectionHidden } from "@/lib/editor-ops";
 import type { EditorApi, MediaItem, Viewport } from "@/components/editor/types";
 import { Empty, Field, Group, Segmented, TextInput } from "@/components/editor/ui";
 import { sectionName } from "@/components/editor/inspector/section";
+import { LayerRename } from "@/components/editor/layers/rename";
+import { renameVisualNode } from "@/components/editor/layers/rename-name";
+import { useLayerReorder } from "@/components/editor/layers/reorder";
+import { reorderLayerSiblings, siblingBeforeId } from "@/components/editor/layers/reorder-drop";
+import { LayerLockButton, LayerUnlockButton } from "@/components/editor/layers/lock";
+import { lockFlowBlock, lockVisualNode } from "@/components/editor/layers/lock-node";
+import { applyLayerUnlock, LAYER_UNLOCK_REASON, layerRole, layerUnlockAllowed } from "@/components/editor/layers/unlock-policy";
+import { LayerVisibilityButton } from "@/components/editor/layers/visibility";
+import { setLayerVisibility } from "@/components/editor/layers/visibility-node";
+import { LayerReparentNote } from "@/components/editor/layers/reparent";
+import { applyLayerReparent, decideLayerDrop } from "@/components/editor/layers/reparent-drop";
+import { useLayerKeyboard } from "@/components/editor/layers/keyboard";
+import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
+import { layerIdText, layoutModeLabel, managedLabel, typeLabel, type LayerExperience } from "@/components/editor/layers/labels";
+import { defaultOpenIds, legacyTarget, visualPageRoot } from "@/components/editor/layers/rows";
+import { listedPages, pageGroups } from "@/components/editor/page-list";
+import { articleRouteFor } from "@/components/editor/state/page";
 
 export function PagesPanel(props: {
   site: SiteDraft;
   posts: BlogDraft[];
+  visualDocument?: unknown;
   path: string;
   canEdit: boolean;
   onOpen: (route: string) => void;
+  articlePattern?: string | null;
   onAddPage: () => void;
   onNewPost: () => void;
   onSettings: (route: string) => void;
@@ -21,13 +41,8 @@ export function PagesPanel(props: {
 }) {
   const [query, setQuery] = useState("");
   const match = (text: string) => text.toLowerCase().includes(query.trim().toLowerCase());
-  const pages = props.site.pages.filter((page) => match(`${page.title} ${page.route}`));
-  const groups = [
-    { title: "In the menu", items: pages.filter((page) => !page.archived && page.navVisible) },
-    { title: "Not in the menu", items: pages.filter((page) => !page.archived && !page.navVisible) },
-    { title: "Archived", items: pages.filter((page) => page.archived) },
-  ];
-  const posts = props.posts.filter((post) => match(post.title));
+  const pages = listedPages(props.visualDocument, props.site.pages).filter((page) => match(`${page.title} ${page.navLabel ?? ""} ${page.route}`));
+  const groups = pageGroups(pages);
   return (
     <div className="ed-panel">
       <div className="ed-panel-head">
@@ -72,58 +87,203 @@ export function PagesPanel(props: {
           </Group>
         ) : null,
       )}
-      <Group title="Insights drafts" action={props.canEdit ? <button type="button" className="ed-icon is-small" aria-label="New Insights post" data-tip="New post" onClick={props.onNewPost}><Plus size={14} aria-hidden="true" /></button> : null}>
-        {posts.length ? (
+      {props.articlePattern && props.posts.length ? (
+        <Group title="Articles">
           <ul className="ed-tree">
-            {posts.map((post) => (
-              <li key={post.slug} className={props.path === `/insights/${post.slug}` ? "is-active" : ""}>
-                <button type="button" className="ed-tree-main" onClick={() => props.onOpen(`/insights/${post.slug}`)}>
-                  <FileText size={14} aria-hidden="true" />
-                  <span className="truncate">{post.title}</span>
-                </button>
-              </li>
-            ))}
+            {props.posts.filter((post) => match(`${post.title} ${post.slug}`)).map((post) => {
+              const route = articleRouteFor(props.articlePattern ?? "", post.slug);
+              return (
+                <li key={post.slug} className={props.path === route ? "is-active" : ""}>
+                  <button type="button" className="ed-tree-main" aria-current={props.path === route ? "page" : undefined} onClick={() => props.onOpen(route)}>
+                    <FileText size={14} aria-hidden="true" />
+                    <span className="truncate">{post.title}</span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
-        ) : (
-          <p className="ed-hint ed-pad">No drafts yet. The 115 published articles are managed for you.</p>
-        )}
-      </Group>
-      {pages.length === 0 && posts.length === 0 ? <Empty title="No pages match">Try part of the page name or its address.</Empty> : null}
+        </Group>
+      ) : null}
+      {pages.length === 0 ? <Empty title="No pages match">Try part of the page name or its address.</Empty> : null}
     </div>
   );
 }
 
-export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSelect: (sectionId: string, itemId?: string) => void; onChrome: (part: "header" | "footer") => void }) {
+function sectionLayoutText(section: { type: string; layout?: string }): string {
+  if (section.type === "freeform") return layoutModeLabel({ type: "section", layout: { mode: "canvas" } });
+  if (section.type !== "flow") return "";
+  if (section.layout === "split" || section.layout === "cards") return layoutModeLabel({ type: "section", layout: { mode: "layout", display: "grid" } });
+  if (section.layout === "stack" || section.layout === "list") return layoutModeLabel({ type: "section", layout: { mode: "layout", display: "flex" } });
+  return layoutModeLabel({ type: "section", layout: { mode: "flow" } });
+}
+
+export function LayersPanel(props: { api: EditorApi; experience: LayerExperience; nodeIds: readonly string[]; chromeFocus: string; onSelect: (sectionId: string, itemId?: string, shift?: boolean) => void; onChrome: (part: "header" | "footer") => void }) {
   const { api } = props;
   const [renaming, setRenaming] = useState("");
   const sections = api.page?.sections ?? [];
+  const visualRoot = visualPageRoot(api.visualDocument, api.path);
+  const defaults = visualRoot
+    ? defaultOpenIds(visualRoot)
+    : sections.filter((section) => section.type === "flow" && section.blocks.length > 0).map((section) => section.id);
+  const layers = useLayerOpen(api.websiteId, api.page?.id ?? api.path, defaults);
   const rename = (sectionId: string, value: string, blockId?: string) => {
     setRenaming("");
     api.commit(setEditorName(api.site, api.path, sectionId, value, blockId), false);
   };
+  const pageId = api.page?.id ?? "";
+  const treeRef = useRef<HTMLUListElement>(null);
+  useLayerKeyboard(treeRef, visualRoot ? "visual" : "version3");
+  const selectedIds = api.selection.itemIds.length
+    ? api.selection.itemIds
+    : props.nodeIds.length
+      ? props.nodeIds
+      : api.selection.itemId
+        ? [api.selection.itemId]
+        : api.selection.sectionId
+          ? [api.selection.sectionId]
+          : [];
+  const selectedKey = selectedIds.join("|");
+  useEffect(() => {
+    const last = selectedKey.split("|").filter(Boolean).at(-1);
+    if (!last) return;
+    document.querySelector(`[data-layer-id="${CSS.escape(last)}"]`)?.scrollIntoView({ block: "nearest" });
+  }, [selectedKey]);
+  const [reject, setReject] = useState<DragRejectReason | null>(null);
+  const setVisibility = (sectionId: string, blockId: string, hidden: boolean) => {
+    const nextVisual = setLayerVisibility(api.visualDocument, blockId, hidden);
+    api.commit(setBlockHidden(api.site, api.path, sectionId, blockId, hidden), true, nextVisual ?? undefined);
+  };
+  const lockBlock = (sectionId: string, blockId: string) => {
+    const nextVisual = lockVisualNode(api.visualDocument, blockId);
+    api.commit(lockFlowBlock(api.site, api.path, sectionId, blockId), false, nextVisual ?? undefined);
+  };
+  const layersDrag = useLayerReorder(api.canEdit, (drop) => {
+    const decision = decideLayerDrop({
+      pageId,
+      sourceId: drop.id,
+      sourceParentId: drop.parentId,
+      targetId: drop.targetId,
+      targetParentId: drop.targetParentId,
+      targetSectionType: drop.targetSectionType,
+      targetContainer: drop.targetContainer,
+      after: drop.after,
+    });
+    if (decision.kind === "ignore") return;
+    if (decision.kind === "reject") {
+      setReject(decision.reason);
+      return;
+    }
+    if (decision.kind === "reparent") {
+      const applied = applyLayerReparent(api.site, api.path, api.visualDocument, decision);
+      if ("reason" in applied) {
+        setReject(applied.reason);
+        return;
+      }
+      setReject(null);
+      api.commit(applied.site, true, applied.visual ?? undefined);
+      return;
+    }
+    setReject(null);
+    const sectionIds = sections.map((section) => section.id);
+    let nextSite = api.site;
+    if (drop.parentId === pageId) {
+      const beforeId = siblingBeforeId(sectionIds, drop.id, drop.targetId, drop.after);
+      if (beforeId === null) return;
+      nextSite = moveSectionById(api.site, api.path, drop.id, beforeId);
+    } else if (sections.some((section) => section.id === drop.parentId && section.type === "flow")) {
+      nextSite = moveFlowBlockById(api.site, api.path, drop.parentId, drop.id, drop.targetId, drop.after);
+    }
+    const nextVisual = reorderLayerSiblings(api.visualDocument, drop.id, drop.targetId, drop.after);
+    const siteChanged = JSON.stringify(nextSite) !== JSON.stringify(api.site);
+    if (!siteChanged && !nextVisual) return;
+    api.commit(siteChanged ? nextSite : api.site, true, nextVisual ?? undefined);
+  }, (reason) => setReject(reason));
+  if (visualRoot) {
+    return (
+      <div className="ed-panel">
+        <div className="ed-panel-head">
+          <h2>Layers</h2>
+        </div>
+        <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it. Use the arrow keys to move, and Enter to select. Drag a row to reorder it, or onto another section to move it.</p>
+        <LayerReparentNote reason={reject} />
+        <ul ref={treeRef} className="ed-tree is-layers" role="tree" aria-label="Page layers" tabIndex={0} data-layer-source="visual">
+          <LayerTree
+            root={visualRoot}
+            experience={props.experience}
+            nodeIds={selectedIds}
+            open={layers.open}
+            onToggle={layers.toggle}
+            selection={{ sectionId: api.selection.sectionId, itemId: api.selection.itemId }}
+            onSelect={(node, shift) => {
+              const target = legacyTarget(node.metadata?.legacyId);
+              if (target) props.onSelect(target.sectionId, target.itemId, shift);
+            }}
+            renamingId={renaming}
+            onRenameStart={(node) => api.canEdit && setRenaming(node.id)}
+            onRename={(node, name) => {
+              setRenaming("");
+              const next = renameVisualNode(api.visualDocument, node.id, name);
+              if (next) api.commit(api.site, false, next);
+            }}
+            onRenameCancel={() => setRenaming("")}
+            onLock={api.canEdit ? (node) => {
+              const target = legacyTarget(node.metadata?.legacyId);
+              const nextSite = target?.itemId ? lockFlowBlock(api.site, api.path, target.sectionId, target.itemId) : api.site;
+              const nextVisual = lockVisualNode(api.visualDocument, node.id);
+              if (nextVisual) api.commit(nextSite, false, nextVisual);
+              else if (target?.itemId) api.commit(nextSite, false);
+            } : undefined}
+            onUnlock={api.canEdit ? (node) => {
+              const target = legacyTarget(node.metadata?.legacyId);
+              if (!target?.itemId) return;
+              const applied = applyLayerUnlock(api.site, api.path, target.sectionId, target.itemId, node.type, layerRole(api.role), api.visualDocument);
+              if (!applied.ok) return;
+              api.commit(applied.site, false, applied.visual ?? undefined);
+            } : undefined}
+            unlockAllowed={(node) => layerUnlockAllowed(node.type, layerRole(api.role))}
+            unlockReason={LAYER_UNLOCK_REASON}
+            onPointerDown={layersDrag.onPointerDown}
+            dropHint={layersDrag.drop}
+          />
+        </ul>
+      </div>
+    );
+  }
   return (
     <div className="ed-panel">
       <div className="ed-panel-head">
         <h2>Layers</h2>
       </div>
-      <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it.</p>
-      <ul className="ed-tree is-layers" role="tree" aria-label="Page layers">
-        <li role="treeitem" aria-selected={props.chromeFocus === "header"} className={props.chromeFocus === "header" ? "is-active" : ""}>
-          <button type="button" className="ed-tree-main" onClick={() => props.onChrome("header")}><PanelTop size={14} aria-hidden="true" /> Header</button>
+      <p className="ed-hint ed-pad">Click to select. Double-click a name to rename it. Use the arrow keys to move, and Enter to select. Drag a row to reorder it, or onto another section to move it.</p>
+      <LayerReparentNote reason={reject} />
+      <ul ref={treeRef} className="ed-tree is-layers" role="tree" aria-label="Page layers" tabIndex={0} data-layer-source="version3">
+        <li role="treeitem" aria-selected={props.chromeFocus === "header"} className={props.chromeFocus === "header" ? "is-active" : ""} data-layer-id="header" data-layer-parent="chrome" data-locked="true" data-layer-drop={layersDrag.drop?.id === "header" ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
+          <button type="button" className="ed-tree-main" onClick={() => props.onChrome("header")}><PanelTop size={14} aria-hidden="true" /> Header <Lock size={12} aria-label="Locked" className="ed-muted-icon" /></button>
+          {layerUnlockAllowed("header", layerRole(api.role)) ? null : <LayerUnlockButton allowed={false} reason={LAYER_UNLOCK_REASON} onUnlock={() => {}} />}
         </li>
+        {api.page?.locked ? (
+          <li role="treeitem" aria-selected={false} data-layer-id={api.page.id} data-provider-managed="true">
+            <div className="ed-tree-row">
+              <span className="ed-tree-main">{api.page.title}</span>
+              <span className="ed-managed">{managedLabel(true)}</span>
+            </div>
+          </li>
+        ) : null}
         {sections.map((section) => {
-          const activeSection = api.selection.sectionId === section.id && !api.selection.itemId;
+          const activeSection = selectedIds.includes(section.id);
           const locked = section.type === "preset" && section.providerLocked;
           return (
-            <li key={section.id} role="treeitem" aria-selected={activeSection} aria-expanded={section.type === "flow" ? true : undefined}>
+            <li key={section.id} role="treeitem" aria-selected={selectedIds.includes(section.id)} aria-expanded={section.type === "flow" && section.blocks.length > 0 ? layers.open.has(section.id) : section.type === "freeform" && section.items.length > 0 ? layers.open.has(section.id) || section.items.some((item) => selectedIds.includes(item.id)) : undefined} data-layer-id={section.id} data-layer-parent={pageId || undefined} data-layer-container="true" data-section-type={section.type} data-locked={locked ? "true" : undefined} data-layer-drop={layersDrag.drop?.id === section.id ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
               <div className={activeSection ? "ed-tree-row is-active" : "ed-tree-row"}>
                 {renaming === section.id ? (
-                  <input className="ed-input is-inline" autoFocus defaultValue={sectionName(section)} aria-label="Section name" onBlur={(event) => rename(section.id, event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); if (event.key === "Escape") setRenaming(""); }} />
+                  <LayerRename value={section.editorName || ""} label="Section name" onCommit={(value) => rename(section.id, value)} onCancel={() => setRenaming("")} />
                 ) : (
-                  <button type="button" className={`ed-tree-main ${section.hidden ? "is-hidden" : ""}`} onClick={() => props.onSelect(section.id)} onDoubleClick={() => api.canEdit && setRenaming(section.id)}>
+                  <button type="button" className={`ed-tree-main ${section.hidden ? "is-hidden" : ""}`} onClick={(event) => props.onSelect(section.id, "", event.shiftKey)} onDoubleClick={() => api.canEdit && setRenaming(section.id)}>
                     <span className="ed-layer-dot" aria-hidden="true" />
                     <span className="truncate">{sectionName(section)}</span>
+                    {sectionLayoutText(section) ? <span className="ed-layout">{sectionLayoutText(section)}</span> : null}
                     {locked ? <Lock size={12} aria-label="Managed for you" className="ed-muted-icon" /> : null}
+                    {managedLabel(locked) ? <span className="ed-managed">{managedLabel(locked)}</span> : null}
                   </button>
                 )}
                 {!locked && api.canEdit ? (
@@ -131,40 +291,71 @@ export function LayersPanel(props: { api: EditorApi; chromeFocus: string; onSele
                     {section.hidden ? <EyeOff size={13} aria-hidden="true" /> : <Eye size={13} aria-hidden="true" />}
                   </button>
                 ) : null}
+                {section.type === "flow" && section.blocks.length > 0 ? (
+                  <button type="button" className="ed-icon is-small" aria-label={layers.open.has(section.id) ? "Collapse" : "Expand"} data-layer-toggle={section.id} onClick={() => layers.toggle(section.id)}>
+                    {layers.open.has(section.id) ? "–" : "+"}
+                  </button>
+                ) : null}
               </div>
-              {section.type === "flow" && section.blocks.length ? (
+              {section.type === "flow" && section.blocks.length > 0 && layers.open.has(section.id) ? (
                 <ul role="group">
                   {section.blocks.map((block) => {
-                    const active = api.selection.itemId === block.id;
+                    const active = selectedIds.includes(block.id);
                     const label = block.editorName || (block.text && typeof block.text === "object" && block.text.text ? block.text.text.slice(0, 32) : block.kind);
+                    const componentId = layerIdText(props.experience, { id: block.id });
                     return (
-                      <li key={block.id} role="treeitem" aria-selected={active}>
+                      <li key={block.id} role="treeitem" aria-selected={active} data-layer-id={block.id} data-layer-parent={section.id} data-section-type={section.type} data-locked={block.locked ? "true" : undefined} data-hidden={block.hidden ? "true" : undefined} data-layer-drop={layersDrag.drop?.id === block.id ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
                         <div className={active ? "ed-tree-row is-child is-active" : "ed-tree-row is-child"}>
                           {renaming === block.id ? (
-                            <input className="ed-input is-inline" autoFocus defaultValue={block.editorName || block.kind} aria-label="Item name" onBlur={(event) => rename(section.id, event.target.value, block.id)} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); if (event.key === "Escape") setRenaming(""); }} />
+                            <LayerRename value={block.editorName || ""} label="Item name" onCommit={(value) => rename(section.id, value, block.id)} onCancel={() => setRenaming("")} />
                           ) : (
-                            <button type="button" className={`ed-tree-main ${block.hidden ? "is-hidden" : ""}`} onClick={() => props.onSelect(section.id, block.id)} onDoubleClick={() => api.canEdit && setRenaming(block.id)}>
-                              <span className="ed-kind">{block.kind === "brand-mark" ? "Logo" : block.kind}</span>
-                              <span className="truncate">{label}</span>
-                              {block.locked ? <Lock size={12} aria-label="Managed for you" className="ed-muted-icon" /> : null}
-                            </button>
+                            <>
+                              <button type="button" className={`ed-tree-main ${block.hidden ? "is-hidden" : ""}`} onClick={(event) => props.onSelect(section.id, block.id, event.shiftKey)} onDoubleClick={() => api.canEdit && setRenaming(block.id)}>
+                                <span className="ed-kind">{block.kind === "brand-mark" ? "Logo" : typeLabel(block.kind)}</span>
+                                <span className="truncate">{label}</span>
+                                {block.locked ? <Lock size={12} aria-label="Locked" className="ed-muted-icon" /> : null}
+                              </button>
+                              {componentId ? <span className="ed-layer-id">{componentId}</span> : null}
+                            </>
                           )}
-                          {!block.locked && api.canEdit ? (
-                            <button type="button" className="ed-icon is-small" aria-label={block.hidden ? "Show" : "Hide"} data-tip={block.hidden ? "Show" : "Hide"} onClick={() => api.commit(setBlockHidden(api.site, api.path, section.id, block.id, !block.hidden), true)}>
-                              {block.hidden ? <EyeOff size={13} aria-hidden="true" /> : <Eye size={13} aria-hidden="true" />}
-                            </button>
-                          ) : null}
+                          {block.locked ? (
+                            <LayerUnlockButton
+                              allowed={layerUnlockAllowed(block.kind, layerRole(api.role))}
+                              reason={LAYER_UNLOCK_REASON}
+                              onUnlock={() => {
+                                const applied = applyLayerUnlock(api.site, api.path, section.id, block.id, block.kind, layerRole(api.role), api.visualDocument);
+                                if (applied.ok) api.commit(applied.site, false, applied.visual ?? undefined);
+                              }}
+                            />
+                          ) : api.canEdit ? <LayerLockButton label={`Lock ${label}`} onLock={() => lockBlock(section.id, block.id)} /> : null}
+                          {!block.locked && api.canEdit ? <LayerVisibilityButton hidden={block.hidden} label={label} onChange={(hidden) => setVisibility(section.id, block.id, hidden)} /> : null}
                         </div>
                       </li>
                     );
                   })}
                 </ul>
               ) : null}
+              {section.type === "freeform" && section.items.length > 0 && (layers.open.has(section.id) || section.items.some((item) => selectedIds.includes(item.id))) ? (
+                <ul role="group">
+                  {section.items.map((item) => (
+                    <li key={item.id} role="treeitem" aria-selected={selectedIds.includes(item.id)} data-layer-id={item.id} data-layer-parent={section.id} data-section-type="freeform">
+                      <div className={selectedIds.includes(item.id) ? "ed-tree-row is-child is-active" : "ed-tree-row is-child"}>
+                        <button type="button" className="ed-tree-main" onClick={(event) => props.onSelect(section.id, item.id, event.shiftKey)}>
+                          <span className="ed-kind">{typeLabel(item.kind)}</span>
+                          <span className="truncate">{item.kind}</span>
+                        </button>
+                        {layerIdText(props.experience, { id: item.id }) ? <span className="ed-layer-id">{layerIdText(props.experience, { id: item.id })}</span> : null}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </li>
           );
         })}
-        <li role="treeitem" aria-selected={props.chromeFocus === "footer"} className={props.chromeFocus === "footer" ? "is-active" : ""}>
-          <button type="button" className="ed-tree-main" onClick={() => props.onChrome("footer")}><PanelBottom size={14} aria-hidden="true" /> Footer</button>
+        <li role="treeitem" aria-selected={props.chromeFocus === "footer"} className={props.chromeFocus === "footer" ? "is-active" : ""} data-layer-id="footer" data-layer-parent="chrome" data-locked="true" data-layer-drop={layersDrag.drop?.id === "footer" ? (layersDrag.drop.after ? "after" : "before") : undefined} onPointerDown={layersDrag.onPointerDown}>
+          <button type="button" className="ed-tree-main" onClick={() => props.onChrome("footer")}><PanelBottom size={14} aria-hidden="true" /> Footer <Lock size={12} aria-label="Locked" className="ed-muted-icon" /></button>
+          {layerUnlockAllowed("footer", layerRole(api.role)) ? null : <LayerUnlockButton allowed={false} reason={LAYER_UNLOCK_REASON} onUnlock={() => {}} />}
         </li>
       </ul>
       {sections.length === 0 ? <Empty title="This page has no sections yet">Use Add to put your first section on the page.</Empty> : null}

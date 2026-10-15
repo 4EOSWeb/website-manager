@@ -1,0 +1,6 @@
+rollback-tag: baseline-editor-chrome-eb8a
+builder-branch: cursor/generic-builder-eb8a
+step-0.3-sha: 0dff4ce7ac3d46b28f161e10bcd476ebc99115a0
+remote-chrome-sha: 227873fddf6614d9151c7275dcddd924a74748b1
+origin-main-sha: efcf6074d322d000c727d26a39083db21cb50d94
+note: Steps 0.4 through 0.10 committed after step 0.3, so the rollback tag is this tip, not the step 0.3 SHA. The remote chrome branch pointer is left at 227873f. This branch contains 076530d and 227873f, which are not on origin/main.

@@ -23,3 +23,66 @@ export function redoStep<T>(history: History<T>, current: T): { state: T; histor
   if (state === undefined) return null;
   return { state, history: { past: [...history.past, current], future: history.future.slice(1) } };
 }
+
+export type ScopedSnapshot<T> = {
+  websiteId: string;
+  value: T;
+  visualDocument: unknown | null;
+};
+
+function scopedEntry<T>(websiteId: string, value: T, visualDocument?: unknown): ScopedSnapshot<T> {
+  return { websiteId, value, visualDocument: visualDocument === undefined ? null : visualDocument };
+}
+
+/** Version 3 history stays a value snapshot. A visual edit also stores that document. */
+export function rememberScoped<T>(history: History<ScopedSnapshot<T>>, websiteId: string, current: T, visualDocument?: unknown): History<ScopedSnapshot<T>> {
+  return remember(history, scopedEntry(websiteId, current, visualDocument));
+}
+
+export type EditTrail<T> = {
+  history: History<ScopedSnapshot<T>>;
+  textKey: string;
+};
+
+/** Repeated edits of the same field stay one step. A different field starts a new step. */
+export function trailText<T>(trail: EditTrail<T>, websiteId: string, current: T, key: string, visualDocument?: unknown): EditTrail<T> {
+  if (trail.textKey === key) return trail;
+  return { history: rememberScoped(trail.history, websiteId, current, visualDocument), textKey: key };
+}
+
+/** A drop is always its own step, even when it follows a text edit of the same field. */
+export function trailDrop<T>(trail: EditTrail<T>, websiteId: string, current: T, visualDocument?: unknown): EditTrail<T> {
+  return { history: rememberScoped(trail.history, websiteId, current, visualDocument), textKey: "" };
+}
+
+/** Restores the previous snapshot for this website. Another website's entry is left in place. */
+export function undoScoped<T>(
+  history: History<ScopedSnapshot<T>>,
+  websiteId: string,
+  current: T,
+  visualDocument?: unknown,
+): { value: T; visualDocument: unknown | null; history: History<ScopedSnapshot<T>> } | null {
+  const top = history.past[history.past.length - 1];
+  if (!top || top.websiteId !== websiteId) return null;
+  const step = undoStep(history, scopedEntry(websiteId, current, visualDocument));
+  if (!step) return null;
+  return { value: step.state.value, visualDocument: step.state.visualDocument, history: step.history };
+}
+
+/** Redo is available only when the next snapshot belongs to this website. */
+export function canRedoScoped<T>(history: History<ScopedSnapshot<T>>, websiteId: string): boolean {
+  const next = history.future[0];
+  return next !== undefined && next.websiteId === websiteId;
+}
+
+export function redoScoped<T>(
+  history: History<ScopedSnapshot<T>>,
+  websiteId: string,
+  current: T,
+  visualDocument?: unknown,
+): { value: T; visualDocument: unknown | null; history: History<ScopedSnapshot<T>> } | null {
+  if (!canRedoScoped(history, websiteId)) return null;
+  const step = redoStep(history, scopedEntry(websiteId, current, visualDocument));
+  if (!step) return null;
+  return { value: step.state.value, visualDocument: step.state.visualDocument, history: step.history };
+}

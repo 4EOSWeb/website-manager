@@ -1,0 +1,34 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { quantumAgeFonts } from "../../adapters/quantum-age/fonts.ts";
+import { adapterFontFamilies, buttonFlowPatch, writeButtonState } from "../../src/components/editor/inspector/button-model.ts";
+
+test("button fonts come from the adapter and disabled state stays on the same node", () => {
+  assert.deepEqual(adapterFontFamilies(quantumAgeFonts), ["Figtree", "Source Serif 4"]);
+  assert.deepEqual(adapterFontFamilies(null), []);
+  const props = { label: "Button", disabled: {} };
+  const next = writeButtonState(props, "disabled", "background", "#abcdef");
+  assert.equal(next.label, "Button");
+  assert.deepEqual(next.disabled, { background: "#abcdef" });
+  assert.equal("id" in next, false);
+  assert.deepEqual(buttonFlowPatch("size", "l"), { size: "l" });
+  assert.deepEqual(buttonFlowPatch("background", "#112233"), { background: "#112233" });
+  assert.equal(buttonFlowPatch("font", "Figtree"), null);
+  const fields = readFileSync("src/components/editor/inspector/button-fields.tsx", "utf8");
+  const model = readFileSync("src/components/editor/inspector/button-model.ts", "utf8");
+  assert.equal(fields.includes("Button text"), true);
+  assert.equal(fields.includes("Button state"), true);
+  assert.equal(fields.includes("adapterFontFamilies") === false, true);
+  assert.equal(fields.includes("disabled="), false);
+  const lowered = `${fields}\n${model}`.toLowerCase();
+  assert.equal(lowered.includes("quantum"), false);
+  assert.equal(lowered.includes("plum"), false);
+  assert.equal(lowered.includes("hero"), false);
+  assert.equal(lowered.includes("figtree"), false);
+  const blocks = readFileSync("src/components/editor/inspector/blocks.tsx", "utf8");
+  assert.equal(blocks.includes("Button text"), true);
+  const shell = readFileSync("src/components/editor-shell.tsx", "utf8");
+  assert.equal(shell.includes("writeButtonState"), true);
+  assert.equal(shell.includes("buttonFlowPatch"), true);
+});

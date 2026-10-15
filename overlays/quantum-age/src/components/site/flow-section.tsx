@@ -87,7 +87,7 @@ function ButtonIcon({ icon }: { icon: Block["icon"] }) {
 }
 
 function BlockView({ block, fluid }: { block: Block; fluid: boolean }) {
-  if (block.hidden && !previewMode) return null;
+  if (block.hidden) return null;
   const placed = fluid && block.desktop;
   const box = placed
     ? {
@@ -127,7 +127,7 @@ function BlockView({ block, fluid }: { block: Block; fluid: boolean }) {
       {block.kind === "paragraph" ? <p className={`max-w-[62ch] ${color ? "" : "text-ink/80"} ${textClasses(block, "text-lead")}`} style={color}><RichText value={block.text} field="text" /></p> : null}
       {block.kind === "button" ? (
         <Button asChild size={block.size === "s" ? "sm" : block.size === "m" ? "default" : "lg"} variant={block.variant === "outline" ? "outline" : block.variant === "text" ? "link" : "default"}>
-          <Link href={block.href || "/contact"} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}>
+          <Link href={block.href || "/contact"} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined} style={block.background || block.textStyle?.color ? { background: block.background, color: block.textStyle?.color } : undefined}>
             <RichText value={block.text} field="text" />
             <ButtonIcon icon={block.icon} />
           </Link>
@@ -240,7 +240,7 @@ export function FlowSection({ section }: { section: EditorSection }) {
       data-editor-name={previewMode ? section.editorName || undefined : undefined}
       data-hidden={section.hidden ? "true" : undefined}
       className={`relative ${tone} ${hideClass(section)} ${section.hidden ? "opacity-60" : ""}`}
-      style={styleFor(section)}
+      style={{ ...(section.style ? styleFor(section) : {}), ...(section.blocks.length === 0 ? { minHeight: "4rem" } : {}) }}
     >
       {section.layout === "hero" ? <HeroLayout section={section} /> : null}
       {section.layout === "band" ? (

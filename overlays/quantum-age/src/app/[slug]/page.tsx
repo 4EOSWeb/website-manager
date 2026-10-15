@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
-import { SectionView } from "@/components/site/section-view";
+import { PageCanvas } from "@/components/site/flow-section";
 import { customPages, previewMode, readEditorPage } from "@/lib/editor-site";
 
 // Unlisted slugs must render completely before the response starts, or a missing
@@ -27,13 +27,5 @@ export default async function CustomPage({ params }: { params: Promise<{ slug: s
   const page = readEditorPage(`/${slug}`);
   if (!page || page.locked) notFound();
   if (page.archived && !previewMode) notFound();
-  return (
-    <article>
-      {page.archived && previewMode ? <p className="container-page py-3 text-sm">This page is archived. It stays off the public site until you restore it.</p> : null}
-      {page.sections.length === 0 && previewMode ? <div data-empty-page="true" className="min-h-40" /> : null}
-      {page.sections.map((section) => (
-        <SectionView key={section.id} section={section} />
-      ))}
-    </article>
-  );
+  return <PageCanvas page={page} />;
 }

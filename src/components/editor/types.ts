@@ -1,4 +1,6 @@
 import type { BlogDraft, PageDocument, SiteDraft } from "@/lib/content-schema";
+import type { LayoutNode } from "@/components/editor/inspector/layout-model";
+import type { SiteContext } from "@/platform/context";
 
 export type MediaItem = {
   src: string;
@@ -23,7 +25,7 @@ export type Selection = {
   kind: string;
 };
 
-export type Snapshot = { site: SiteDraft; posts: BlogDraft[] };
+export type Snapshot = { site: SiteDraft; posts: BlogDraft[]; layouts?: Record<string, LayoutNode> };
 
 export type Viewport = "desktop" | "tablet" | "mobile";
 
@@ -41,16 +43,21 @@ export const VIEWPORTS: { id: Viewport; label: string; width: number }[] = [
 
 export type EditorApi = {
   websiteId: string;
+  siteContext: SiteContext;
+  adapterId: string | null;
+  adapter: Record<string, unknown> | null;
   site: SiteDraft;
   path: string;
   page?: PageDocument;
   canEdit: boolean;
+  role: string;
   viewport: Viewport;
   selection: Selection;
-  commit: (next: SiteDraft, reload: boolean) => void;
+  visualDocument: unknown;
+  commit: (next: SiteDraft, reload: boolean, nextVisual?: unknown) => void;
   commitText: (next: SiteDraft, key: string, reload?: boolean) => void;
   notify: (message: string, tone?: "info" | "error") => void;
-  selectNode: (sectionId: string, itemId?: string) => void;
+  selectNode: (sectionId: string, itemId?: string, shift?: boolean) => void;
   openPicker: () => void;
   openCrop: () => void;
   run: (action: "duplicate" | "delete" | "copy" | "template") => void;

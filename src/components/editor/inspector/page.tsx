@@ -4,41 +4,69 @@ import { useState } from "react";
 import { Archive, ArchiveRestore, Copy } from "lucide-react";
 import type { BlogDraft, PageDocument } from "@/lib/content-schema";
 import { SITE_AUTHORS } from "@/lib/content-schema";
-import { setArchived, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
+import { applyText, setArchived, setNavVisible, updatePageMeta } from "@/lib/editor-ops";
 import type { EditorApi } from "@/components/editor/types";
 import { Field, Group, Select, TextArea, TextInput, Toggle } from "@/components/editor/ui";
+import { navigationEditingEnabled, pageCapabilityFlags, showBody, showHeaderToggle, showMetadata } from "@/components/editor/inspector/page-controls";
+import { ArticleConvert } from "@/components/editor/article-convert";
+import { articleBodyKind } from "@/platform/pages/route-flags";
+import { routeReserved } from "@/platform/pages/reserved";
+import { seoHost } from "@/platform/pages/seo-host";
 
 export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: PageDocument; onDuplicate: () => void }) {
-  const disabled = !api.canEdit || page.locked;
+  const flags = pageCapabilityFlags(api.adapter, page, page.route);
+  const body = showBody(flags);
+  const canEditNav = navigationEditingEnabled(api.adapter);
+  const disabled = !api.canEdit || page.locked || !body;
   const parents = api.site.pages.filter((item) => item.route !== page.route && item.route !== "/" && !item.parentRoute && !item.archived);
+  const sidebar = page.sections.find((section) => section.type === "paragraph" && section.editorName === "Sidebar");
+  const cta = page.sections.find((section) => section.type === "button" && section.editorName === "Call to action");
   return (
     <>
-      {page.locked ? <p className="ed-note">This page is managed for you. You can still change its menu label and search details.</p> : null}
+      {flags.providerManaged ? <p className="ed-note">This page is managed for you. You can still change its menu label and search details.</p> : null}
+      {flags.lockLayout ? <p className="ed-note" data-layout-lock="page">This page keeps its layout.</p> : null}
+      {flags.lockContent ? <p className="ed-note" data-content-lock="page">This content is locked.</p> : null}
       <Group title="Page">
-        <Field label="Page name" hint="Shown in the editor and used as the menu label unless you set one below.">
-          <TextInput value={page.title} disabled={disabled} maxLength={80} onChange={(value) => api.commitText(updatePageMeta(api.site, page.route, { title: value }), `${page.route}:title`, true)} />
-        </Field>
-        {page.template === "home" || page.template === "marketing" || page.template === "legal" ? (
-          <Field label="Web address" hint="Built-in pages keep their address.">
-            <TextInput value={page.route} disabled onChange={() => undefined} />
-          </Field>
-        ) : (
-          <AddressField key={page.route} api={api} page={page} />
-        )}
+        {body ? (
+          <div data-page-control="body">
+            <Field label="Page name" hint="Shown in the editor and used as the menu label unless you set one below.">
+              <TextInput value={page.title} disabled={disabled} maxLength={80} onChange={(value) => api.commitText(updatePageMeta(api.site, page.route, { title: value }), `${page.route}:title`, true)} />
+            </Field>
+            {routeReserved(page.route, api.adapter) ? (
+              <Field label="Web address" hint="This page keeps its address.">
+                <TextInput value={page.route} disabled onChange={() => undefined} />
+              </Field>
+            ) : (
+              <AddressField key={page.route} api={api} page={page} />
+            )}
+          </div>
+        ) : null}
       </Group>
       <Group title="Menu">
-        <Toggle label="Show in the site menu" checked={page.navVisible} disabled={!api.canEdit || page.route === "/" || page.archived} onChange={(value) => api.commit(setNavVisible(api.site, page.route, value), true)} />
-        <Field label="Menu label">
-          <TextInput value={page.navLabel ?? ""} placeholder={page.title} disabled={!api.canEdit} maxLength={80} onChange={(value) => api.commitText(updatePageMeta(api.site, page.route, { navLabel: value }), `${page.route}:nav`, true)} />
-        </Field>
+        <div data-page-control="menu">
+          {canEditNav ? <Toggle label="Show in the site menu" checked={page.navVisible} disabled={!api.canEdit || page.route === "/" || page.archived} onChange={(value) => api.commit(setNavVisible(api.site, page.route, value), true)} /> : null}
+          <Field label="Menu label">
+            <TextInput value={page.navLabel ?? ""} placeholder={page.title} disabled={!api.canEdit} maxLength={80} onChange={(value) => api.commitText(updatePageMeta(api.site, page.route, { navLabel: value }), `${page.route}:nav`, true)} />
+          </Field>
+        </div>
         {page.route !== "/" ? (
           <Field label="Show under">
             <Select label="Show under" value={page.parentRoute ?? ""} disabled={!api.canEdit} options={[{ value: "", label: "Top of the menu" }, ...parents.map((item) => ({ value: item.route, label: item.navLabel || item.title }))]} onChange={(value) => api.commit(updatePageMeta(api.site, page.route, { parentRoute: value || undefined }), true)} />
           </Field>
         ) : null}
-        <Toggle label="Hide the site header on this page" checked={Boolean(page.hideHeader)} disabled={disabled} onChange={(value) => api.commit(updatePageMeta(api.site, page.route, { hideHeader: value }), true)} />
+        {showHeaderToggle(flags) ? <Toggle label="Hide the site header on this page" checked={Boolean(page.hideHeader)} disabled={disabled} onChange={(value) => api.commit(updatePageMeta(api.site, page.route, { hideHeader: value }), true)} /> : null}
+        {sidebar && "text" in sidebar ? (
+          <Field label="Sidebar text">
+            <TextArea rows={3} value={sidebar.text} disabled={!api.canEdit || flags.editSidebar !== true} onChange={(value) => api.commitText(applyText(api.site, page.route, sidebar.id, "text", value), `${sidebar.id}:text`, true)} />
+          </Field>
+        ) : null}
+        {cta && "label" in cta ? (
+          <Field label="Call to action">
+            <TextInput value={cta.label} disabled={!api.canEdit || flags.editCta !== true} maxLength={80} onChange={(value) => api.commitText(applyText(api.site, page.route, cta.id, "label", value), `${cta.id}:label`, true)} />
+          </Field>
+        ) : null}
       </Group>
-      {page.route !== "/" && !page.locked ? (
+      {page.route !== "/" && body ? (
         <Group title="Page actions">
           <div className="ed-row">
             <button type="button" className="ed-button" disabled={!api.canEdit} onClick={onDuplicate}><Copy size={14} aria-hidden="true" /> Duplicate</button>
@@ -54,10 +82,12 @@ export function PageTab({ api, page, onDuplicate }: { api: EditorApi; page: Page
 }
 
 export function SeoTab({ api, page }: { api: EditorApi; page: PageDocument }) {
+  const flags = pageCapabilityFlags(api.adapter, page, page.route);
+  if (!showMetadata(flags)) return null;
   const disabled = !api.canEdit;
   const title = page.seoTitle || page.title;
   return (
-    <>
+    <div data-page-control="metadata">
       <Group title="Search results">
         <Field label="Title" count={{ value: page.seoTitle.length, max: 70 }} hint="About 50 to 60 characters reads best.">
           <TextInput value={page.seoTitle} placeholder={page.title} disabled={disabled} maxLength={70} onChange={(value) => api.commitText(updatePageMeta(api.site, page.route, { seoTitle: value }), `${page.route}:seo`)} />
@@ -68,11 +98,31 @@ export function SeoTab({ api, page }: { api: EditorApi; page: PageDocument }) {
       </Group>
       <Group title="Preview">
         <div className="ed-serp" aria-label="How this page may look in search results">
-          <span className="ed-serp-url">testsite.4eos.com{page.route === "/" ? "" : page.route}</span>
+          <span className="ed-serp-url">{seoHost(api.adapter)}{page.route === "/" ? "" : page.route}</span>
           <span className="ed-serp-title">{title}</span>
           <span className="ed-serp-desc">{page.metaDescription || "Add a description so search engines don't pick a random sentence."}</span>
         </div>
       </Group>
+    </div>
+  );
+}
+
+export function ArticleRegions({ api, experience = "basic", canAdminister = false }: { api: EditorApi; experience?: string; canAdminister?: boolean }) {
+  const flags = pageCapabilityFlags(api.adapter, api.page ?? {}, api.path);
+  const preserved = articleBodyKind(api.adapter) === "html-preserved";
+  return (
+    <>
+      {flags.providerManaged ? <p className="ed-note" data-provider-managed="article">This page is managed for you. You can still change its menu label and search details.</p> : null}
+      {preserved ? <p className="ed-note" data-article-body="preserved">This article body stays as published HTML.</p> : null}
+      {flags.editMetadata ? (
+        <Group title="Search details">
+          <p className="ed-hint" data-article-region="metadata">Search title and description can change.</p>
+        </Group>
+      ) : null}
+      {flags.editHeader ? <p className="ed-note" data-article-region="header">The header on this page can change.</p> : null}
+      {preserved ? (
+        <ArticleConvert experience={experience} canAdminister={canAdminister} websiteId={api.websiteId} />
+      ) : null}
     </>
   );
 }
@@ -106,7 +156,7 @@ export function PostTab({ api, post, onPost, onBlock }: { api: EditorApi; post: 
           <button type="button" className="ed-tile" disabled={disabled} onClick={() => onBlock({ type: "list", ordered: false, items: ["First point"] })}>List</button>
           <button type="button" className="ed-tile" disabled={disabled} onClick={() => onBlock({ type: "table", headers: ["Column", "Detail"], rows: [["", ""]] })}>Table</button>
           <button type="button" className="ed-tile" disabled={disabled} onClick={() => onBlock({ type: "image", src: "", alt: "" })}>Image</button>
-          <button type="button" className="ed-tile" disabled={disabled} onClick={() => onBlock({ type: "link", href: "/contact", label: "Related page" })}>Link</button>
+          <button type="button" className="ed-tile" disabled={disabled} onClick={() => onBlock({ type: "link", href: "/", label: "Related page" })}>Link</button>
         </div>
       </Group>
     </>
