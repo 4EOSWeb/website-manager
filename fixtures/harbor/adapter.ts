@@ -1,4 +1,5 @@
 import { harborRegistry } from "./registry";
+import { harborVisitTemplate } from "./templates";
 
 const adapter = {
   version: 1 as const,
@@ -92,7 +93,7 @@ const adapter = {
     ],
   },
   components: { components: harborRegistry },
-  templates: { templates: [] as const },
+  templates: { templates: [harborVisitTemplate] },
   sharedLayout: { header: "optional" as const, footer: "optional" as const },
   articles: { enabled: false, routePattern: "/journal/:slug", body: "structured" as const },
   media: { storage: "git" as const, publicDir: "public", accept: [".svg" as const, ".png" as const] },
