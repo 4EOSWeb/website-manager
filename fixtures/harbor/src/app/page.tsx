@@ -1,11 +1,13 @@
+import { HarborHero } from "@/components/harbor-hero";
 import { HarborNav } from "@/components/harbor-nav";
 
 export default function HomePage() {
   return (
     <main>
       <HarborNav />
+      <HarborHero />
       <section>
-        <h1>A coastal studio</h1>
+        <h2>A coastal studio</h2>
         <p>Harbor & Co. designs rooms, walks, and waterfront places in Port City.</p>
       </section>
       <section aria-label="Selected work">
