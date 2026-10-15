@@ -1,4 +1,5 @@
 import { HarborPillButton } from "@/components/harbor-button";
+import { HarborFooter } from "@/components/harbor-footer";
 import { harborProjects, WorkCard } from "@/components/work-card";
 import { HarborHero } from "@/components/harbor-hero";
 import { HarborNav } from "@/components/harbor-nav";
@@ -25,9 +26,7 @@ export default function HomePage() {
         <p>The studio looks over the water. The north shed is open on weekdays.</p>
         <HarborPillButton href="/visit">Plan a visit</HarborPillButton>
       </section>
-      <footer>
-        <p>Harbor & Co., Port City</p>
-      </footer>
+      <HarborFooter />
     </main>
   );
 }
