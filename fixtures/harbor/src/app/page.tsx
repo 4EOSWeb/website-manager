@@ -1,3 +1,4 @@
+import { HarborPillButton } from "@/components/harbor-button";
 import { HarborHero } from "@/components/harbor-hero";
 import { HarborNav } from "@/components/harbor-nav";
 
@@ -21,6 +22,7 @@ export default function HomePage() {
       <section>
         <h2>Visit the shed</h2>
         <p>The studio looks over the water. The north shed is open on weekdays.</p>
+        <HarborPillButton href="/visit">Plan a visit</HarborPillButton>
       </section>
       <footer>
         <p>Harbor & Co., Port City</p>

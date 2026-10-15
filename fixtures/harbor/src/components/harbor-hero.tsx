@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { HarborTextButton } from "@/components/harbor-button";
 
 export function HarborHero() {
   return (
@@ -6,7 +6,7 @@ export function HarborHero() {
       <img src="/hero.svg" alt="" style={{ display: "block", width: "100%", height: "22rem", objectFit: "cover" }} />
       <div style={{ position: "absolute", left: "1.5rem", bottom: "1.5rem", color: "#F7F1E8" }}>
         <h1 style={{ margin: 0 }}>Harbor & Co.</h1>
-        <Link href="/visit">Walk down to the shed</Link>
+        <HarborTextButton href="/visit">Walk down to the shed</HarborTextButton>
       </div>
     </section>
   );

@@ -11,3 +11,19 @@ a {
 .harbor-sand {
   background: #E6D3B1;
 }
+
+.harbor-text-button {
+  color: #0F3D4C;
+  background: none;
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+.harbor-pill-button {
+  display: inline-block;
+  background: #E26D5A;
+  color: #F7F1E8;
+  border-radius: 999px;
+  padding: 0.65rem 1.15rem;
+  text-decoration: none;
+}
