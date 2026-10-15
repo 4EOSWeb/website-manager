@@ -2,7 +2,7 @@ const formEntries = new Set(["element:form", "element:input", "element:textarea"
 
 const formComponents = new Set(["generic.form", "generic.input", "generic.textarea", "generic.select", "generic.checkbox"]);
 
-function flag(adapter: unknown, name: "supportsFreeCanvas" | "supportsForms" | "supportsThemeEditing"): boolean {
+function flag(adapter: unknown, name: "supportsFreeCanvas" | "supportsForms" | "supportsThemeEditing" | "supportsBlog"): boolean {
   if (!adapter || typeof adapter !== "object") return false;
   const capabilities = (adapter as { capabilities?: Record<string, unknown> }).capabilities;
   return capabilities?.[name] === true;
@@ -32,4 +32,12 @@ export function libraryEntryVisible(entryId: string, adapter: unknown): boolean 
   if (entryId === "element:canvas") return canvasControlsVisible(adapter);
   if (formEntries.has(entryId)) return formControlsVisible(adapter);
   return true;
+}
+
+const blogLibrary = new Set(["section:insights-summary", "section:freeform", "section:search"]);
+
+/** Version 3 section entries that belong to a blog stay with sites that publish one. */
+export function legacyLibraryVisible(entryId: string, adapter: unknown): boolean {
+  if (!blogLibrary.has(entryId)) return true;
+  return flag(adapter, "supportsBlog");
 }

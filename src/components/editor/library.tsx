@@ -13,7 +13,7 @@ import { createTextarea } from "@/platform/elements/textarea";
 import { createSelect } from "@/platform/elements/select";
 import { createCheckbox } from "@/platform/elements/checkbox";
 import { createForm } from "@/platform/elements/form";
-import { canvasControlsVisible, formControlsVisible, libraryEntryVisible } from "@/components/editor/inspector/capability-gate";
+import { canvasControlsVisible, formControlsVisible, legacyLibraryVisible, libraryEntryVisible } from "@/components/editor/inspector/capability-gate";
 import { createFaq } from "@/platform/elements/faq";
 import { createTestimonial } from "@/platform/elements/testimonial";
 import { createCta } from "@/platform/elements/cta";
@@ -50,7 +50,7 @@ export const GENERIC_ENTRIES: LibraryEntry[] = [
   { id: "element:container", label: "Container", description: "A box for other elements", category: "Sections", keywords: "box wrap", thumb: "blank" },
   { id: "element:stack", label: "Stack", description: "A vertical or horizontal stack", category: "Sections", keywords: "column row", thumb: "blank" },
   { id: "element:grid", label: "Grid", description: "A two-column grid", category: "Sections", keywords: "columns", thumb: "cards" },
-  { id: "element:canvas", label: "Canvas", description: "A free canvas", category: "Freeform zone", keywords: "canvas", thumb: "zone" },
+  { id: "element:canvas", label: "Canvas", description: "A free canvas", category: "Sections", keywords: "canvas", thumb: "zone" },
   { id: "element:group", label: "Group", description: "An empty group", category: "Sections", keywords: "group", thumb: "blank" },
   { id: "element:card", label: "Card", description: "A heading and some text", category: "Sections", keywords: "card", thumb: "card" },
   { id: "element:cta", label: "Call to action", description: "A heading, text, and a button", category: "Calls to action", keywords: "cta button", thumb: "cta" },
@@ -134,10 +134,16 @@ export function LibraryBrowser(props: {
   const results = useMemo(() => {
     if (category === "Saved" || category === "Custom") return [];
     const generic = GENERIC_ENTRIES.filter((entry) => entryVisible(entry, query, category) && libraryEntryVisible(entry.id, props.adapter));
-    const library = searchLibrary(query, category, props.canEmbed);
+    const library = searchLibrary(query, category, props.canEmbed).filter((entry) => legacyLibraryVisible(entry.id, props.adapter));
     return [...generic, ...library];
   }, [query, category, props.canEmbed, props.adapter]);
   const catalog = useMemo(() => [...GENERIC_ENTRIES, ...LIBRARY], []);
+  const categories = useMemo(() => {
+    const generic = GENERIC_ENTRIES.filter((entry) => libraryEntryVisible(entry.id, props.adapter));
+    const library = searchLibrary("", "All", props.canEmbed).filter((entry) => legacyLibraryVisible(entry.id, props.adapter));
+    const names = new Set([...generic, ...library].map((entry) => entry.category));
+    return CATEGORIES.filter((name) => names.has(name));
+  }, [props.adapter, props.canEmbed]);
   const recent = props.recent.map((id) => catalog.find((entry) => entry.id === id)).filter((entry): entry is LibraryEntry => Boolean(entry)).slice(0, 4);
   const recommended = props.recommended.map((id) => LIBRARY.find((entry) => entry.id === id)).filter((entry): entry is LibraryEntry => Boolean(entry));
   const browsing = !query && category === "All";
@@ -222,7 +228,7 @@ export function LibraryBrowser(props: {
         <input autoFocus={props.autoFocus} placeholder="Search sections and elements" aria-label="Search sections and elements" value={query} onChange={(event) => setQuery(event.target.value)} />
       </label>
       <div className="ed-chips" role="tablist" aria-label="Categories">
-        {(["All", ...CATEGORIES, ...(registered.length ? (["Custom"] as const) : []), ...(props.templates.length ? (["Saved"] as const) : [])] as const).map((name) => (
+        {(["All", ...categories, ...(registered.length ? (["Custom"] as const) : []), ...(props.templates.length ? (["Saved"] as const) : [])] as const).map((name) => (
           <button key={name} type="button" role="tab" aria-selected={category === name} onClick={() => setCategory(name)}>
             {name}
           </button>
