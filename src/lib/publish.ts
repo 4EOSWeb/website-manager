@@ -15,7 +15,7 @@ import { editorAdapterForSite } from "@/lib/editor-adapter";
 import { ensureWorkspace, writePreviewContent } from "@/lib/workspace";
 import { assertAllowed } from "@/platform/adapter/allowlist";
 import { discoverAdapters } from "@/platform/discover-adapters";
-import { adapterNotFound } from "@/platform/errors";
+import { adapterInvalid, adapterNotFound } from "@/platform/errors";
 import { err, ok, type Result } from "@/platform/result";
 import type { User, Website } from "@/generated/prisma/client";
 
@@ -129,7 +129,31 @@ async function idsFromMetadata(root: string) {
   return ids;
 }
 
+function allowlistFromAdapter(fields: Record<string, unknown> | undefined) {
+  const publish = fields?.publish;
+  if (!publish || typeof publish !== "object") return null;
+  const allowlist = (publish as { allowlist?: unknown }).allowlist;
+  if (!Array.isArray(allowlist) || !allowlist.every((item) => typeof item === "string")) return null;
+  return allowlist;
+}
+
+/** A candidate must stay inside this site's workspace and on this site's allowlist. */
+export function reviewFilesForSite(siteWorkspace: string, allowlist: string[], candidates: string[]): Result<string[]> {
+  const root = path.resolve(siteWorkspace);
+  for (const candidate of candidates) {
+    if (path.isAbsolute(candidate)) return err(adapterInvalid("That file is not on the publish list.", "path"));
+    const resolved = path.resolve(root, candidate);
+    if (resolved !== root && !resolved.startsWith(`${root}${path.sep}`)) {
+      return err(adapterInvalid("That file is not on the publish list.", "path"));
+    }
+  }
+  return filesForReview(allowlist, candidates);
+}
+
 export async function resolvePublishAllowlist(websiteId: string) {
+  const adapter = await editorAdapterForSite(websiteId);
+  const listed = allowlistFromAdapter(adapter?.fields);
+  if (listed) return { allowlist: listed };
   const root = path.join(process.cwd(), "adapters");
   if (!fs.existsSync(root)) return allowlistFromDiscovery(websiteId, err(adapterNotFound()), readAdapterAllowlist);
   let discovered: Result<string[]>;
@@ -195,7 +219,7 @@ export async function submitForPublish(options: {
     ...options.posts.map((post) => `src/content/blog/${post.slug}.json`),
     ...[...mediaNames].filter((filename) => fs.existsSync(path.join(dir, "public", "media", filename))).map((filename) => `public/media/${filename}`),
   ];
-  const reviewed = filesForReview(resolved.allowlist, candidates);
+  const reviewed = reviewFilesForSite(dir, resolved.allowlist, candidates);
   if (!reviewed.ok) throw new Error(reviewed.error.message);
   const files = reviewed.value;
   const committed = await commitAllowedChanges({
