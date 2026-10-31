@@ -13,6 +13,20 @@ export function mediaRoot(websiteId: string) {
   return path.join(process.cwd(), "data", "media", websiteId);
 }
 
+export async function mediaAssetForSite(websiteId: string, id: string) {
+  if (!id || !/^[A-Za-z0-9_-]+$/.test(id)) return null;
+  return prisma.mediaAsset.findFirst({ where: { id, websiteId } });
+}
+
+export async function readMediaById(websiteId: string, id: string) {
+  const asset = await mediaAssetForSite(websiteId, id);
+  if (!asset || !/^[\w.-]+$/.test(asset.filename)) return null;
+  const root = mediaRoot(websiteId);
+  const file = path.join(root, asset.filename);
+  if (!file.startsWith(root) || !fs.existsSync(file)) return null;
+  return { asset, bytes: fs.readFileSync(file) };
+}
+
 export async function storeImage(options: { websiteId: string; userId: string; bytes: Buffer; altText: string }) {
   const audio = sniffAudio(options.bytes);
   const limit = audio ? 8_000_000 : MAX_BYTES;
