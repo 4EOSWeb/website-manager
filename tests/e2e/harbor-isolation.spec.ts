@@ -9,6 +9,9 @@ test("Harbor does not inherit Quantum Age library entries or pages", async ({ pa
   await expect(page.getByRole("button", { name: "Approach" })).toHaveCount(0);
   await page.getByRole("navigation", { name: "Editor panels" }).getByRole("button", { name: "Add" }).click();
   const library = page.locator(".ed-library").first();
+  await library.getByRole("tab", { name: "Custom" }).click();
+  await expect(library.getByRole("button", { name: "Tide clock" })).toBeVisible();
+  await expect(library.getByRole("button", { name: "Hero", exact: true })).toHaveCount(0);
   await expect(library.getByText("Insights summary")).toHaveCount(0);
   await expect(library.getByText("Freeform zone")).toHaveCount(0);
   await expect(library.getByText("Logo", { exact: true })).toHaveCount(0);
@@ -16,4 +19,8 @@ test("Harbor does not inherit Quantum Age library entries or pages", async ({ pa
   expect(background).not.toBe(paper);
   await page.goto("/sites/web_quantum_age/editor");
   await expect(page.getByRole("button", { name: "Approach", exact: true })).toBeVisible();
+  await page.getByRole("navigation", { name: "Editor panels" }).getByRole("button", { name: "Add" }).click();
+  const quantumLibrary = page.locator(".ed-library").first();
+  await quantumLibrary.getByRole("tab", { name: "Custom" }).click();
+  await expect(quantumLibrary.getByRole("button", { name: "Hero", exact: true })).toBeVisible();
 });
