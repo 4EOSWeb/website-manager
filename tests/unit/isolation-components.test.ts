@@ -6,13 +6,6 @@ import quantumAgeAdapter from "../../adapters/quantum-age/adapter.ts";
 import { customCatalog } from "../../src/platform/elements/custom.ts";
 import { registryFromAdapter } from "../../src/platform/registry/discover.ts";
 
-function ids(adapter: { components: { components: readonly { id: string }[] } }) {
-  const registry = registryFromAdapter(adapter);
-  assert.equal(registry.ok, true);
-  if (!registry.ok) return [];
-  return registry.value.list().map((item) => item.id);
-}
-
 test("each site registry returns only that site's components", () => {
   const harbor = registryFromAdapter(harborAdapter);
   const quantum = registryFromAdapter(quantumAgeAdapter);

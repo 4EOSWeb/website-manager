@@ -7,6 +7,7 @@ import { imageSize, mediaRoot } from "@/lib/media";
 import { canUseAdministrator } from "@/components/editor/state/experience";
 import { draftForSite } from "@/components/editor/state/site";
 import { editorAdapterForSite, registeredInspectorPlan } from "@/lib/editor-adapter";
+import { siteDraftFromAdapter } from "@/lib/adapter-draft";
 import { clientEditorPayload } from "@/lib/editor-payload";
 import { normalizeSiteDraft } from "@/lib/page-documents";
 import { mintPreviewAccess } from "@/lib/preview-access";
@@ -36,8 +37,12 @@ export default async function EditorPage({ params }: { params: Promise<{ website
       })
     : null;
   const ownedDraft = draftForSite(websiteId, draft);
-  const site = normalizeSiteDraft(ownedDraft?.draftData);
   const adapter = await editorAdapterForSite(websiteId);
+  const site = ownedDraft
+    ? normalizeSiteDraft(ownedDraft.draftData)
+    : adapter?.fields.workspace
+      ? siteDraftFromAdapter(adapter, actor.website.name)
+      : normalizeSiteDraft(undefined);
   const editorPayload = clientEditorPayload({
     canAdminister,
     website: actor.website,

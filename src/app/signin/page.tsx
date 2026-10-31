@@ -1,4 +1,4 @@
-import { signInAsAdministrator, signInAsEditor, signInWithMicrosoft } from "@/app/signin/actions";
+import { signInAsAdministrator, signInAsEditor, signInAsHarborEditor, signInWithMicrosoft } from "@/app/signin/actions";
 import { devAuthEnabled, entraConfigured } from "@/lib/dev-auth";
 
 export default function SignInPage() {
@@ -38,6 +38,11 @@ export default function SignInPage() {
             <form action={signInAsEditor} className="mt-2">
               <button className="w-full border border-[var(--line)] px-4 py-3 text-left" type="submit">
                 Continue as client editor
+              </button>
+            </form>
+            <form action={signInAsHarborEditor} className="mt-2">
+              <button className="w-full border border-[var(--line)] px-4 py-3 text-left" type="submit">
+                Continue as Harbor editor
               </button>
             </form>
           </div>

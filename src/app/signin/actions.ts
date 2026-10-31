@@ -47,3 +47,7 @@ export async function signInAsAdministrator() {
 export async function signInAsEditor() {
   await developmentSignIn("editor@4eos.test");
 }
+
+export async function signInAsHarborEditor() {
+  await developmentSignIn("harbor@4eos.test");
+}
