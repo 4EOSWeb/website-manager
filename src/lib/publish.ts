@@ -10,7 +10,7 @@ import { githubAppConfigured } from "@/lib/dev-auth";
 import { installationClient, pushBranch } from "@/lib/github";
 import { mediaRoot } from "@/lib/media";
 import { prisma } from "@/lib/prisma";
-import { commitAllowedChanges, openPullRequest } from "@/lib/publish-git";
+import { commitAllowedChanges, editorBranchName, openPullRequest } from "@/lib/publish-git";
 import { editorAdapterForSite } from "@/lib/editor-adapter";
 import { ensureWorkspace, writePreviewContent } from "@/lib/workspace";
 import { assertAllowed } from "@/platform/adapter/allowlist";
@@ -208,8 +208,7 @@ export async function submitForPublish(options: {
   posts: BlogDraft[];
 }) {
   const dir = await syncDraftToWorkspace(options.website.id, options.site, options.posts);
-  const slug = options.website.githubRepository.replace(/[^a-z0-9-]/gi, "").toLowerCase() || "site";
-  const branch = `editor/${slug}/${randomBytes(4).toString("hex")}`;
+  const branch = editorBranchName(options.website.githubRepository, randomBytes(4).toString("hex"));
   const mediaNames = collectMedia(options.site);
   for (const post of options.posts) collectMedia(post, mediaNames);
   const resolved = await resolvePublishAllowlist(options.website.id);
@@ -224,6 +223,7 @@ export async function submitForPublish(options: {
   const files = reviewed.value;
   const committed = await commitAllowedChanges({
     cwd: dir,
+    workspace: dir,
     branch,
     files,
     message: "Update approved website content",
