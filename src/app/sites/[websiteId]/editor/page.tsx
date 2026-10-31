@@ -7,6 +7,7 @@ import { imageSize, mediaRoot } from "@/lib/media";
 import { canUseAdministrator } from "@/components/editor/state/experience";
 import { draftForSite } from "@/components/editor/state/site";
 import { editorAdapterForSite, registeredInspectorPlan } from "@/lib/editor-adapter";
+import { clientEditorPayload } from "@/lib/editor-payload";
 import { normalizeSiteDraft } from "@/lib/page-documents";
 import { mintPreviewAccess } from "@/lib/preview-access";
 import { prisma } from "@/lib/prisma";
@@ -25,13 +26,9 @@ export default async function EditorPage({ params }: { params: Promise<{ website
     throw error;
   }
   if (actor.website.id !== websiteId) notFound();
-  const siteContext = {
-    clientId: actor.website.clientId,
-    websiteId: actor.website.id,
-    repository: `${actor.website.githubOwner}/${actor.website.githubRepository}`,
-    branch: actor.website.defaultBranch,
-    actorId: actor.user.id,
-  };
+  const actions = permissionsFor(actor.platformRole, actor.membershipRole);
+  const canEmbed = actor.platformRole === "SUPER_ADMIN" || actor.platformRole === "DESIGNER" || actor.membershipRole === "DESIGNER";
+  const canAdminister = canUseAdministrator(actor.platformRole, actor.membershipRole);
   const page = await prisma.page.findUnique({ where: { websiteId_route: { websiteId, route: "/" } } });
   const draft = page
     ? await prisma.workspaceDraft.findUnique({
@@ -41,6 +38,12 @@ export default async function EditorPage({ params }: { params: Promise<{ website
   const ownedDraft = draftForSite(websiteId, draft);
   const site = normalizeSiteDraft(ownedDraft?.draftData);
   const adapter = await editorAdapterForSite(websiteId);
+  const editorPayload = clientEditorPayload({
+    canAdminister,
+    website: actor.website,
+    userId: actor.user.id,
+    adapter: adapter?.fields ?? null,
+  });
   const inspectorPlan = registeredInspectorPlan(adapter?.fields ?? null);
   const storedPosts = await prisma.blogPost.findMany({
     where: { websiteId, status: { in: ["DRAFT", "SCHEDULED"] } },
@@ -57,14 +60,12 @@ export default async function EditorPage({ params }: { params: Promise<{ website
     orderBy: { createdAt: "desc" },
     take: 8,
   });
-  const actions = permissionsFor(actor.platformRole, actor.membershipRole);
-  const canEmbed = actor.platformRole === "SUPER_ADMIN" || actor.platformRole === "DESIGNER" || actor.membershipRole === "DESIGNER";
   return (
     <EditorShell
       websiteId={websiteId}
-      siteContext={siteContext}
+      siteContext={editorPayload.siteContext}
       adapterId={adapter?.id ?? null}
-      adapter={adapter?.fields ?? null}
+      adapter={editorPayload.adapter}
       visualDocument={ownedDraft?.visualDocument ?? null}
       websiteName={actor.website.name}
       initialSite={site}
@@ -86,7 +87,7 @@ export default async function EditorPage({ params }: { params: Promise<{ website
       canEdit={can(actions, "edit")}
       canPublish={can(actions, "publish.request")}
       canEmbed={canEmbed}
-      canAdminister={canUseAdministrator(actor.platformRole, actor.membershipRole)}
+      canAdminister={canAdminister}
       role={roleLabel(actor.platformRole, actor.membershipRole)}
       userName={actor.user.displayName}
       previewAccess={mintPreviewAccess(websiteId, actor.user.id)}
