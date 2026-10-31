@@ -2,6 +2,7 @@ import { authorize, authzResponse } from "@/lib/authorize";
 import { recordAudit } from "@/lib/audit";
 import { blogDraftSchema } from "@/lib/content-schema";
 import { dropSaveData, readDraftPut } from "@/lib/draft-put";
+import { foreignDraftPageStatus } from "@/lib/pages";
 import { normalizeSiteDraft, stripEmbeds } from "@/lib/page-documents";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
@@ -18,7 +19,11 @@ export async function PUT(request: Request, { params }: Params) {
   const { websiteId } = await params;
   try {
     const actor = await authorize(websiteId, "draft.save");
-    const parsed = readDraftPut(websiteId, await request.json());
+    const body = await request.json();
+    if (await foreignDraftPageStatus(websiteId, body)) {
+      return Response.json({ message: "That page is not available." }, { status: 404 });
+    }
+    const parsed = readDraftPut(websiteId, body);
     if (!parsed.ok) return Response.json({ message: parsed.message }, { status: parsed.status });
     const site = stripEmbeds(normalizeSiteDraft(parsed.site), canEmbed(actor.platformRole, actor.membershipRole));
     // A version 3 save always writes draft_data. visual_document stays until step 19.25 when this request omits it.
