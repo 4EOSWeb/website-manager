@@ -1,6 +1,7 @@
 import type { AdapterContract } from "../adapter";
 import { discoverStaticRoutes, type DiscoveredRoute } from "../adapter/routes";
 import type { SiteContext } from "../context";
+import { registryFromAdapter } from "../registry/discover";
 
 export type OnboardingRoutes =
   | { ok: true; routes: DiscoveredRoute[]; warning?: string }
@@ -28,4 +29,23 @@ export async function discoverOnboardingRoutes(adapter: Pick<AdapterContract, "l
   const discovered = await discoverStaticRoutes(adapter.routes)(context);
   if (!discovered.ok) return { ok: false, problem: discovered.error.message };
   return { ok: true, routes: discovered.value };
+}
+
+export type ComponentAudience = "client-admin" | "super-admin";
+
+export type OnboardingComponent = { name: string; id?: string };
+
+/** Display names for client admins. Super admins may also see ids. Server paths are omitted. */
+export function discoverOnboardingComponents(
+  adapter: Pick<AdapterContract, "components">,
+  audience: ComponentAudience,
+): { ok: true; components: OnboardingComponent[] } | { ok: false; problem: string } {
+  const registry = registryFromAdapter(adapter);
+  if (!registry.ok) return { ok: false, problem: registry.error.message };
+  return {
+    ok: true,
+    components: registry.value.list().map((definition) => (
+      audience === "super-admin" ? { name: definition.name, id: definition.id } : { name: definition.name }
+    )),
+  };
 }
