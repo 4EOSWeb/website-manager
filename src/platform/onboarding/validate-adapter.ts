@@ -1,3 +1,5 @@
+import { execFile } from "node:child_process";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { adapterSchema, parseAdapter, type AdapterContract } from "../adapter";
@@ -39,6 +41,29 @@ export async function validateAdapterSource(read: () => Promise<unknown>): Promi
   }
 }
 
+function readAdapterModule(file: string) {
+  const hook = path.join(process.cwd(), "src/platform/onboarding/resolve-adapter-hook.mjs");
+  const reader = path.join(process.cwd(), "src/platform/onboarding/read-adapter.mjs");
+  if (!existsSync(hook) || !existsSync(reader)) return Promise.reject(new Error("The adapter file could not be read."));
+  return new Promise<unknown>((resolve, reject) => {
+    execFile(process.execPath, ["--experimental-strip-types", "--no-warnings", "--import", hook, reader, pathToFileURL(file).href], {
+      cwd: process.cwd(),
+      env: { PATH: process.env.PATH, HOME: process.env.HOME, NODE_ENV: "development" },
+      timeout: 20_000,
+    }, (error: Error | null, stdout: string) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      try {
+        resolve(JSON.parse(stdout));
+      } catch {
+        reject(new Error("The adapter file could not be read."));
+      }
+    });
+  });
+}
+
 /** Reads one relative file from a workspace checkout. The client never imports that module. */
 export async function validateAdapterFile(root: string, relativePath: string): Promise<AdapterValidation> {
   const checked = workspacePath(relativePath);
@@ -48,5 +73,5 @@ export async function validateAdapterFile(root: string, relativePath: string): P
   if (full !== base && !full.startsWith(`${base}${path.sep}`)) {
     return { ok: false, errors: [formatAdapterError(adapterInvalid("Use a path inside the workspace.", "adapter"))] };
   }
-  return validateAdapterSource(() => import(pathToFileURL(full).href));
+  return validateAdapterSource(() => readAdapterModule(full));
 }

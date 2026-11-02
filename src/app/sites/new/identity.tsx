@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { websiteIdExists } from "./actions";
 import { PathFields, adapterPathOnboarding, contentPathOnboarding, mediaPathOnboarding, navigationSourceOnboarding, themeSourceOnboarding } from "./paths";
+import { CompatibilityReport } from "./report";
+import type { ReportSection } from "./report-model";
+import { reviewSite } from "./review";
 import { RepositoryFields, branchOnboarding, repositoryProblems } from "./repository";
 import { siteIdPattern, siteIdProblem } from "./site-id";
 
@@ -27,18 +30,25 @@ export function SiteIdentity() {
   const [navigationSource, setNavigationSource] = useState("document");
   const [navigationError, setNavigationError] = useState("");
   const [connectionError, setConnectionError] = useState("");
+  const [report, setReport] = useState<ReportSection[] | null>(null);
 
   async function checkConnection(nextOwner: string, nextRepository: string) {
     setConnectionError("");
+    setReport(null);
     try {
-      const response = await fetch("/api/sites/onboarding/connection", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ owner: nextOwner, repository: nextRepository }),
+      const sections = await reviewSite({
+        owner: nextOwner,
+        repository: nextRepository,
+        branch,
+        adapterPath,
+        contentPath,
+        mediaPath,
+        themeSource,
+        navigationSource,
       });
-      const payload = await response.json().catch(() => null);
-      const message = payload && typeof payload.problem === "string" ? payload.problem : payload && typeof payload.message === "string" ? payload.message : "";
-      if (!response.ok || payload?.ok === false) setConnectionError(message || "That repository could not be checked.");
+      setReport(sections);
+      const connection = sections.find((section) => section.id === "connection");
+      if (connection && connection.status === "fail") setConnectionError(connection.message);
     } catch {
       setConnectionError("That repository could not be checked.");
     }
@@ -125,6 +135,7 @@ export function SiteIdentity() {
       />
       {connectionError ? <p className="text-sm text-[var(--accent)]" role="alert">{connectionError}</p> : null}
       <button className="border border-[var(--ink)] px-4 py-3 text-left" type="submit">Continue</button>
+      {report ? <CompatibilityReport sections={report} /> : null}
     </form>
   );
 }
