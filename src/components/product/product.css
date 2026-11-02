@@ -384,18 +384,21 @@ a.product-card {
   line-height: 1.2;
 }
 
-.product-pages.ed-panel {
+.product-pages.ed-panel,
+.product-media.ed-panel {
   padding-bottom: var(--product-space-5);
   font-family: var(--product-font-body);
 }
 
-.product-pages .ed-panel-head {
+.product-pages .ed-panel-head,
+.product-media .ed-panel-head {
   height: auto;
   min-height: 44px;
   padding: var(--product-space-2) var(--product-space-3);
 }
 
-.product-pages .ed-panel-head h2 {
+.product-pages .ed-panel-head h2,
+.product-media .ed-panel-head h2 {
   color: var(--ed-strong);
   font-family: var(--product-font-display);
   font-style: normal;
@@ -405,18 +408,38 @@ a.product-card {
   text-transform: none;
 }
 
-.product-pages .ed-search {
+.product-pages .ed-search,
+.product-media .ed-search {
   height: 40px;
   margin: 0 var(--product-space-3) var(--product-space-3);
   border-radius: 2px;
 }
 
-.product-pages .ed-group-head > button {
+.product-pages .ed-group-head > button,
+.product-media .ed-group-head > button {
   height: 36px;
   font-size: var(--product-text-sm);
   font-weight: 560;
   letter-spacing: 0;
   text-transform: none;
+}
+
+.product-media .ed-drop {
+  margin: 0 var(--product-space-3) var(--product-space-3);
+  padding: var(--product-space-4);
+  border-style: solid;
+  border-radius: 2px;
+  gap: var(--product-space-2);
+}
+
+.product-media .ed-drop:focus-within {
+  outline: 2px solid var(--product-focus);
+  outline-offset: 2px;
+}
+
+.product-media .ed-media-tile {
+  min-height: 44px;
+  padding: var(--product-space-2) var(--product-space-3);
 }
 
 .product-pages .ed-tree-main {

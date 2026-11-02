@@ -458,7 +458,7 @@ export function MediaPanel(props: {
     );
   }
   return (
-    <div className="ed-panel">
+    <div className="ed-panel product-media">
       <div className="ed-panel-head">
         <h2>Media</h2>
       </div>
@@ -475,7 +475,7 @@ export function MediaPanel(props: {
           }}
         >
           <Upload size={16} aria-hidden="true" />
-          <span>{props.progress !== null ? `Uploading ${props.progress}%` : "Drop an image here or choose a file"}</span>
+          <span>{props.progress !== null ? `Uploading ${props.progress}%` : "Drop an image, or choose a file."}</span>
           <span className="ed-hint">PNG, JPEG, WebP, or SVG</span>
           <input className="sr-only" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={(event) => { const file = event.target.files?.[0]; if (file) props.onUpload(file); event.target.value = ""; }} />
         </label>

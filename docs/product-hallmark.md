@@ -137,3 +137,27 @@ There was no empty page state. A search with no matches said “No pages match.�
 A stored draft has at least one page, so Harbor and Quantum Age cannot be saved empty. The empty branch is still in the Pages panel. It stays hidden while any page is listed. A document with zero pages, covered by the unit fixture, shows “This site has no pages yet.” and Add page.
 
 A search that matches nothing still says “No pages match,” not the empty-document sentence. Quantum Age still lists Home and Approach. Harbor still lists its pages. Keyboard focus on Add page in that branch uses the product ring. The panel does not animate the empty card.
+
+## Media library
+
+Hallmark, before:
+
+- The heading is a small uppercase label, “MEDIA.”
+- The upload area is a dashed box.
+- The group label is uppercase, “ALL IMAGES (0).”
+- The upload line says “Drop an image here or choose a file.”
+
+Humanizer:
+
+- The heading is “Media.”
+- The upload line is “Drop an image, or choose a file.”
+- The formats stay PNG, JPEG, WebP, or SVG.
+- “Used on” stays with the count. Delete stays off while that count is above zero.
+
+After:
+
+- The panel uses the product serif and spacing on the editor’s dark surface.
+- The upload border is solid.
+- A new PNG shows its size, and Delete is available because the picture is not in use.
+- Checked at 1440, 768, and 390. The panel fits.
+- The empty library copy is still the previous sentence. That empty state is the next step.
