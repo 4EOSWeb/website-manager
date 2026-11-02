@@ -136,6 +136,9 @@ export function SiteIdentity() {
       {connectionError ? <p className="text-sm text-[var(--accent)]" role="alert">{connectionError}</p> : null}
       <button className="border border-[var(--ink)] px-4 py-3 text-left" type="submit">Continue</button>
       {report ? <CompatibilityReport sections={report} /> : null}
+      <button className="border border-[var(--line)] px-4 py-3 text-left" type="button" disabled={!report || report.some((section) => section.status === "fail")}>
+        Activate
+      </button>
     </form>
   );
 }
