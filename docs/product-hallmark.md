@@ -59,3 +59,25 @@ After:
 There was no empty screen before this. A person with no sites saw the heading and a blank list.
 
 The empty state is a card with a small page mark and one sentence. An administrator sees “Nothing is connected yet.” and Connect a website. A client editor sees “No website is assigned to you.” and no connect action. A person who already has sites still sees the cards. The mark does not move, so reduced motion has nothing extra to stop. Keyboard focus lands on Connect a website in the administrator empty state. There is still no loading or error file on this route.
+
+## Site dashboard
+
+Hallmark, before:
+
+- `/sites/web_harbor` and `/sites/web_quantum_age` had no page. Both showed “That page is not available.”
+- The only site home was the editor canvas.
+
+Humanizer:
+
+- The heading is the site name.
+- Edit, Pages, Media, and Review are the action names. The line under each one says what it opens.
+- “Your websites” is the way back to the list.
+
+After:
+
+- Harbor shows Edit, Pages, and Media. It does not show Review, because that site does not support review publishing.
+- Quantum Age shows Review as well.
+- Each card opens `/sites/<id>/editor`, which is where those tools live. The editor still shows the Pages heading.
+- Checked at 1440, 768, and 390. The page does not scroll sideways.
+- Tab reaches “Your websites,” and the focus ring is visible.
+- Someone without access still gets “That page is not available.” This route has no loading file.

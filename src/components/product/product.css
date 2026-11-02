@@ -146,6 +146,27 @@ a.product-button {
   color: var(--product-ink);
 }
 
+a.product-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.product-card:focus {
+  outline: none;
+}
+
+.product-card:focus-visible {
+  outline: 2px solid var(--product-focus);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  a.product-card:hover {
+    border-color: var(--product-accent);
+  }
+}
+
 .product-display {
   margin: 0;
   font-family: var(--product-font-display);
@@ -179,6 +200,12 @@ a.product-button {
   color: var(--product-muted);
   font-size: var(--product-text-sm);
   line-height: 1.5;
+}
+
+.product-quiet a {
+  color: var(--product-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 .product-signin {

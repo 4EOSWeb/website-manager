@@ -1,11 +1,14 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 
-export function ProductCard({ title, className, children }: { title?: string; className?: string; children: ReactNode }) {
+export function ProductCard({ title, className, href, children }: { title?: string; className?: string; href?: string; children: ReactNode }) {
   const classes = ["product-card", className].filter(Boolean).join(" ");
-  return (
-    <section className={classes}>
+  const body = (
+    <>
       {title ? <h2>{title}</h2> : null}
       {children}
-    </section>
+    </>
   );
+  if (href) return <Link className={classes} href={href}>{body}</Link>;
+  return <section className={classes}>{body}</section>;
 }
