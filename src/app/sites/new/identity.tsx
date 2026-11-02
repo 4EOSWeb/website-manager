@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { ProductButton } from "@/components/product/button";
+import { ProductField } from "@/components/product/field";
 import { websiteIdExists } from "./actions";
 import { PathFields, adapterPathOnboarding, contentPathOnboarding, mediaPathOnboarding, navigationSourceOnboarding, themeSourceOnboarding } from "./paths";
 import { CompatibilityReport } from "./report";
@@ -59,9 +61,15 @@ export function SiteIdentity() {
     setProblem(siteIdProblem(value, exists));
   }
 
+  const steps = [
+    { id: "site-name", label: "Name" },
+    { id: "repository", label: "Repository" },
+    { id: "files", label: "Files" },
+    { id: "report", label: "Report" },
+  ];
   return (
     <form
-      className="mt-10 flex flex-col gap-5 border border-[var(--line)] bg-white p-6"
+      className="product-connect"
       aria-label="Connect a website"
       onSubmit={(event) => {
         event.preventDefault();
@@ -86,15 +94,23 @@ export function SiteIdentity() {
         void checkConnection(owner.trim(), repository.trim());
       }}
     >
-      <label className="block text-sm text-[var(--ink)]">
-        Site name
-        <input className="mt-2 w-full border border-[var(--line)] px-3 py-2" value={name} onChange={(event) => setName(event.target.value)} />
-      </label>
-      <label className="block text-sm text-[var(--ink)]">
-        Site id
-        <input
-          className="mt-2 w-full border border-[var(--line)] px-3 py-2"
+      <ol className="product-steps" aria-label="Steps">
+        {steps.map((step, index) => (
+          <li key={step.id} aria-current={(!report && step.id === "site-name") || (report && step.id === "report") ? "step" : undefined}>
+            <a href={`#${step.id}`}>
+              {index + 1} {step.label}
+            </a>
+          </li>
+        ))}
+      </ol>
+      <fieldset id="site-name" className="product-fieldset">
+        <legend>Name</legend>
+        <ProductField id="site-name-field" label="Site name" value={name} onChange={(event) => setName(event.target.value)} />
+        <ProductField
+          id="site-id"
+          label="Site id"
           value={id}
+          error={problem || undefined}
           autoCapitalize="none"
           spellCheck={false}
           onChange={(event) => {
@@ -103,9 +119,10 @@ export function SiteIdentity() {
           }}
           onBlur={(event) => void check(event.target.value)}
         />
-      </label>
-      {problem ? <p className="text-sm text-[var(--accent)]" role="alert">{problem}</p> : null}
-      <RepositoryFields
+      </fieldset>
+      <fieldset id="repository" className="product-fieldset">
+        <legend>Repository</legend>
+        <RepositoryFields
         owner={owner}
         repository={repository}
         branch={branch}
@@ -115,8 +132,11 @@ export function SiteIdentity() {
         onOwner={setOwner}
         onRepository={setRepository}
         onBranch={setBranch}
-      />
-      <PathFields
+        />
+      </fieldset>
+      <fieldset id="files" className="product-fieldset">
+        <legend>Files</legend>
+        <PathFields
         adapterPath={adapterPath}
         adapterError={adapterError}
         onAdapterPath={setAdapterPath}
@@ -132,14 +152,22 @@ export function SiteIdentity() {
         navigationSource={navigationSource}
         navigationError={navigationError}
         onNavigationSource={setNavigationSource}
-      />
-      {connectionError ? <p className="text-sm text-[var(--accent)]" role="alert">{connectionError}</p> : null}
-      <button className="border border-[var(--ink)] px-4 py-3 text-left" type="submit">Continue</button>
-      {report ? <CompatibilityReport sections={report} /> : null}
-      {report?.some((section) => section.status === "fail") ? <p className="text-sm text-[var(--ink)]">Nothing was connected.</p> : null}
-      <button className="border border-[var(--line)] px-4 py-3 text-left" type="button" disabled={!report || report.some((section) => section.status === "fail")}>
+        />
+      </fieldset>
+      {connectionError ? (
+        <p className="product-error" role="alert">
+          {connectionError}
+        </p>
+      ) : null}
+      <ProductButton type="submit">Continue</ProductButton>
+      <fieldset id="report" className="product-fieldset">
+        <legend>Report</legend>
+        {report ? <CompatibilityReport sections={report} /> : <p className="product-quiet">No report yet.</p>}
+        {report?.some((section) => section.status === "fail") ? <p>Nothing was connected.</p> : null}
+      </fieldset>
+      <ProductButton type="button" variant="quiet" disabled={!report || report.some((section) => section.status === "fail")}>
         Activate
-      </button>
+      </ProductButton>
     </form>
   );
 }

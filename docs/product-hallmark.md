@@ -81,3 +81,27 @@ After:
 - Checked at 1440, 768, and 390. The page does not scroll sideways.
 - Tab reaches “Your websites,” and the focus ring is visible.
 - Someone without access still gets “That page is not available.” This route has no loading file.
+
+## Connect a website
+
+Hallmark, before:
+
+- A kicker says “New website” and the heading says “Connect a website.”
+- Every field sits in one white box, with Continue and Activate as two similar rectangles.
+- There is no grouping for the repository or the file paths.
+
+Humanizer:
+
+- The kicker is gone. The heading stays “Connect a website.”
+- Owner is now “Repository owner.” Repository, branch, and adapter stay, because those words are the fields.
+- The steps are Name, Repository, Files, and Report.
+- Before the checks run, the report says “No report yet.”
+- Errors are the same sentences as before. A bad site id still says “Use a lowercase id that starts with a letter.” A duplicate still says “That id is already used.”
+
+After:
+
+- The form uses the product fields, the step list, and the quiet Activate button.
+- Checked at 1440, 768, and 390. The page does not scroll sideways.
+- Tab reaches “Your websites,” and the focus ring is visible.
+- The Harbor path still reaches the compatibility report. GitHub is not configured here, so the connection check fails and Activate stays off. The form keeps the typed values and says “Nothing was connected.”
+- This route has no loading file. A client editor still sees “That page is not available.”

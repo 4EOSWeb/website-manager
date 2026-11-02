@@ -125,9 +125,33 @@ a.product-button {
   border-color: var(--product-accent);
 }
 
-.product-field input:disabled {
+.product-field input:disabled,
+.product-field select:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.product-field select {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--product-space-2) var(--product-space-3);
+  border: 1px solid var(--product-line);
+  border-radius: 2px;
+  background: var(--product-surface);
+  color: var(--product-ink);
+  font-family: var(--product-font-body);
+  font-size: var(--product-text);
+}
+
+.product-field select:focus {
+  outline: none;
+}
+
+.product-field select:focus-visible,
+.product-quiet a:focus-visible,
+.product-steps a:focus-visible {
+  outline: 2px solid var(--product-focus);
+  outline-offset: 2px;
 }
 
 .product-field [role="alert"] {
@@ -176,6 +200,10 @@ a.product-card {
   line-height: 1.05;
   overflow-wrap: anywhere;
   min-width: 0;
+}
+
+.product-card p {
+  margin: 0;
 }
 
 .product-card h2 {
@@ -300,6 +328,60 @@ a.product-card {
 
 .product-site-card p {
   margin: 0;
+}
+
+.product-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--product-space-5);
+  width: min(100%, 40rem);
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding: var(--product-space-6) var(--product-space-4);
+  overflow-x: clip;
+}
+
+.product-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--product-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.product-steps a {
+  color: var(--product-muted);
+  font-size: var(--product-text-sm);
+  text-decoration: none;
+}
+
+.product-steps [aria-current="step"] a {
+  color: var(--product-ink);
+}
+
+.product-connect {
+  display: flex;
+  flex-direction: column;
+  gap: var(--product-space-5);
+}
+
+.product-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--product-space-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.product-fieldset legend {
+  padding: 0;
+  font-family: var(--product-font-display);
+  font-style: normal;
+  font-weight: 450;
+  font-size: var(--product-title);
+  line-height: 1.2;
 }
 
 .product-empty {

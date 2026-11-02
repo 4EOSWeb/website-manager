@@ -1,5 +1,7 @@
 "use client";
 
+import { ProductField } from "@/components/product/field";
+
 export { branchOnboarding, repositoryProblems } from "./repository-rules";
 
 export function RepositoryFields(props: {
@@ -15,21 +17,33 @@ export function RepositoryFields(props: {
 }) {
   return (
     <>
-      <label className="block text-sm text-[var(--ink)]">
-        Owner
-        <input className="mt-2 w-full border border-[var(--line)] px-3 py-2" value={props.owner} autoCapitalize="none" spellCheck={false} onChange={(event) => props.onOwner(event.target.value)} />
-      </label>
-      {props.ownerError ? <p className="text-sm text-[var(--accent)]" role="alert">{props.ownerError}</p> : null}
-      <label className="block text-sm text-[var(--ink)]">
-        Repository name
-        <input className="mt-2 w-full border border-[var(--line)] px-3 py-2" value={props.repository} autoCapitalize="none" spellCheck={false} onChange={(event) => props.onRepository(event.target.value)} />
-      </label>
-      {props.repositoryError ? <p className="text-sm text-[var(--accent)]" role="alert">{props.repositoryError}</p> : null}
-      <label className="block text-sm text-[var(--ink)]">
-        Default branch
-        <input className="mt-2 w-full border border-[var(--line)] px-3 py-2" value={props.branch} autoCapitalize="none" spellCheck={false} onChange={(event) => props.onBranch(event.target.value)} />
-      </label>
-      {props.branchError ? <p className="text-sm text-[var(--accent)]" role="alert">{props.branchError}</p> : null}
+      <ProductField
+        id="repository-owner"
+        label="Repository owner"
+        value={props.owner}
+        error={props.ownerError || undefined}
+        autoCapitalize="none"
+        spellCheck={false}
+        onChange={(event) => props.onOwner(event.target.value)}
+      />
+      <ProductField
+        id="repository-name"
+        label="Repository name"
+        value={props.repository}
+        error={props.repositoryError || undefined}
+        autoCapitalize="none"
+        spellCheck={false}
+        onChange={(event) => props.onRepository(event.target.value)}
+      />
+      <ProductField
+        id="default-branch"
+        label="Default branch"
+        value={props.branch}
+        error={props.branchError || undefined}
+        autoCapitalize="none"
+        spellCheck={false}
+        onChange={(event) => props.onBranch(event.target.value)}
+      />
     </>
   );
 }

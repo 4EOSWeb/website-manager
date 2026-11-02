@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteIdentity } from "@/app/sites/new/identity";
 import { requirePageActor } from "@/lib/authorize";
@@ -12,9 +13,11 @@ export default async function NewSitePage() {
   });
   if (!canConnectWebsite(actor.platformRole, memberships.map((membership) => membership.role))) notFound();
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col justify-center px-6 py-16">
-      <p className="text-sm font-medium tracking-[0.14em] text-[var(--accent)] uppercase">New website</p>
-      <h1 className="mt-3 font-serif text-5xl text-[var(--ink)]">Connect a website</h1>
+    <main className="product-form">
+      <p className="product-quiet">
+        <Link href="/sites">Your websites</Link>
+      </p>
+      <h1 className="product-display">Connect a website</h1>
       <SiteIdentity />
     </main>
   );
