@@ -41,3 +41,12 @@ export function themeSourceOnboarding(value: string) {
   if (problem) return { ok: false as const, problem };
   return { ok: true as const, onboarding: { themeSource: trimmed } };
 }
+
+/** Navigation is owned by the document or the adapter. Neither choice rewrites a header. */
+export function navigationSourceOnboarding(value: string) {
+  const trimmed = value.trim();
+  if (trimmed === "document" || trimmed === "adapter") {
+    return { ok: true as const, onboarding: { navigationSource: trimmed } };
+  }
+  return { ok: false as const, problem: "Choose document or adapter." };
+}

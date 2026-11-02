@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { websiteIdExists } from "./actions";
-import { PathFields, adapterPathOnboarding, contentPathOnboarding, mediaPathOnboarding, themeSourceOnboarding } from "./paths";
+import { PathFields, adapterPathOnboarding, contentPathOnboarding, mediaPathOnboarding, navigationSourceOnboarding, themeSourceOnboarding } from "./paths";
 import { RepositoryFields, branchOnboarding, repositoryProblems } from "./repository";
 import { siteIdPattern, siteIdProblem } from "./site-id";
 
@@ -24,6 +24,8 @@ export function SiteIdentity() {
   const [mediaError, setMediaError] = useState("");
   const [themeSource, setThemeSource] = useState("adapter");
   const [themeError, setThemeError] = useState("");
+  const [navigationSource, setNavigationSource] = useState("document");
+  const [navigationError, setNavigationError] = useState("");
 
   async function check(value: string) {
     const exists = siteIdPattern.test(value) ? await websiteIdExists(value) : false;
@@ -42,11 +44,13 @@ export function SiteIdentity() {
         const nextContent = contentPathOnboarding(contentPath);
         const nextMedia = mediaPathOnboarding(mediaPath);
         const nextTheme = themeSourceOnboarding(themeSource);
+        const nextNavigation = navigationSourceOnboarding(navigationSource);
         setRepoErrors({ ...names, branch: nextBranch.ok ? "" : nextBranch.problem });
         setAdapterError(nextAdapter.ok ? "" : nextAdapter.problem);
         setContentError(nextContent.ok ? "" : nextContent.problem);
         setMediaError(nextMedia.ok ? "" : nextMedia.problem);
         setThemeError(nextTheme.ok ? "" : nextTheme.problem);
+        setNavigationError(nextNavigation.ok ? "" : nextNavigation.problem);
       }}
     >
       <label className="block text-sm text-[var(--ink)]">
@@ -92,6 +96,9 @@ export function SiteIdentity() {
         themeSource={themeSource}
         themeError={themeError}
         onThemeSource={setThemeSource}
+        navigationSource={navigationSource}
+        navigationError={navigationError}
+        onNavigationSource={setNavigationSource}
       />
       <button className="border border-[var(--ink)] px-4 py-3 text-left" type="submit">Continue</button>
     </form>

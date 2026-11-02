@@ -1,6 +1,6 @@
 "use client";
 
-export { adapterPathOnboarding, contentPathOnboarding, mediaPathOnboarding, themeSourceOnboarding } from "./path-rules";
+export { adapterPathOnboarding, contentPathOnboarding, mediaPathOnboarding, navigationSourceOnboarding, themeSourceOnboarding } from "./path-rules";
 
 function PathField(props: { label: string; value: string; placeholder: string; error: string; onChange: (value: string) => void }) {
   return (
@@ -34,6 +34,9 @@ export function PathFields(props: {
   themeSource: string;
   themeError: string;
   onThemeSource: (value: string) => void;
+  navigationSource: string;
+  navigationError: string;
+  onNavigationSource: (value: string) => void;
 }) {
   return (
     <>
@@ -41,6 +44,18 @@ export function PathFields(props: {
       <PathField label="Content path" value={props.contentPath} placeholder="src/content" error={props.contentError} onChange={props.onContentPath} />
       <PathField label="Media path" value={props.mediaPath} placeholder="public/media" error={props.mediaError} onChange={props.onMediaPath} />
       <PathField label="Theme source" value={props.themeSource} placeholder="adapter" error={props.themeError} onChange={props.onThemeSource} />
+      <label className="block text-sm text-[var(--ink)]">
+        Navigation source
+        <select
+          className="mt-2 w-full border border-[var(--line)] bg-white px-3 py-2"
+          value={props.navigationSource}
+          onChange={(event) => props.onNavigationSource(event.target.value)}
+        >
+          <option value="document">Document</option>
+          <option value="adapter">Adapter</option>
+        </select>
+      </label>
+      {props.navigationError ? <p className="text-sm text-[var(--accent)]" role="alert">{props.navigationError}</p> : null}
     </>
   );
 }
