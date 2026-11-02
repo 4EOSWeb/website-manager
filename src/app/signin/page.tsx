@@ -1,10 +1,11 @@
 import { signInAsAdministrator, signInAsEditor, signInAsHarborEditor, signInWithMicrosoft } from "@/app/signin/actions";
 import { SignInSubmit } from "@/app/signin/callback-status";
+import { developmentAccess } from "@/app/signin/development-access";
 import { ProductCard } from "@/components/product/card";
 import { devAuthEnabled, entraConfigured } from "@/lib/dev-auth";
 
 export default async function SignInPage({ searchParams }: PageProps<"/signin">) {
-  const dev = devAuthEnabled();
+  const dev = developmentAccess(devAuthEnabled());
   const entra = entraConfigured();
   const params = await searchParams;
   const failed = typeof params.error === "string" && params.error.length > 0;
@@ -25,6 +26,8 @@ export default async function SignInPage({ searchParams }: PageProps<"/signin">)
       )}
       {dev ? (
         <div className="product-dev">
+          <h2>{dev.title}</h2>
+          <p>{dev.note}</p>
           <form action={signInAsAdministrator}>
             <SignInSubmit label="Continue as 4EOS administrator" />
           </form>

@@ -37,6 +37,29 @@ test("the sign-in screen uses the product system and development sign-in still w
   await expect(page.getByRole("heading", { name: "Choose a website" })).toBeVisible();
 });
 
+test("development access is secondary and both roles still sign in", async ({ browser }) => {
+  const admin = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const adminPage = await admin.newPage();
+  await adminPage.goto("/signin");
+  await expect(adminPage.getByRole("heading", { name: "Development access" })).toBeVisible();
+  await expect(adminPage.locator(".border-dashed")).toHaveCount(0);
+  await adminPage.getByRole("button", { name: "Continue as 4EOS administrator" }).click();
+  await expect(adminPage).not.toHaveURL(/\/signin/);
+  await adminPage.goto("/sites/new");
+  await expect(adminPage.getByRole("heading", { name: "Connect a website" })).toBeVisible();
+  await admin.close();
+
+  const editor = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const editorPage = await editor.newPage();
+  await editorPage.goto("/signin");
+  await editorPage.getByRole("button", { name: "Continue as client editor" }).click();
+  await expect(editorPage).not.toHaveURL(/\/signin/);
+  await editorPage.goto("/sites/new");
+  await expect(editorPage.getByRole("heading", { name: "That page is not available" })).toBeVisible();
+  await expect(editorPage.getByRole("heading", { name: "Connect a website" })).toHaveCount(0);
+  await editor.close();
+});
+
 test("a failed sign-in shows one sentence and a later sign-in clears it", async ({ page }) => {
   await page.goto("/signin?error=CredentialsSignin");
   await expect(page.locator("main").getByRole("alert")).toHaveText("Sign-in did not complete. Try again.");

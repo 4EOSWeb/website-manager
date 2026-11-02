@@ -200,6 +200,17 @@
   border-top: 1px solid var(--product-line);
 }
 
+.product-dev h2,
+.product-dev p {
+  margin: 0;
+  color: var(--product-muted);
+  font-family: var(--product-font-body);
+  font-size: var(--product-text-sm);
+  font-style: normal;
+  font-weight: 450;
+  line-height: 1.45;
+}
+
 .product-dev .product-button {
   color: var(--product-muted);
   font-size: var(--product-text-sm);

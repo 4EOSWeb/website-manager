@@ -27,3 +27,5 @@ After:
 There is no separate callback URL. While a sign-in request is in flight, the button label is “Signing you in” and the button will not submit again. That state does not show an error.
 
 A failed sign-in returns to this page and says “Sign-in did not complete. Try again.” The raw error code is not shown. A later successful sign-in leaves the page, so the sentence is gone.
+
+Development accounts sit under “Development access,” with one line that they exist only on a local copy. The group is quieter than the unavailable card. It is omitted when development auth is off. The administrator still opens Connect a website. The client editor still does not.
