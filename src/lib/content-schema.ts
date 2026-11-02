@@ -241,6 +241,7 @@ export const flowBlockSchema = z
     tablet: placementSchema.optional(),
     mobile: placementSchema.optional(),
     textStyle: textStyleSchema.optional(),
+    background: hexColor.optional(),
     variant: z.enum(["filled", "outline", "text"]).optional(),
     size: z.enum(["s", "m", "l"]).optional(),
     align: z.enum(["start", "center", "end"]).optional(),
@@ -330,6 +331,8 @@ export const freeformItemSchema = z
     desktop: placementSchema,
     tablet: placementSchema.optional(),
     mobile: placementSchema.optional(),
+    strategy: z.enum(["reflow", "scale", "custom"]).optional(),
+    anchor: z.enum(["top-left", "top", "top-right", "left", "center", "right", "bottom-left", "bottom", "bottom-right"]).optional(),
   })
   .strict();
 
@@ -431,8 +434,10 @@ export const sectionSchema = z.discriminatedUnion("type", [
             .object({
               id: blockId,
               label: z.string().max(80),
-              kind: z.enum(["text", "email", "textarea"]),
+              kind: z.enum(["text", "email", "textarea", "select", "checkbox"]),
               required: z.boolean(),
+              options: z.array(z.string().max(80)).max(12).optional(),
+              checked: z.boolean().optional(),
             })
             .strict(),
         )
@@ -461,28 +466,12 @@ export const sectionSchema = z.discriminatedUnion("type", [
 
 export type Section = z.infer<typeof sectionSchema>;
 
-const BUILT_IN_ROUTES = new Set([
-  "/",
-  "/about",
-  "/approach",
-  "/solutions",
-  "/team",
-  "/references",
-  "/insights",
-  "/contact",
-  "/privacy",
-  "/terms",
-  "/prototype-notes",
-]);
-
-const CUSTOM_TEMPLATES = new Set(["blank", "landing", "service", "resource", "insights-landing"]);
-
 export const pageDocumentSchema = z
   .object({
     id: blockId,
     route: z.string().regex(/^\/(?:[a-z0-9]+(?:-[a-z0-9]+)*)?$/, "Use a short address such as /new-service."),
     title: z.string().trim().min(1).max(80),
-    template: z.enum(["home", "marketing", "legal", "blank", "landing", "service", "resource", "insights-landing"]),
+    template: z.enum(["home", "marketing", "legal", "blank", "landing", "service", "resource", "insights-landing", "canvas", "article"]),
     navVisible: z.boolean(),
     archived: z.boolean(),
     seoTitle: z.string().max(70),
@@ -492,6 +481,10 @@ export const pageDocumentSchema = z
     parentRoute: z.string().max(80).optional(),
     shareImage: mediaPath.optional(),
     hideHeader: z.boolean().optional(),
+    editHeader: z.boolean().optional(),
+    editBody: z.boolean().optional(),
+    editSidebar: z.boolean().optional(),
+    editCta: z.boolean().optional(),
     sections: z.array(sectionSchema).max(80),
   })
   .strict();
@@ -523,9 +516,6 @@ export const siteDraftSchema = z
       if (routes.has(page.route)) ctx.addIssue({ code: "custom", message: "Two pages cannot share a web address." });
       routes.add(page.route);
       if (page.route === "/" && page.archived) ctx.addIssue({ code: "custom", message: "The homepage cannot be archived." });
-      if (CUSTOM_TEMPLATES.has(page.template) && BUILT_IN_ROUTES.has(page.route)) {
-        ctx.addIssue({ code: "custom", message: "That address is already used by this website." });
-      }
       const ids = new Set<string>();
       for (const section of page.sections) {
         if (ids.has(section.id)) ctx.addIssue({ code: "custom", message: "Each section needs its own place on the page." });

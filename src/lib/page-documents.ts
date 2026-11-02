@@ -162,21 +162,50 @@ export function catalogSection(layout: "hero" | "split" | "cards" | "list" | "st
 
 export function templateSections(template: PageDocument["template"]): Section[] {
   if (template === "landing") {
+    const button = createSection("button");
     return [
-      createSection("heading"),
-      withText("paragraph", "Tell visitors who this is for and what they can do next."),
-      createSection("image"),
-      createSection("cta"),
+      withText("heading", "Landing page"),
+      withText("paragraph", "Describe the offer"),
+      button.type === "button" ? { ...button, label: "Get started", href: "/", editorName: "Call to action" } : button,
+      catalogSection("cards"),
     ];
   }
   if (template === "service") {
-    return [createSection("heading"), createSection("features"), createSection("faq"), createSection("cta")];
+    const cta = createSection("cta");
+    return [
+      withText("heading", "Service"),
+      withText("paragraph", "Explain the work"),
+      createSection("card"),
+      createSection("card"),
+      createSection("card"),
+      cta.type === "cta" ? { ...cta, heading: "Next step", body: "Say what happens next.", label: "Continue", href: "/" } : cta,
+    ];
   }
   if (template === "resource") {
     return [createSection("heading"), withText("paragraph", "Summarize the resource in a few sentences."), createSection("quote")];
   }
   if (template === "insights-landing") {
     return [withText("heading", "Insights"), withText("paragraph", "Introduce the latest writing from your team."), createSection("image")];
+  }
+  if (template === "article") {
+    const id = createId("sec");
+    const side = withText("paragraph", "Sidebar note");
+    return [
+      {
+        id,
+        type: "flow",
+        hidden: false,
+        editorName: "Article",
+        layout: "stack",
+        blocks: [{ id: createId("blk"), kind: "paragraph", hidden: false, text: { text: "Write the article", marks: [] } }],
+      },
+      side.type === "paragraph" ? { ...side, editorName: "Sidebar" } : side,
+    ];
+  }
+  if (template === "canvas") return [createSection("freeform", "Canvas")];
+  if (template === "blank") {
+    const id = createId("sec");
+    return [{ id, type: "flow", hidden: false, editorName: "Section", layout: "stack", blocks: [] }];
   }
   return [withText("heading", "New page"), createSection("paragraph")];
 }
@@ -267,8 +296,8 @@ export function clampPlacement(placement: Placement): Placement {
   return {
     x: round(placement.x),
     y: round(placement.y),
-    w: Math.min(1, Math.max(0.05, round(placement.w))),
-    h: Math.min(1, Math.max(0.05, round(placement.h))),
+    w: Math.min(1, Math.max(0.02, round(placement.w))),
+    h: Math.min(1, Math.max(0.02, round(placement.h))),
   };
 }
 

@@ -31,5 +31,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "overlays", ".workspaces", "src/generated", "scripts", ".workspaces/**", "overlays/**"]
+  "exclude": ["node_modules", "overlays", ".workspaces", "fixtures", "src/generated", "scripts", ".workspaces/**", "overlays/**", "fixtures/**"]
 }

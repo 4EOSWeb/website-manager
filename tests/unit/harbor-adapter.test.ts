@@ -1,0 +1,30 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import harborAdapter from "../../fixtures/harbor/adapter.ts";
+import quantumAgeAdapter from "../../adapters/quantum-age/adapter.ts";
+import { parseAdapter } from "../../src/platform/adapter/index.ts";
+import { discoverAdapters } from "../../src/platform/discover-adapters.ts";
+
+test("the harbor adapter parses and discovery finds its folder", async () => {
+  const parsed = parseAdapter(harborAdapter);
+  assert.equal(parsed.ok, true);
+  if (!parsed.ok) return;
+  console.log(parsed.value.site.id);
+  assert.equal(parsed.value.site.id, "web_harbor");
+  assert.equal(parsed.value.level, 2);
+  assert.equal(parsed.value.capabilities.supportsForms, false);
+  assert.equal(parsed.value.capabilities.supportsBlog, false);
+  assert.equal(parsed.value.capabilities.supportsReviewPublishing, false);
+  assert.equal(parsed.value.capabilities.supportsPageCreation, true);
+  assert.equal(parsed.value.capabilities.supportsNavigationEditing, true);
+  assert.equal(parsed.value.capabilities.supportsFreeCanvas, true);
+  assert.equal(parsed.value.routes.some((route) => route.path === "/work/:project"), true);
+  const found = await discoverAdapters("fixtures");
+  assert.equal(found.ok, true);
+  if (found.ok) assert.equal(found.value.includes("web_harbor"), true);
+  const platform = readFileSync("src/platform/discover-adapters.ts", "utf8");
+  assert.equal(platform.includes("web_harbor"), false);
+  const quantum = parseAdapter(quantumAgeAdapter);
+  assert.equal(quantum.ok, true);
+});

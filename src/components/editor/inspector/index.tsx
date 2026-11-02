@@ -7,8 +7,23 @@ import type { EditorApi } from "@/components/editor/types";
 import { Empty } from "@/components/editor/ui";
 import { BlockVisibility, ButtonContent, ButtonStyle, ImageContent, ImageStyle, TEXT_KINDS, TextContent, TextStyleTab } from "@/components/editor/inspector/blocks";
 import { SectionAdvanced, SectionContent, SectionLayoutTab, SectionStyleTab, sectionHasContent, sectionName } from "@/components/editor/inspector/section";
-import { PageTab, PostTab, SeoTab } from "@/components/editor/inspector/page";
+import { ArticleRegions, PageTab, PostTab, SeoTab } from "@/components/editor/inspector/page";
 import { FooterInspector, FreeformInspector, HeaderInspector, NavInspector } from "@/components/editor/inspector/chrome";
+import { GeneratedInspector } from "@/components/editor/inspector/generated";
+import type { RegisteredInspector } from "@/components/editor/inspector/registered-model";
+import { adapterColorTokens, type GeneratedNode } from "@/components/editor/inspector/generated-model";
+import { LayoutFields } from "@/components/editor/inspector/layout-fields";
+import { pageCapabilityFlags } from "@/components/editor/inspector/page-controls";
+import { isArticleRoute } from "@/platform/pages/route-flags";
+import { layoutModeName, type LayoutModeName, type LayoutNode } from "@/components/editor/inspector/layout-model";
+import { VisibilityFields } from "@/components/editor/inspector/visibility-fields";
+import type { VisibilityDevice, VisibilityState } from "@/components/editor/inspector/visibility-model";
+import { LinkFields } from "@/components/editor/inspector/link-fields";
+import { ImageFields } from "@/components/editor/inspector/image-fields";
+import { ButtonFields } from "@/components/editor/inspector/button-fields";
+import { adapterFontFamilies, type ButtonStateName } from "@/components/editor/inspector/button-model";
+import { TextFields } from "@/components/editor/inspector/text-fields";
+import { AdminFields } from "@/components/editor/inspector/admin-fields";
 
 const BLOCK_LABELS: Record<string, string> = {
   eyebrow: "Small heading",
@@ -34,7 +49,8 @@ type Mode =
   | { kind: "section" }
   | { kind: "freeform"; item?: FreeformItem }
   | { kind: "page" }
-  | { kind: "post" };
+  | { kind: "post" }
+  | { kind: "article" };
 
 const TABS: Record<string, { id: string; label: string }[]> = {
   text: [{ id: "content", label: "Content" }, { id: "design", label: "Design" }, { id: "layout", label: "Layout" }],
@@ -56,23 +72,51 @@ export function Inspector(props: {
   onOpenPage: (route: string) => void;
   onClear: () => void;
   managedRoute: boolean;
+  overflow?: string | null;
+  generated?: GeneratedNode | null;
+  onGeneratedName?: (name: string) => void;
+  onGeneratedProp?: (prop: string, value: string) => void;
+  onGeneratedStyle?: (key: string, value: string) => void;
+  sectionLayout?: LayoutNode | null;
+  layoutAllowed?: boolean;
+  onLayoutMode?: (mode: LayoutModeName) => void;
+  onLayoutSetting?: (key: string, value: string | number | boolean) => void;
+  visibility?: VisibilityState | null;
+  onVisibility?: (device: VisibilityDevice, hidden: boolean) => void;
+  onLink?: (href: string) => void;
+  onLinkTarget?: (target: "same" | "new") => void;
+  onImageAlt?: (alt: string) => void;
+  onImageFit?: (fit: "fit" | "fill") => void;
+  onImageFocal?: (focal: "center" | "top" | "bottom" | "left" | "right") => void;
+  onButton?: (key: string, value: string) => void;
+  onButtonState?: (state: ButtonStateName, key: string, value: string) => void;
+  onTextStyle?: (key: string, value: string) => void;
+  registered?: RegisteredInspector[];
+  inspectorSlots?: Record<string, { label: string }>;
+  experience?: string;
+  canAdminister?: boolean;
 }) {
   const { api } = props;
   const selection = api.selection;
   const page = api.page;
+  const flags = pageCapabilityFlags(api.adapter, page ?? {}, api.path);
+  const onArticle = isArticleRoute(api.adapter, api.path) && !page;
   const section = page?.sections.find((item) => item.id === selection.sectionId);
   const block = section?.type === "flow" ? section.blocks.find((item) => item.id === selection.itemId) : undefined;
   const zoneItems = section?.type === "freeform" ? section.items : section?.type === "preset" && selection.overlay ? section.overlay ?? [] : [];
   const zoneItem = zoneItems.find((item) => item.id === selection.itemId);
 
   let mode: Mode = { kind: "none" };
-  if (selection.locked) mode = { kind: "locked", label: section ? sectionName(section) : "This part" };
-  else if (selection.navRoute) mode = { kind: "nav", route: selection.navRoute };
+  if (selection.navRoute) mode = { kind: "nav", route: selection.navRoute };
   else if (selection.chrome === "header" || selection.chrome === "footer") mode = { kind: selection.chrome };
+  else if (selection.locked && onArticle && !flags.providerManaged) mode = { kind: "article" };
+  else if (selection.locked && flags.providerManaged && page) mode = { kind: "page" };
+  else if (selection.locked) mode = { kind: "locked", label: section ? sectionName(section) : "This part" };
   else if (block?.locked) mode = { kind: "locked", label: BLOCK_LABELS[block.kind] ?? "Item" };
   else if (block) mode = { kind: block.kind === "button" ? "button" : block.kind === "image" ? "image" : (TEXT_KINDS as readonly string[]).includes(block.kind) ? "text" : "block-other" };
   else if (section && (section.type === "freeform" || selection.overlay)) mode = { kind: "freeform", item: zoneItem };
   else if (section) mode = { kind: "section" };
+  else if (onArticle) mode = { kind: "article" };
   else if (props.post) mode = { kind: "post" };
   else if (page) mode = { kind: "page" };
 
@@ -102,6 +146,7 @@ export function Inspector(props: {
 
   const title =
     mode.kind === "page" ? page?.title ?? "Page"
+    : mode.kind === "article" ? "Article"
     : mode.kind === "post" ? props.post?.title ?? "Insights post"
     : mode.kind === "header" ? "Header"
     : mode.kind === "footer" ? "Footer"
@@ -119,7 +164,7 @@ export function Inspector(props: {
           {page ? (
             <button type="button" onClick={props.onClear}>{page.title}</button>
           ) : (
-            <span>{props.post ? "Insights" : "Page"}</span>
+            <span>{onArticle ? "Article" : props.post ? "Insights" : "Page"}</span>
           )}
           {section && (block || zoneItem) ? (
             <>
@@ -140,9 +185,36 @@ export function Inspector(props: {
         </div>
       ) : null}
       <div className="ed-inspector-body" id="inspector-panel" role={tabs.length > 1 ? "tabpanel" : undefined} aria-labelledby={tabs.length > 1 ? `tab-${active}` : undefined}>
+        {props.generated && props.onGeneratedName ? <GeneratedInspector node={props.generated} tokens={adapterColorTokens(api.adapter)} adapter={api.adapter} registered={props.registered} slots={props.inspectorSlots} experience={props.experience} canAdminister={props.canAdminister} onName={props.onGeneratedName} onProp={props.onGeneratedProp} onStyle={props.onGeneratedStyle} /> : null}
+        {props.generated ? (
+          <AdminFields
+            experience={props.experience ?? "basic"}
+            canAdminister={props.canAdminister === true}
+            adapterId={api.adapterId ?? ""}
+            componentId={props.generated.componentId}
+            lockId={typeof props.generated.metadata.lockId === "string" ? props.generated.metadata.lockId : ""}
+            providerManaged={props.generated.metadata.providerManaged === true}
+            embedUrl={typeof props.generated.props.src === "string" ? props.generated.props.src : ""}
+            embed={props.generated.componentId === "generic.embed"}
+          />
+        ) : null}
+        {props.sectionLayout && layoutModeName(props.sectionLayout.layout) ? (
+          <LayoutFields
+            mode={layoutModeName(props.sectionLayout.layout) as LayoutModeName}
+            allowed={props.layoutAllowed !== false}
+            locked={flags.lockLayout}
+            layout={props.sectionLayout.layout}
+            onConfirm={(mode) => props.onLayoutMode?.(mode)}
+            onSetting={(key, value) => props.onLayoutSetting?.(key, value)}
+          />
+        ) : null}
+        {props.visibility && props.onVisibility && props.generated?.componentId !== "generic.button" ? <VisibilityFields visibility={props.visibility} onToggle={props.onVisibility} /> : null}
+        {props.generated && block && props.generated.componentId === "generic.link" && props.onLink && props.onLinkTarget ? (
+          <LinkFields site={api.site} href={block.href ?? "/"} target={block.target === "new" ? "new" : "same"} onHref={props.onLink} onTarget={props.onLinkTarget} />
+        ) : null}
         {mode.kind === "none" ? (
           props.managedRoute ? (
-            <Empty title="This page is managed for you">Articles, search results, and system pages come from your website provider. Choose a page on the left to edit it.</Empty>
+            <Empty title="This page is managed for you">Search results and system pages come from your website provider. Choose a page on the left to edit it.</Empty>
           ) : (
             <Empty title="Select something to edit">Click any text, image, or section on the page. Double-click text to type.</Empty>
           )
@@ -159,11 +231,64 @@ export function Inspector(props: {
         {block && section?.type === "flow" ? (
           <>
             {mode.kind === "text" && active === "content" ? <TextContent api={api} section={section} block={block} /> : null}
-            {mode.kind === "text" && active === "design" ? <TextStyleTab api={api} section={section} block={block} /> : null}
-            {mode.kind === "button" && active === "content" ? <ButtonContent api={api} section={section} block={block} /> : null}
-            {mode.kind === "button" && active === "design" ? <ButtonStyle api={api} section={section} block={block} /> : null}
-            {mode.kind === "image" && active === "content" ? <ImageContent api={api} section={section} block={block} /> : null}
-            {mode.kind === "image" && active === "layout" ? <ImageStyle api={api} section={section} block={block} /> : null}
+            {mode.kind === "text" && active === "design" && props.generated?.componentId !== "generic.heading" && props.generated?.componentId !== "generic.text" ? <TextStyleTab api={api} section={section} block={block} /> : null}
+            {(props.generated?.componentId === "generic.heading" || props.generated?.componentId === "generic.text") && active === "design" && props.onTextStyle ? (
+              <TextFields
+                tag={block.textStyle?.tag ?? (props.generated.componentId === "generic.text" ? "p" : "h2")}
+                weight={block.textStyle?.weight ?? "regular"}
+                leading={block.textStyle?.leading ?? "normal"}
+                tracking={block.textStyle?.tracking ?? "normal"}
+                align={block.textStyle?.align ?? "start"}
+                color={block.textStyle?.color ?? ""}
+                onChange={props.onTextStyle}
+              />
+            ) : null}
+            {mode.kind === "button" && active === "content" && props.generated?.componentId !== "generic.button" ? <ButtonContent api={api} section={section} block={block} /> : null}
+            {mode.kind === "button" && active === "design" && props.generated?.componentId !== "generic.button" ? <ButtonStyle api={api} section={section} block={block} /> : null}
+            {props.generated?.componentId === "generic.button" && (active === "content" || active === "design") && props.onButton && props.onButtonState ? (
+              <ButtonFields
+                site={api.site}
+                label={typeof block.text === "object" ? block.text.text : ""}
+                href={block.href ?? "/"}
+                target={block.target === "new" ? "new" : "same"}
+                variant={block.variant ?? "filled"}
+                size={block.size ?? "m"}
+                font={typeof props.generated.props.font === "string" ? props.generated.props.font : ""}
+                color={block.textStyle?.color ?? ""}
+                background={block.background ?? ""}
+                border={typeof props.generated.props.border === "string" ? props.generated.props.border : ""}
+                radius={typeof props.generated.props.radius === "string" ? props.generated.props.radius : ""}
+                padding={typeof props.generated.props.padding === "string" ? props.generated.props.padding : ""}
+                icon={block.icon ?? "none"}
+                iconPosition={typeof props.generated.props.iconPosition === "string" ? props.generated.props.iconPosition : "end"}
+                align={block.align ?? "start"}
+                width={typeof props.generated.props.width === "string" ? props.generated.props.width : "auto"}
+                fonts={adapterFontFamilies(api.adapter?.fonts)}
+                nodeProps={props.generated.props}
+                visibility={props.visibility}
+                onChange={props.onButton}
+                onState={props.onButtonState}
+                onVisibility={props.onVisibility}
+              />
+            ) : null}
+            {mode.kind === "image" && active === "content" && props.generated?.componentId !== "generic.image" ? <ImageContent api={api} section={section} block={block} /> : null}
+            {mode.kind === "image" && active === "layout" && props.generated?.componentId !== "generic.image" ? <ImageStyle api={api} section={section} block={block} /> : null}
+            {props.generated?.componentId === "generic.image" && (active === "content" || active === "layout") && props.onImageAlt && props.onImageFit && props.onImageFocal ? (
+              <ImageFields
+                active={active}
+                websiteId={api.websiteId}
+                src={block.src ?? ""}
+                alt={block.alt ?? ""}
+                fit={block.fit === "fill" ? "fill" : "fit"}
+                focal={block.focal ?? "center"}
+                disabled={!api.canEdit}
+                onChoose={api.openPicker}
+                onCrop={api.openCrop}
+                onAlt={props.onImageAlt}
+                onFit={props.onImageFit}
+                onFocal={props.onImageFocal}
+              />
+            ) : null}
             {active === "layout" && mode.kind !== "locked" ? <BlockVisibility api={api} section={section} block={block} /> : null}
           </>
         ) : null}
@@ -175,13 +300,19 @@ export function Inspector(props: {
             {active === "advanced" ? <SectionAdvanced api={api} section={section} /> : null}
           </>
         ) : null}
-        {mode.kind === "freeform" && section ? <FreeformInspector api={api} section={section} item={mode.item} tab={active} /> : null}
+        {mode.kind === "freeform" && section ? (
+          <>
+            {props.overflow ? <p className="ed-callout" role="status">{props.overflow}</p> : null}
+            <FreeformInspector api={api} section={section} item={mode.item} tab={active} experience={props.experience ?? "basic"} />
+          </>
+        ) : null}
         {mode.kind === "page" && page ? (
           <>
             {active === "page" ? <PageTab api={api} page={page} onDuplicate={props.onDuplicatePage} /> : null}
             {active === "seo" ? <SeoTab api={api} page={page} /> : null}
           </>
         ) : null}
+        {mode.kind === "article" ? <ArticleRegions api={api} experience={props.experience} canAdminister={props.canAdminister === true} /> : null}
         {mode.kind === "post" && props.post ? <PostTab api={api} post={props.post} onPost={props.onPost} onBlock={props.onPostBlock} /> : null}
       </div>
     </aside>

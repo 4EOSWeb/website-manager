@@ -6,6 +6,8 @@ import net from "node:net";
 import path from "node:path";
 import { promisify } from "node:util";
 import { redact } from "@/lib/redact";
+import { workspacePath } from "@/platform/adapter/serialize";
+import { editorAdapterForSite } from "@/lib/editor-adapter";
 
 const exec = promisify(execFile);
 
@@ -60,7 +62,41 @@ function walk(dir: string): string[] {
   return files;
 }
 
+function syncCanvasRuntime(destination: string) {
+  const source = path.join(process.cwd(), "src", "platform", "canvas");
+  if (!fs.existsSync(source)) return;
+  const target = path.join(destination, "src", "platform", "canvas");
+  for (const file of walk(source)) {
+    const relative = path.relative(source, file);
+    const next = path.join(target, relative);
+    fs.mkdirSync(path.dirname(next), { recursive: true });
+    fs.copyFileSync(file, next);
+  }
+}
+
+function adapterWorkspaceRoot(workspace: unknown) {
+  if (!workspace || typeof workspace !== "object") return null;
+  const root = (workspace as { root?: unknown }).root;
+  if (typeof root !== "string") return null;
+  const checked = workspacePath(root);
+  if (!checked.ok) return null;
+  const resolved = path.resolve(process.cwd(), checked.value);
+  const hub = path.resolve(process.cwd());
+  if (resolved !== hub && !resolved.startsWith(`${hub}${path.sep}`)) return null;
+  if (!fs.existsSync(path.join(resolved, "package.json"))) return null;
+  return resolved;
+}
+
 export async function ensureWorkspace(websiteId: string) {
+  const adapter = await editorAdapterForSite(websiteId);
+  const mapped = adapterWorkspaceRoot(adapter?.fields.workspace);
+  if (mapped) {
+    syncCanvasRuntime(mapped);
+    if (!fs.existsSync(path.join(mapped, "node_modules", "next"))) {
+      await exec("npm", ["ci"], { cwd: mapped, env: safeEnv({}) });
+    }
+    return mapped;
+  }
   const dir = workspaceDir(websiteId);
   if (!fs.existsSync(path.join(dir, ".git"))) {
     fs.mkdirSync(path.dirname(dir), { recursive: true });
@@ -72,6 +108,7 @@ export async function ensureWorkspace(websiteId: string) {
     }
   }
   copyOverlay(dir);
+  syncCanvasRuntime(dir);
   if (!fs.existsSync(path.join(dir, "node_modules", "next"))) {
     await exec("npm", ["ci"], { cwd: dir, env: safeEnv({}) });
   }
@@ -164,10 +201,10 @@ async function waitForPreview(port: number, token: string, child: ChildProcess) 
   throw new Error("The website preview did not start. Please try again in a moment.");
 }
 
-function nextPort() {
+async function nextPort() {
   const used = new Set([...previews.values()].map((preview) => preview.port));
   let port = 4600;
-  while (used.has(port)) port += 1;
+  while (used.has(port) || (await portInUse(port))) port += 1;
   return port;
 }
 
@@ -183,7 +220,7 @@ export async function startPreview(websiteId: string) {
   const dir = await ensureWorkspace(websiteId);
   const stale = lockPid(dir);
   if (stale && stale !== process.pid) await stopProcess(stale);
-  const port = nextPort();
+  const port = await nextPort();
   await waitForPort(port, true);
   if (await portInUse(port)) {
     throw new Error("The website preview port is still busy.");

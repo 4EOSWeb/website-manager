@@ -35,7 +35,7 @@ export type EditorSection = {
   emailLabel?: string;
   messageLabel?: string;
   images?: { src?: string; alt?: string }[];
-  items?: { title?: string; body?: string; q?: string; a?: string; id?: string; kind?: string; hidden?: boolean; locked?: boolean; groupId?: string; zIndex?: number; text?: string; href?: string; src?: string; alt?: string; caption?: string; desktop?: Share; tablet?: Share; mobile?: Share }[];
+  items?: { title?: string; body?: string; q?: string; a?: string; id?: string; kind?: string; hidden?: boolean; locked?: boolean; groupId?: string; zIndex?: number; text?: string; href?: string; src?: string; alt?: string; caption?: string; desktop?: Share; tablet?: Share; mobile?: Share; strategy?: "reflow" | "scale" | "custom" }[];
   overlay?: EditorSection["items"];
   blocks?: {
     id: string;
@@ -45,6 +45,7 @@ export type EditorSection = {
     locked?: boolean;
     pin?: boolean;
     textStyle?: TextStyle;
+    background?: string;
     variant?: "filled" | "outline" | "text";
     size?: "s" | "m" | "l";
     align?: "start" | "center" | "end";
@@ -68,7 +69,7 @@ export type EditorSection = {
   layout?: string;
   hideOn?: ("desktop" | "tablet" | "mobile")[];
   style?: { background?: string; color?: string; padding?: string; minHeight?: string; overlay?: number; width?: "content" | "full"; align?: "start" | "center" };
-  fields?: { id: string; label: string; kind: string; required: boolean }[];
+  fields?: { id: string; label: string; kind: string; required: boolean; options?: string[]; checked?: boolean }[];
   thankYou?: string;
   recipient?: string;
   address?: string;

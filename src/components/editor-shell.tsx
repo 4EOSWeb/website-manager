@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { signOutUser } from "@/app/signin/actions";
-import { defaultBlogDraft, type BlogDraft, type FreeformItem, type Section, type SiteDraft } from "@/lib/content-schema";
+import { defaultBlogDraft, type BlogDraft, type FlowBlock, type FreeformItem, type Section, type SiteDraft } from "@/lib/content-schema";
 import {
   addFlowBlock,
   changePageRoute,
@@ -18,11 +18,17 @@ import {
   duplicateItem,
   duplicatePage,
   duplicateSection,
+  bringForwardItems,
+  sendBackwardItems,
   groupItems,
+  ungroupItems,
   imageUsage,
+  insertFlowBlock,
   insertSection,
   insertSectionCopy,
+  moveBlockToSection,
   moveFlowBlockById,
+  patchFlowBlock,
   moveSectionById,
   pageByRoute,
   patchChrome,
@@ -31,23 +37,120 @@ import {
   saveSectionTemplate,
   setBlockHidden,
   setImageSource,
+  setEditorName,
   setSectionHidden,
   updatePageMeta,
 } from "@/lib/editor-ops";
+import { validLink } from "@/lib/links";
 import { blockFitsInZone, createId } from "@/lib/page-documents";
 import { entryById, recommendedFor, sectionForEntry, type LibraryEntry } from "@/lib/library";
-import { emptySelection, VIEWPORTS, type EditorApi, type MediaItem, type Publication, type RailPanel, type SaveState, type Selection, type Snapshot, type Viewport } from "@/components/editor/types";
+import { articlePatternFrom, articleRouteFor, articleSlug, selectActivePage } from "@/components/editor/state/page";
+import { clearNodeSelection, clickNode, nodeIdsFromLegacy } from "@/components/editor/state/selection";
+import { activeSiteContext, createSiteState } from "@/components/editor/state/site";
+import { breakpointWidth, previewRadioLabel, type BreakpointId } from "@/components/editor/state/breakpoint";
+import { emptyDirty, markChanged, markSaved, shouldWarnBeforeUnload, switchWebsite } from "@/components/editor/state/dirty";
+import { dismissEditorError, editorErrorFromSave, type EditorError } from "@/components/editor/state/errors";
+import { FieldIssueProvider } from "@/components/editor/inspector/errors";
+import { blocksSave, type FieldIssue } from "@/components/editor/inspector/errors-model";
+import { mountEditorStore, unmountEditorStore } from "@/components/editor/state/store";
+import { persistExperience, readExperience, type ExperienceMode } from "@/components/editor/state/experience";
+import { emptySelection, type EditorApi, type MediaItem, type Publication, type RailPanel, type SaveState, type Selection, type Snapshot, type Viewport } from "@/components/editor/types";
+import type { SiteContext } from "@/platform/context";
 import { StatusBar, ToolRail, TopBar, type Zoom } from "@/components/editor/chrome";
 import { Canvas } from "@/components/editor/canvas";
+import { DragStatus, dragRejectReason, type DragRejectReason } from "@/components/editor/drag-status";
+import { groupCanvas } from "@/platform/canvas/group";
+import { canvasGroupId, ungroupCanvas } from "@/platform/canvas/ungroup";
+import { bringForwardCanvas, sendBackwardCanvas } from "@/platform/canvas/z-order";
+import { overflowWarning } from "@/platform/canvas/overflow";
+import { toPercent } from "@/platform/canvas/percent";
+import { placeOnCanvas } from "@/platform/drag/canvas-place";
+import { flowReorder } from "@/platform/drag/flow-insert";
+import { groupEnter } from "@/platform/drag/group-enter";
+import { groupExit } from "@/platform/drag/group-exit";
+import { keyboardMove, keyboardStep } from "@/platform/drag/keyboard";
+import { libraryDrop } from "@/platform/drag/library-drop";
+import { cancelDrag } from "@/platform/drag/cancel";
+import { reparent } from "@/platform/drag/reparent";
 import { DesignPanel, LayersPanel, MediaPanel, PagesPanel } from "@/components/editor/panels";
 import { LibraryBrowser } from "@/components/editor/library";
 import { Inspector } from "@/components/editor/inspector";
-import { previewFrame as frame, readMarks, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
+import { adapterColorTokens, renameGeneratedNode, writeGeneratedProp, writeGeneratedStyle, type GeneratedNode } from "@/components/editor/inspector/generated-model";
+import { applySectionLayout, componentDefinitions, confirmLayoutMode, definitionAllowsLayout, writeLayoutSetting, type LayoutNode } from "@/components/editor/inspector/layout-model";
+import { applyBlockVisibility, writeHideOn } from "@/components/editor/inspector/visibility-model";
+import { acceptLink } from "@/components/editor/inspector/link-model";
+import { replaceImageSrc } from "@/components/editor/inspector/image-model";
+import { buttonFlowPatch, writeButtonState } from "@/components/editor/inspector/button-model";
+import { textStylePatch } from "@/components/editor/inspector/text-model";
+import type { RegisteredInspector } from "@/components/editor/inspector/registered-model";
+import { renameVisualNode } from "@/components/editor/layers/rename-name";
+import { nodeIdFromCanvasMessage, previewFrame as frame, readMarks, selectionTargetForNode, toFrame, useCanvasMessages, type CanvasMessage } from "@/components/editor/use-canvas-messages";
+import { selectNodeId } from "@/components/editor/state/selection";
+import type { NodeDocument } from "@/platform/document/node";
+import { insertAfter, insertNode, nodeIdsIn } from "@/platform/elements/create";
+import { createButton, writeButtonField } from "@/platform/elements/button";
+import { createIconButton } from "@/platform/elements/icon-button";
+import { createContainer } from "@/platform/elements/container";
+import { createInput } from "@/platform/elements/input";
+import { createTextarea } from "@/platform/elements/textarea";
+import { createSelect } from "@/platform/elements/select";
+import { createCheckbox } from "@/platform/elements/checkbox";
+import { createForm } from "@/platform/elements/form";
+import { createFaq } from "@/platform/elements/faq";
+import { createTestimonial } from "@/platform/elements/testimonial";
+import { createCta } from "@/platform/elements/cta";
+import { createCard } from "@/platform/elements/card";
+import { createGroup } from "@/platform/elements/group";
+import { createCanvas } from "@/platform/elements/canvas";
+import { createGrid } from "@/platform/elements/grid";
+import { createStack } from "@/platform/elements/stack";
+import { createDivider } from "@/platform/elements/divider";
+import { createIcon } from "@/platform/elements/icon";
+import { createSpacer } from "@/platform/elements/spacer";
+import { createImage, writeImage } from "@/platform/elements/image";
+import { createGallery, writeGallery } from "@/platform/elements/gallery";
+import { acceptVideoUrl, createVideo, writeVideoUrl } from "@/platform/elements/video";
+import { createCustom, type CustomDefinition } from "@/platform/elements/custom";
+import { layoutChangeRefused } from "@/components/editor/inspector/layout-lock";
+import { headerChromeField } from "@/platform/pages/regions";
+import { reservedRoutesOf } from "@/platform/pages/reserved";
+import { pageCapabilityFlags } from "@/components/editor/inspector/page-controls";
+import { articleBodyKind, isArticleRoute } from "@/platform/pages/route-flags";
+import { createHeading } from "@/platform/elements/heading";
+import { createLink, writeLinkHref } from "@/platform/elements/link";
+import { createParagraph } from "@/platform/elements/paragraph";
+import { createRichText, writeRichMarks } from "@/platform/elements/richtext";
 import { useEditorHistory } from "@/components/editor/use-editor-history";
 import { AddPageDialog, CropDialog, ImagePickerDialog, InsertDialog, PublishDialog, ShortcutsDialog, TemplateDialog, type PageForm } from "@/components/editor/dialogs";
 
 type Toast = { id: number; message: string; tone: "info" | "error"; action?: { label: string; run: () => void } };
 type Insert = { beforeId: string };
+
+function flowBlockText(site: SiteDraft, route: string, blockId: string) {
+  const page = site.pages.find((item) => item.route === route);
+  for (const section of page?.sections ?? []) {
+    if (section.type !== "flow") continue;
+    const block = section.blocks.find((item) => item.id === blockId);
+    if (block?.text && typeof block.text === "object") return block.text.text;
+  }
+  return "";
+}
+
+function sectionUrl(site: SiteDraft, route: string, sectionId: string) {
+  const page = site.pages.find((item) => item.route === route);
+  const section = page?.sections.find((item) => item.id === sectionId);
+  return section && section.type === "video" ? section.url : "";
+}
+
+function flowBlockHref(site: SiteDraft, route: string, blockId: string) {
+  const page = site.pages.find((item) => item.route === route);
+  for (const section of page?.sections ?? []) {
+    if (section.type !== "flow") continue;
+    const block = section.blocks.find((item) => item.id === blockId);
+    if (block) return block.href ?? "";
+  }
+  return "";
+}
 
 const RECENT_KEY = "4eos-editor-recent-library";
 const TIP_KEY = "4eos-editor-tip-dismissed";
@@ -55,6 +158,10 @@ const READY_TIMEOUT = 20000;
 
 export function EditorShell(props: {
   websiteId: string;
+  siteContext: SiteContext;
+  adapterId: string | null;
+  adapter: Record<string, unknown> | null;
+  visualDocument: unknown;
   websiteName: string;
   initialSite: SiteDraft;
   initialPosts: BlogDraft[];
@@ -62,27 +169,55 @@ export function EditorShell(props: {
   canEdit: boolean;
   canPublish: boolean;
   canEmbed: boolean;
+  canAdminister: boolean;
   role: string;
   userName: string;
   previewAccess: string;
   publications: Publication[];
+  registered?: RegisteredInspector[];
+  inspectorSlots?: Record<string, { label: string }>;
 }) {
+  const [siteState] = useState(() => createSiteState(props.siteContext));
+  const [adapterId] = useState(props.adapterId);
+  const [adapter] = useState(props.adapter);
   const [path, setPath] = useState("/");
-  const [viewport, setViewport] = useState<Viewport>("desktop");
+  const [viewport, setViewport] = useState<BreakpointId>("desktop");
+  const [experience, setExperience] = useState<ExperienceMode>("basic");
+  const [dirtyState, setDirtyState] = useState(() => emptyDirty(props.websiteId));
+  const dirtyRef = useRef(dirtyState);
+  dirtyRef.current = dirtyState;
+  const dirtyWebsite = useRef(props.websiteId);
+  useEffect(() => {
+    setExperience(readExperience(window.localStorage, props.websiteId, props.canAdminister));
+  }, [props.websiteId, props.canAdminister]);
+  useEffect(() => {
+    mountEditorStore(props.websiteId);
+    return () => unmountEditorStore(props.websiteId, window.sessionStorage);
+  }, [props.websiteId]);
   const [zoom, setZoom] = useState<Zoom>("fit");
   const [scale, setScale] = useState(1);
   const [site, setSite] = useState(props.initialSite);
+  const [visualDocument, setVisualDocument] = useState<unknown>(props.visualDocument);
+  const [visualNodeIds, setVisualNodeIds] = useState<string[]>([]);
+  const pinnedNode = useRef<string | null>(null);
+  const libraryFactory = useRef("");
+  const dragActive = useRef(false);
+  const dropIgnored = useRef(false);
   const [posts, setPosts] = useState(props.initialPosts);
-  const history = useEditorHistory<Snapshot>();
+  const history = useEditorHistory<Snapshot>(props.websiteId);
   const [media, setMedia] = useState(props.media);
   const [recentImages, setRecentImages] = useState<string[]>([]);
   const [recentLibrary, setRecentLibrary] = useState<string[]>([]);
   const [rail, setRail] = useState<RailPanel | null>("pages");
   const [selection, setSelection] = useState<Selection>(emptySelection);
+  const [nodeIds, setNodeIds] = useState<string[]>([]);
+  const [genericByBlock, setGenericByBlock] = useState<Record<string, GeneratedNode>>({});
+  const [genericBySection, setGenericBySection] = useState<Record<string, LayoutNode>>({});
   const [version, setVersion] = useState(0);
   const [publications, setPublications] = useState(props.publications);
   const [progress, setProgress] = useState<number | null>(null);
   const [save, setSave] = useState<SaveState>("saved");
+  const [editorError, setEditorError] = useState<EditorError | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [editing, setEditing] = useState(false);
@@ -98,25 +233,54 @@ export function EditorShell(props: {
   const [publishMessage, setPublishMessage] = useState("");
   const [shortcuts, setShortcuts] = useState(false);
   const [insert, setInsert] = useState<Insert | null>(null);
+  const [dragReason, setDragReason] = useState<DragRejectReason | null>(null);
+  const [contentOverflow, setContentOverflow] = useState<string | null>(null);
+  const [keyboardStatus, setKeyboardStatus] = useState("");
 
   const skipSite = useRef(true);
   const skipPost = useRef(true);
   const reloadAfter = useRef(false);
-  const textKey = useRef("");
   const saveSeq = useRef(0);
+  const pendingDraft = useRef<SiteDraft | null>(null);
+  const saveFlight = useRef<Promise<boolean> | null>(null);
+  const fieldIssues = useRef(new Map<string, readonly FieldIssue[]>());
+  const reportFieldIssues = useCallback((id: string, issues: readonly FieldIssue[]) => {
+    if (issues.length === 0) fieldIssues.current.delete(id);
+    else fieldIssues.current.set(id, issues);
+  }, []);
   const siteRef = useRef(site);
   const scrollByPath = useRef<Record<string, number>>({});
   const readyFor = useRef("");
+  const richBlocks = useRef(new Map<string, string>());
+  const linkBlocks = useRef(new Map<string, string>());
+  const buttonBlocks = useRef(new Map<string, string>());
+  const imageBlocks = useRef(new Map<string, string>());
+  const formSections = useRef(new Map<string, string>());
+  const gallerySections = useRef(new Map<string, string>());
+  const videoSections = useRef(new Map<string, string>());
   const toastId = useRef(0);
 
   const page = pageByRoute(site, path);
-  const activePost = posts.find((item) => path === `/insights/${item.slug}`);
-  const managedRoute = !page && !activePost;
+  const articleRoute = articlePatternFrom(adapter);
+  const pageState = selectActivePage(
+    path,
+    visualDocument,
+    site.pages.map((item) => ({ id: item.id, route: item.route, title: item.title })),
+  );
+  const activePost = articleRoute ? posts.find((item) => articleSlug(articleRoute, path) === item.slug) : undefined;
+  const onArticle = isArticleRoute(adapter, path);
+  const preservedArticle = onArticle && articleBodyKind(adapter) === "html-preserved";
+  const managedRoute = !page && !onArticle;
   const section = page?.sections.find((item) => item.id === selection.sectionId);
 
   useEffect(() => {
     siteRef.current = site;
   }, [site]);
+
+  useEffect(() => {
+    if (pinnedNode.current) return;
+    setNodeIds(nodeIdsFromLegacy(selection).nodeIds);
+  }, [selection]);
 
   useEffect(() => {
     try {
@@ -136,76 +300,147 @@ export function EditorShell(props: {
     window.setTimeout(() => setToasts((items) => items.filter((item) => item.id !== id)), tone === "error" ? 9000 : action ? 7000 : 4000);
   }, []);
 
-  function rememberHistory() {
-    history.record({ site, posts });
+  function currentSnapshot(): Snapshot {
+    return { site, posts, layouts: genericBySection };
   }
 
-  function commit(next: SiteDraft, reload: boolean) {
-    if (!props.canEdit || next === site) return;
-    textKey.current = "";
+  function rememberHistory() {
+    history.record(currentSnapshot(), visualDocument);
+  }
+
+  function commit(next: SiteDraft, reload: boolean, nextVisual?: unknown) {
+    if (!props.canEdit || (next === site && nextVisual === undefined)) return;
     rememberHistory();
+    setDirtyState((state) => markChanged(state, nextVisual === undefined ? { version3: next } : { version3: next, visualDocument: nextVisual }));
     setSite(next);
+    if (nextVisual !== undefined) setVisualDocument(nextVisual);
     if (reload) reloadAfter.current = true;
   }
 
   function commitText(next: SiteDraft, key: string, reload = false) {
     if (!props.canEdit || JSON.stringify(next) === JSON.stringify(site)) return;
-    if (textKey.current !== key) {
-      textKey.current = key;
-      rememberHistory();
+    history.recordText(currentSnapshot(), key, visualDocument);
+    const blockId = key.split(":")[0] ?? "";
+    const field = key.split(":")[1] ?? "";
+    const nodeId = buttonBlocks.current.get(blockId);
+    const label = flowBlockText(next, path, blockId);
+    let nextVisual = nodeId ? writeButtonField(visualDocument, nodeId, "label", label) : null;
+    const videoNodeId = videoSections.current.get(blockId);
+    if (videoNodeId && field === "url") {
+      const url = sectionUrl(next, path, blockId);
+      if (acceptVideoUrl(url)) nextVisual = writeVideoUrl(visualDocument, videoNodeId, url);
     }
+    setDirtyState((state) => markChanged(state, nextVisual ? { version3: next, visualDocument: nextVisual } : { version3: next }));
     setSite(next);
+    if (nextVisual) setVisualDocument(nextVisual);
     if (reload) reloadAfter.current = true;
   }
 
   function undo() {
-    const previous = history.undo({ site, posts });
+    const previous = history.undo({ site, posts }, visualDocument);
     if (!previous) return;
-    setSite(previous.site);
-    setPosts(previous.posts);
+    pinnedNode.current = null;
+    setSite(previous.value.site);
+    setPosts(previous.value.posts);
+    if (previous.value.layouts) setGenericBySection(previous.value.layouts);
+    setVisualDocument(previous.visualDocument);
+    setVisualNodeIds(nodeIdsIn(previous.visualDocument));
+    setNodeIds(nodeIdsFromLegacy(selection).nodeIds);
     reloadAfter.current = true;
-    textKey.current = "";
+    history.breakCoalesce();
   }
 
   function redo() {
-    const next = history.redo({ site, posts });
+    const next = history.redo({ site, posts }, visualDocument);
     if (!next) return;
-    setSite(next.site);
-    setPosts(next.posts);
+    pinnedNode.current = null;
+    setSite(next.value.site);
+    setPosts(next.value.posts);
+    if (next.value.layouts) setGenericBySection(next.value.layouts);
+    setVisualDocument(next.visualDocument);
+    setVisualNodeIds(nodeIdsIn(next.visualDocument));
+    setNodeIds(nodeIdsFromLegacy(selection).nodeIds);
     reloadAfter.current = true;
-    textKey.current = "";
+    history.breakCoalesce();
   }
 
   const persistSite = useCallback(
-    async (next: SiteDraft) => {
-      saveSeq.current += 1;
-      const seq = saveSeq.current;
-      setSave("saving");
-      try {
-        const response = await fetch(`/api/sites/${props.websiteId}/draft`, {
-          method: "PUT",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(next),
-        });
-        const body = (await response.json().catch(() => ({}))) as { message?: string };
-        if (!response.ok) {
-          setSave("error");
-          notify(body.message ?? "Your last change was not saved. Check your connection and press Retry.", "error");
-          return false;
+    (next: SiteDraft) => {
+      pendingDraft.current = next;
+      if (saveFlight.current) return saveFlight.current;
+      saveFlight.current = (async () => {
+        let ok = true;
+        try {
+          while (pendingDraft.current) {
+            const marked = [...fieldIssues.current.values()].flat();
+            if (blocksSave(marked)) {
+              setSave("error");
+              setEditorError({ code: "document_invalid", message: "Fix the marked fields before saving." });
+              notify("Fix the marked fields before saving.", "error");
+              return false;
+            }
+            const next = pendingDraft.current;
+            pendingDraft.current = null;
+            saveSeq.current += 1;
+            const seq = saveSeq.current;
+            setSave("saving");
+            try {
+              const response = await fetch(`/api/sites/${props.websiteId}/draft`, {
+                method: "PUT",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({
+                  websiteId: props.websiteId,
+                  draft: next,
+                  ...(visualDocument == null ? {} : { visualDocument }),
+                }),
+              });
+              const body = (await response.json().catch(() => ({}))) as { message?: string };
+              if (!response.ok) {
+                ok = false;
+                if (seq === saveSeq.current && !pendingDraft.current) {
+                  const failure = editorErrorFromSave(body);
+                  setEditorError(failure);
+                  setSave("error");
+                  notify(failure.message, "error");
+                  break;
+                }
+                continue;
+              }
+              ok = true;
+              if (seq === saveSeq.current && !pendingDraft.current) {
+                setSave("saved");
+                setSavedAt(Date.now());
+                setEditorError(null);
+                setDirtyState((state) => markSaved(state));
+              }
+            } catch {
+              ok = false;
+              if (seq === saveSeq.current && !pendingDraft.current) {
+                const failure = editorErrorFromSave(null);
+                setEditorError(failure);
+                setSave("error");
+                notify(failure.message, "error");
+                break;
+              }
+            }
+          }
+          return ok;
+        } finally {
+          saveFlight.current = null;
         }
-        if (seq === saveSeq.current) {
-          setSave("saved");
-          setSavedAt(Date.now());
-        }
-        return true;
-      } catch {
-        setSave("error");
-        notify("Your last change was not saved. Check your connection and press Retry.", "error");
-        return false;
-      }
+      })();
+      return saveFlight.current;
     },
-    [notify, props.websiteId],
+    [notify, props.websiteId, visualDocument],
   );
+
+  useEffect(() => {
+    if (dirtyWebsite.current === props.websiteId) return;
+    const moved = switchWebsite(dirtyRef.current, props.websiteId);
+    dirtyWebsite.current = props.websiteId;
+    skipSite.current = true;
+    setDirtyState(moved.state);
+  }, [props.websiteId]);
 
   useEffect(() => {
     if (skipSite.current) {
@@ -252,6 +487,7 @@ export function EditorShell(props: {
         }
         setSave("saved");
         setSavedAt(Date.now());
+        setDirtyState((state) => markSaved(state));
         if (shouldReload) {
           reloadAfter.current = false;
           setVersion((value) => value + 1);
@@ -274,14 +510,14 @@ export function EditorShell(props: {
   }
 
   useEffect(() => {
-    if (save === "saved") return;
+    if (save === "saved" && !shouldWarnBeforeUnload(dirtyState)) return;
     function onLeave(event: BeforeUnloadEvent) {
       event.preventDefault();
       event.returnValue = "";
     }
     window.addEventListener("beforeunload", onLeave);
     return () => window.removeEventListener("beforeunload", onLeave);
-  }, [save]);
+  }, [save, dirtyState]);
 
   useEffect(() => {
     let timer = window.setTimeout(() => void signOutUser(), 30 * 60 * 1000);
@@ -306,9 +542,18 @@ export function EditorShell(props: {
     return { ...emptySelection, sectionId, itemId, itemIds: itemId ? [itemId] : [], locked, kind: block?.kind ?? target.type };
   }
 
-  function selectNode(sectionId: string, itemId = "") {
-    setSelection(selectionFor(sectionId, itemId));
-    toFrame({ type: "4eos-select-node", sectionId, itemId });
+  function selectNode(sectionId: string, itemId = "", shift = false) {
+    pinnedNode.current = null;
+    if (!shift) {
+      setSelection(selectionFor(sectionId, itemId));
+      toFrame({ type: "4eos-select-node", sectionId, itemId });
+      return;
+    }
+    const next = clickNode({ nodeIds: nodeIdsFromLegacy(selection).nodeIds }, itemId || sectionId, true).nodeIds;
+    const primary = next[next.length - 1] ?? "";
+    const base = selectionFor(sectionId, primary && primary !== sectionId ? primary : "");
+    setSelection({ ...base, sectionId, itemId: primary && primary !== sectionId ? primary : "", itemIds: next });
+    toFrame({ type: "4eos-select-node", sectionId, itemId: primary, itemIds: next });
   }
 
   function selectChrome(part: "header" | "footer") {
@@ -430,7 +675,20 @@ export function EditorShell(props: {
       notify("Select an image on the page first.");
       return;
     }
-    commit(setImageSource(site, path, selection.sectionId, item.src, item.alt, selection.itemId || undefined), true);
+    if (selection.itemId && genericByBlock[selection.itemId]?.componentId === "generic.image") {
+      const blockId = selection.itemId;
+      setGenericByBlock((items) => {
+        const current = items[blockId];
+        if (!current) return items;
+        return { ...items, [blockId]: { ...current, props: { ...current.props, src: item.src } } };
+      });
+      commit(replaceImageSrc(site, path, selection.sectionId, blockId, item.src), true);
+      return;
+    }
+    const galleryNodeId = selection.itemId ? undefined : gallerySections.current.get(selection.sectionId);
+    const nodeId = selection.itemId ? imageBlocks.current.get(selection.itemId) : undefined;
+    const nextVisual = galleryNodeId ? writeGallery(visualDocument, galleryNodeId, item.src, item.alt) : nodeId ? writeImage(visualDocument, nodeId, item.src, item.alt) : null;
+    commit(setImageSource(site, path, selection.sectionId, item.src, item.alt, galleryNodeId ? undefined : selection.itemId || undefined), true, nextVisual ?? undefined);
   }
 
   async function removeMedia(item: MediaItem) {
@@ -453,10 +711,7 @@ export function EditorShell(props: {
   function updateBlog(field: string, index: unknown, value: string) {
     if (!activePost) return;
     const key = `blog:${field}:${String(index ?? "")}`;
-    if (textKey.current !== key) {
-      textKey.current = key;
-      rememberHistory();
-    }
+    history.recordText(currentSnapshot(), key, visualDocument);
     setPosts((items) =>
       items.map((post) => {
         if (post.slug !== activePost.slug) return post;
@@ -497,17 +752,13 @@ export function EditorShell(props: {
   function updatePost(next: BlogDraft) {
     if (!props.canEdit) return;
     const key = `post:${next.slug}`;
-    if (textKey.current !== key) {
-      textKey.current = key;
-      rememberHistory();
-    }
+    history.recordText(currentSnapshot(), key, visualDocument);
     setPosts((items) => items.map((item) => (item.slug === next.slug ? next : item)));
   }
 
   function addBlogBlock(block: BlogDraft["blocks"][number]) {
     if (!activePost || !props.canEdit) return;
     rememberHistory();
-    textKey.current = "";
     reloadAfter.current = true;
     setPosts((items) => items.map((post) => (post.slug === activePost.slug ? { ...post, blocks: [...post.blocks, block] } : post)));
   }
@@ -536,11 +787,12 @@ export function EditorShell(props: {
     skipPost.current = true;
     setPosts((items) => [post, ...items]);
     setSave("saved");
-    openPage(`/insights/${post.slug}`);
+    setDirtyState((state) => markSaved(state));
+    if (articleRoute) openPage(articleRouteFor(articleRoute, post.slug));
   }
 
   async function createPageFrom(form: PageForm) {
-    const result = createPage(site, form);
+    const result = createPage(site, form, reservedRoutesOf(adapter));
     if (result.error) return result.error;
     const created = result.site.pages[result.site.pages.length - 1];
     const ok = await persistSite(result.site);
@@ -555,7 +807,7 @@ export function EditorShell(props: {
   }
 
   async function changeCurrentRoute(to: string) {
-    const result = changePageRoute(site, path, to);
+    const result = changePageRoute(site, path, to, reservedRoutesOf(adapter));
     if (result.error || !result.route) return result.error ?? "This page keeps its address.";
     if (result.route === path) return "";
     const ok = await persistSite(result.site);
@@ -570,7 +822,7 @@ export function EditorShell(props: {
 
   function duplicateCurrentPage() {
     if (!page) return;
-    const result = duplicatePage(site, page.route);
+    const result = duplicatePage(site, page.route, reservedRoutesOf(adapter));
     if (result.error || !result.route) {
       notify(result.error ?? "This page cannot be duplicated.", "error");
       return;
@@ -626,11 +878,22 @@ export function EditorShell(props: {
         removed();
       } else if (action === "hide" || action === "show") commit(patchItem(site, path, sectionId, itemId, { hidden: action === "hide" }, overlay), true);
       else if (action === "lock" || action === "unlock") commit(patchItem(site, path, sectionId, itemId, { locked: action === "lock" }, overlay), true);
-      else if (action === "forward" || action === "back") {
+      else if (action === "forward") {
+        const ordered = bringForwardCanvas(visualDocument, itemId);
+        commit(bringForwardItems(site, path, sectionId, itemId, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
+      } else if (action === "back") {
+        const ordered = sendBackwardCanvas(visualDocument, itemId);
+        commit(sendBackwardItems(site, path, sectionId, itemId, overlay), true, ordered && ordered.ok ? ordered.document : undefined);
+      } else if (action === "group") {
+        const ids = itemIds.length > 1 ? itemIds : [itemId];
+        const grouped = groupCanvas(visualDocument, ids);
+        commit(groupItems(site, path, sectionId, ids, overlay), true, grouped && grouped.ok ? grouped.document : undefined);
+      } else if (action === "ungroup") {
         const items: FreeformItem[] = overlay && target.type === "preset" ? target.overlay ?? [] : target.type === "freeform" ? target.items : [];
-        const item = items.find((entry) => entry.id === itemId);
-        commit(patchItem(site, path, sectionId, itemId, { zIndex: Math.max(0, (item?.zIndex ?? 1) + (action === "forward" ? 1 : -1)) }, overlay), true);
-      } else if (action === "group") commit(groupItems(site, path, sectionId, itemIds.length > 1 ? itemIds : [itemId], overlay), true);
+        const groupId = canvasGroupId(visualDocument, itemId) || items.find((entry) => entry.id === itemId)?.groupId || "";
+        const released = groupId ? ungroupCanvas(visualDocument, groupId) : null;
+        commit(ungroupItems(site, path, sectionId, itemId, overlay), true, released && released.ok ? released.document : undefined);
+      }
       return;
     }
     if (action === "duplicate") commit(duplicateSection(site, path, sectionId), true);
@@ -640,9 +903,430 @@ export function EditorShell(props: {
     } else if (action === "hide" || action === "show") commit(setSectionHidden(site, path, sectionId, action === "hide"), true);
   }
 
-  function insertEntry(entry: LibraryEntry, at?: Insert) {
+  function insertPreviewNode(node: NodeDocument, block: FlowBlock, libraryId: string, nextVisual: unknown | null, at?: Insert) {
     if (!page || !props.canEdit) {
-      notify(managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
+      notify(preservedArticle ? "This article body stays as published HTML." : managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
+      return;
+    }
+    if (page.locked) {
+      notify("This page is managed for you, so nothing can be added here.");
+      return;
+    }
+    rememberLibrary(libraryId);
+    const label = block.text?.text ?? "Item";
+    let ownerId = section?.id ?? "";
+    let next: SiteDraft;
+    if (!at && section?.type === "flow" && !selection.locked) {
+      ownerId = section.id;
+      next = insertFlowBlock(site, path, section.id, block, selection.itemId || undefined);
+    } else {
+      const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: label, layout: "stack", blocks: [block] };
+      ownerId = created.id;
+      const index = at ? (at.beforeId ? page.sections.findIndex((item) => item.id === at.beforeId) : page.sections.length) : section ? page.sections.findIndex((item) => item.id === section.id) + 1 : page.sections.length;
+      next = insertSection(site, path, index < 0 ? page.sections.length : index, created);
+    }
+    commit(next, true, nextVisual ?? undefined);
+    setGenericByBlock((current) => ({
+      ...current,
+      [block.id]: { id: node.id, componentId: node.componentId, metadata: { ...node.metadata }, props: { ...node.props } },
+    }));
+    setSelection({ ...emptySelection, sectionId: ownerId, itemId: block.id, itemIds: [block.id], kind: block.kind });
+    pinnedNode.current = node.id;
+    setNodeIds(selectNodeId(node.id).nodeIds);
+    setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
+    notify(`${label} added.`);
+  }
+
+  function insertCreatedHeading(node: NodeDocument, at?: Insert) {
+    if (!at && section?.type === "freeform") {
+      commit(addZoneItem(site, path, section.id, "heading", false), true);
+      notify("Heading added to the zone.");
+      return;
+    }
+    const parentId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const block: FlowBlock = { id: createId("blk"), kind: "heading", hidden: false, text: { text: "Heading", marks: [] } };
+    insertPreviewNode(node, block, "element:heading", insertNode(visualDocument, path, parentId, node), at);
+  }
+
+  function insertCreatedParagraph(node: NodeDocument, at?: Insert) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const block: FlowBlock = { id: createId("blk"), kind: "paragraph", hidden: false, text: { text: "Paragraph", marks: [] } };
+    insertPreviewNode(node, block, "element:paragraph", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
+  function insertCreatedRichText(node: NodeDocument, at?: Insert) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const block: FlowBlock = { id: createId("blk"), kind: "paragraph", hidden: false, text: { text: "Rich text", marks: [] } };
+    richBlocks.current.set(block.id, node.id);
+    insertPreviewNode(node, block, "element:richtext", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
+  function insertCreatedLink(node: NodeDocument, at?: Insert) {
+    const href = typeof node.props.href === "string" ? node.props.href : "";
+    if (!validLink(href)) return;
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const label = typeof node.props.label === "string" ? node.props.label : "Link";
+    const block: FlowBlock = { id: createId("blk"), kind: "link", hidden: false, text: { text: label, marks: [] }, href };
+    linkBlocks.current.set(block.id, node.id);
+    insertPreviewNode(node, block, "element:link", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
+  function insertCreatedButton(node: NodeDocument, at?: Insert) {
+    if (!at && section?.type === "freeform") {
+      commit(addZoneItem(site, path, section.id, "button", false), true);
+      notify("Button added to the zone.");
+      return;
+    }
+    const href = typeof node.props.href === "string" && validLink(node.props.href) ? node.props.href : "/";
+    const label = typeof node.props.label === "string" ? node.props.label : "Button";
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const icon = node.props.icon === "arrow" || node.props.icon === "external" || node.props.icon === "mail" || node.props.icon === "phone" ? node.props.icon : "none";
+    const block: FlowBlock = {
+      id: createId("blk"),
+      kind: "button",
+      hidden: false,
+      text: { text: label, marks: [] },
+      href,
+      icon,
+      variant: node.props.variant === "outline" || node.props.variant === "text" ? node.props.variant : "filled",
+      size: node.props.size === "s" || node.props.size === "l" ? node.props.size : "m",
+      align: node.props.align === "center" || node.props.align === "end" ? node.props.align : "start",
+      target: node.props.target === "new" ? "new" : "same",
+    };
+    buttonBlocks.current.set(block.id, node.id);
+    insertPreviewNode(node, block, node.componentId === "generic.icon-button" ? "element:icon-button" : "element:button", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
+  function insertPreviewSection(node: NodeDocument, created: Section, libraryId: string, nextVisual: unknown | null, trackLayout = false) {
+    if (!page || !props.canEdit) {
+      notify(preservedArticle ? "This article body stays as published HTML." : managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
+      return;
+    }
+    if (page.locked) {
+      notify("This page is managed for you, so nothing can be added here.");
+      return;
+    }
+    rememberLibrary(libraryId);
+    const index = section ? page.sections.findIndex((item) => item.id === section.id) + 1 : page.sections.length;
+    const next = insertSection(site, path, index < 0 ? page.sections.length : index, created);
+    commit(next, true, nextVisual ?? undefined);
+    if (trackLayout) {
+      setGenericBySection((current) => ({
+        ...current,
+        [created.id]: {
+          id: node.id,
+          componentId: node.componentId,
+          metadata: { ...node.metadata },
+          props: { ...node.props },
+          ...(node.layout ? { layout: node.layout } : {}),
+          allowLayoutConversion: true,
+        },
+      }));
+    }
+    pinnedNode.current = node.id;
+    setNodeIds(selectNodeId(node.id).nodeIds);
+    setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
+    setSelection({ ...emptySelection, sectionId: created.id, kind: created.type });
+    const label = created.type === "video" ? "Video" : created.type === "divider" ? "Divider" : created.type === "spacer" ? "Spacer" : created.type === "freeform" ? created.name : created.type === "gallery" ? "Gallery" : created.type === "cta" ? "Call to action" : created.type === "testimonial" ? "Testimonial" : created.type === "faq" ? "FAQ" : created.type === "form" ? "Form" : created.editorName || "Item";
+    notify(`${label} added.`);
+  }
+
+  function insertCreatedImage(node: NodeDocument, at?: Insert) {
+    if (!at && section?.type === "freeform") {
+      commit(addZoneItem(site, path, section.id, "image", false), true);
+      notify("Image added to the zone.");
+      return;
+    }
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const src = typeof node.props.src === "string" ? node.props.src : "";
+    const alt = typeof node.props.alt === "string" ? node.props.alt : "";
+    const block: FlowBlock = { id: createId("blk"), kind: "image", hidden: false, ...(src ? { src } : {}), alt };
+    imageBlocks.current.set(block.id, node.id);
+    insertPreviewNode(node, block, "element:image", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
+  function insertCreatedInput(node: NodeDocument) {
+    if (!page) return;
+    const formId = selection.sectionId;
+    const parentId = formSections.current.get(formId);
+    const current = page.sections.find((item) => item.id === formId);
+    if (!parentId || !current || current.type !== "form") {
+      notify("Add this inside a form.");
+      return;
+    }
+    const kind = node.type === "checkbox" ? "checkbox" as const : node.type === "select" ? "select" as const : node.type === "textarea" ? "textarea" as const : "text" as const;
+    const label = typeof node.props.label === "string" ? node.props.label : kind === "checkbox" ? "Option" : kind === "select" ? "Choose" : kind === "textarea" ? "Message" : "Label";
+    const required = node.props.required === true;
+    const options = kind === "select" ? (Array.isArray(node.props.options) ? node.props.options.filter((item): item is string => typeof item === "string") : ["First", "Second"]) : undefined;
+    const field = { id: createId("fld"), label, kind, required, ...(options?.length ? { options } : {}), ...(kind === "checkbox" ? { checked: node.props.checked === true } : {}) };
+    const fields = current.fields?.length
+      ? current.fields
+      : [
+          { id: "name", label: current.nameLabel || "Name", kind: "text" as const, required: true },
+          { id: "email", label: current.emailLabel || "Email", kind: "email" as const, required: true },
+          { id: "message", label: current.messageLabel || "Message", kind: "textarea" as const, required: false },
+        ];
+    const created = { ...current, fields: [...fields, field] };
+    const next = {
+      ...site,
+      pages: site.pages.map((item) => (item.route === path ? { ...item, sections: item.sections.map((section) => (section.id === formId ? created : section)) } : item)),
+    };
+    const nextVisual = insertNode(visualDocument, path, parentId, node);
+    commit(next, true, nextVisual ?? undefined);
+    pinnedNode.current = node.id;
+    setNodeIds(selectNodeId(node.id).nodeIds);
+    setVisualNodeIds(nextVisual ? nodeIdsIn(nextVisual) : [...visualNodeIds, node.id]);
+    setSelection({ ...emptySelection, sectionId: formId, kind: "form" });
+    notify(kind === "checkbox" ? "Checkbox added." : kind === "select" ? "Select added." : kind === "textarea" ? "Text area added." : "Input added.");
+  }
+
+  function insertCreatedForm(node: NodeDocument) {
+    const text = (key: string, fallback: string) => (typeof node.props[key] === "string" ? node.props[key] : fallback);
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = {
+      id: createId("sec"),
+      type: "form",
+      hidden: false,
+      nameLabel: text("nameLabel", "Name"),
+      emailLabel: text("emailLabel", "Email"),
+      messageLabel: text("messageLabel", "Message"),
+      buttonLabel: text("buttonLabel", "Send"),
+      recipient: "",
+    };
+    formSections.current.set(created.id, node.id);
+    insertPreviewSection(node, created, "element:form", insertAfter(visualDocument, path, afterId, node));
+  }
+
+  function insertCreatedFaq(node: NodeDocument) {
+    const items = Array.isArray(node.props.items) ? node.props.items.flatMap((item) => {
+      if (!item || typeof item !== "object") return [];
+      const row = item as { q?: unknown; a?: unknown };
+      return [{ q: typeof row.q === "string" ? row.q : "Question", a: typeof row.a === "string" ? row.a : "Answer" }];
+    }) : [{ q: "Question", a: "Answer" }];
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "faq", hidden: false, heading: "", items };
+    insertPreviewSection(node, created, "element:faq", insertAfter(visualDocument, path, afterId, node));
+  }
+
+  function insertCreatedTestimonial(node: NodeDocument) {
+    const quote = typeof node.props.quote === "string" ? node.props.quote : "Quote";
+    const name = typeof node.props.name === "string" ? node.props.name : "Name";
+    const role = typeof node.props.role === "string" ? node.props.role : "Role";
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "testimonial", hidden: false, quote, name, role };
+    insertPreviewSection(node, created, "element:testimonial", insertAfter(visualDocument, path, afterId, node));
+  }
+
+  function insertCreatedCta(node: NodeDocument) {
+    const heading = node.children.find((child) => child.type === "heading");
+    const paragraph = node.children.find((child) => child.type === "text");
+    const button = node.children.find((child) => child.type === "button");
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = {
+      id: createId("sec"),
+      type: "cta",
+      hidden: false,
+      heading: heading && typeof heading.props.text === "string" ? heading.props.text : "Heading",
+      body: paragraph && typeof paragraph.props.text === "string" ? paragraph.props.text : "Paragraph",
+      label: button && typeof button.props.label === "string" ? button.props.label : "Continue",
+      href: "/",
+    };
+    insertPreviewSection(node, created, "element:cta", insertAfter(visualDocument, path, afterId, node));
+  }
+
+  function insertCreatedCard(node: NodeDocument, at?: Insert) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const title = node.children.find((child) => child.type === "heading");
+    const body = node.children.find((child) => child.type === "text");
+    const heading = title && typeof title.props.text === "string" ? title.props.text : "Card title";
+    const paragraph = body && typeof body.props.text === "string" ? body.props.text : "Card text";
+    const block: FlowBlock = { id: createId("blk"), kind: "card", hidden: false, text: { text: heading, marks: [] }, detail: { text: paragraph, marks: [] } };
+    insertPreviewNode(node, block, "element:card", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
+  function insertCreatedGroup(node: NodeDocument) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Group", layout: "stack", blocks: [] };
+    insertPreviewSection(node, created, "element:group", insertAfter(visualDocument, path, afterId, node), true);
+  }
+
+  function insertCreatedCanvas(node: NodeDocument) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "freeform", hidden: false, name: "Canvas", items: [] };
+    insertPreviewSection(node, created, "element:canvas", insertAfter(visualDocument, path, afterId, node), true);
+  }
+
+  function insertCreatedGrid(node: NodeDocument) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Grid", layout: "grid", blocks: [] };
+    insertPreviewSection(node, created, "element:grid", insertAfter(visualDocument, path, afterId, node), true);
+  }
+
+  function insertCreatedStack(node: NodeDocument) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Stack", layout: "stack", blocks: [] };
+    insertPreviewSection(node, created, "element:stack", insertAfter(visualDocument, path, afterId, node), true);
+  }
+
+  function insertCreatedContainer(node: NodeDocument) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "flow", hidden: false, editorName: "Container", layout: "stack", blocks: [] };
+    insertPreviewSection(node, created, "element:container", insertAfter(visualDocument, path, afterId, node), true);
+  }
+
+  function insertCreatedSpacer(node: NodeDocument) {
+    const size = node.props.size === "s" || node.props.size === "l" ? node.props.size : "m";
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "spacer", hidden: false, size };
+    insertPreviewSection(node, created, "element:spacer", insertAfter(visualDocument, path, afterId, node));
+  }
+
+  function insertCreatedDivider(node: NodeDocument) {
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "divider", hidden: false };
+    insertPreviewSection(node, created, "element:divider", insertAfter(visualDocument, path, afterId, node));
+  }
+
+  function insertCreatedIcon(node: NodeDocument, at?: Insert) {
+    const name = typeof node.props.name === "string" && node.props.name ? node.props.name : "arrow";
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const block: FlowBlock = { id: createId("blk"), kind: "paragraph", hidden: false, text: { text: name, marks: [] } };
+    insertPreviewNode(node, block, "element:icon", insertAfter(visualDocument, path, afterId, node), at);
+  }
+
+  function insertCreatedGallery(node: NodeDocument) {
+    const layout = node.props.layout === "stack" || node.props.layout === "slideshow" ? node.props.layout : "grid";
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "gallery", hidden: false, images: [], layoutName: layout };
+    gallerySections.current.set(created.id, node.id);
+    insertPreviewSection(node, created, "element:gallery", insertAfter(visualDocument, path, afterId, node));
+  }
+
+  function insertCreatedVideo(node: NodeDocument) {
+    const url = typeof node.props.url === "string" ? node.props.url : "";
+    if (!acceptVideoUrl(url)) return;
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const created: Section = { id: createId("sec"), type: "video", hidden: false, url };
+    videoSections.current.set(created.id, node.id);
+    insertPreviewSection(node, created, "element:video", insertAfter(visualDocument, path, afterId, node));
+  }
+
+  function insertCreatedCustom(definition: CustomDefinition, at?: Insert) {
+    const node = createCustom(definition);
+    const afterId = nodeIds.find((id) => id.startsWith("node_") || id.startsWith("grp_")) ?? null;
+    const block: FlowBlock = { id: createId("blk"), kind: "paragraph", hidden: false, text: { text: definition.name, marks: [] } };
+    insertPreviewNode(node, block, `element:${definition.id}`, insertAfter(visualDocument, path, afterId, node), at);
+  }
+
+  function insertEntry(entry: LibraryEntry, at?: Insert) {
+    if (entry.id === "element:heading") {
+      insertCreatedHeading(createHeading(), at);
+      return;
+    }
+    if (entry.id === "element:paragraph") {
+      insertCreatedParagraph(createParagraph(), at);
+      return;
+    }
+    if (entry.id === "element:richtext") {
+      insertCreatedRichText(createRichText(), at);
+      return;
+    }
+    if (entry.id === "element:link") {
+      const node = createLink();
+      if (node) insertCreatedLink(node, at);
+      return;
+    }
+    if (entry.id === "element:button") {
+      insertCreatedButton(createButton(), at);
+      return;
+    }
+    if (entry.id === "element:icon-button") {
+      insertCreatedButton(createIconButton(), at);
+      return;
+    }
+    if (entry.id === "element:image") {
+      insertCreatedImage(createImage(), at);
+      return;
+    }
+    if (entry.id === "element:gallery") {
+      insertCreatedGallery(createGallery());
+      return;
+    }
+    if (entry.id === "element:video") {
+      const node = createVideo();
+      if (node) insertCreatedVideo(node);
+      return;
+    }
+    if (entry.id === "element:icon") {
+      insertCreatedIcon(createIcon(), at);
+      return;
+    }
+    if (entry.id === "element:divider") {
+      insertCreatedDivider(createDivider());
+      return;
+    }
+    if (entry.id === "element:spacer") {
+      insertCreatedSpacer(createSpacer());
+      return;
+    }
+    if (entry.id === "element:container") {
+      insertCreatedContainer(createContainer());
+      return;
+    }
+    if (entry.id === "element:stack") {
+      insertCreatedStack(createStack());
+      return;
+    }
+    if (entry.id === "element:grid") {
+      insertCreatedGrid(createGrid());
+      return;
+    }
+    if (entry.id === "element:canvas") {
+      insertCreatedCanvas(createCanvas());
+      return;
+    }
+    if (entry.id === "element:group") {
+      insertCreatedGroup(createGroup());
+      return;
+    }
+    if (entry.id === "element:card") {
+      insertCreatedCard(createCard(), at);
+      return;
+    }
+    if (entry.id === "element:cta") {
+      insertCreatedCta(createCta());
+      return;
+    }
+    if (entry.id === "element:testimonial") {
+      insertCreatedTestimonial(createTestimonial());
+      return;
+    }
+    if (entry.id === "element:faq") {
+      insertCreatedFaq(createFaq());
+      return;
+    }
+    if (entry.id === "element:form") {
+      insertCreatedForm(createForm());
+      return;
+    }
+    if (entry.id === "element:input") {
+      insertCreatedInput(createInput());
+      return;
+    }
+    if (entry.id === "element:textarea") {
+      insertCreatedInput(createTextarea());
+      return;
+    }
+    if (entry.id === "element:select") {
+      insertCreatedInput(createSelect());
+      return;
+    }
+    if (entry.id === "element:checkbox") {
+      insertCreatedInput(createCheckbox());
+      return;
+    }
+    if (!page || !props.canEdit) {
+      notify(preservedArticle ? "This article body stays as published HTML." : managedRoute ? "This page is managed for you, so nothing can be added here." : "You can view this site but not change it.");
       return;
     }
     rememberLibrary(entry.id);
@@ -689,6 +1373,7 @@ export function EditorShell(props: {
   function openPage(route: string) {
     setPath(route);
     setSelection(emptySelection);
+    setNodeIds(clearNodeSelection().nodeIds);
     setVersion((value) => value + 1);
   }
 
@@ -719,18 +1404,99 @@ export function EditorShell(props: {
         break;
       }
       case "4eos-select": {
+        pinnedNode.current = null;
         const itemId = text("itemId");
         const itemIds = Array.isArray(data.itemIds) ? data.itemIds.map((item) => String(item)).filter(Boolean) : itemId ? [itemId] : [];
         const chrome = data.chrome === "header" || data.chrome === "footer" ? data.chrome : "";
         setSelection({ sectionId: text("sectionId"), itemId, itemIds, overlay: Boolean(data.overlay), locked: Boolean(data.locked), chrome, navRoute: text("navRoute"), kind: text("kind") });
+        setDragReason(null);
+        break;
+      }
+      case "4eos-drag-reject": {
+        const reason = dragRejectReason(text("reason"));
+        if (reason) setDragReason(reason);
+        break;
+      }
+      case "4eos-drag-start":
+        dropIgnored.current = false;
+        dragActive.current = true;
+        break;
+      case "4eos-drag-cancel":
+        dragActive.current = false;
+        setDragReason(null);
+        break;
+      case "4eos-overflow":
+        setContentOverflow(overflowWarning({
+          textWidth: Number(data.textWidth) || 0,
+          textHeight: Number(data.textHeight) || 0,
+          nodeWidth: Number(data.nodeWidth) || 0,
+          nodeHeight: Number(data.nodeHeight) || 0,
+          parentWidth: Number(data.parentWidth) || 0,
+          parentHeight: Number(data.parentHeight) || 0,
+        }));
+        break;
+      case "4eos-keyboard": {
+        const decision = keyboardStep({
+          key: text("key"),
+          alt: data.alt !== false,
+          shift: data.shift === true,
+          index: Number(data.index),
+          count: Number(data.count),
+          neighbor: text("neighbor"),
+          locked: data.locked === true,
+          row: data.row === true,
+        });
+        if (!decision) break;
+        setKeyboardStatus(decision.announcement);
+        if (!decision.ok) break;
+        const sectionId = text("sectionId");
+        const itemId = text("itemId");
+        const visual = keyboardMove(visualDocument, {
+          nodeId: itemId,
+          key: text("key"),
+          alt: true,
+          shift: data.shift === true,
+          childType: "text",
+          childParents: { allowedParents: ["section", "container", "stack", "grid", "group", "card"] },
+        });
+        const nextVisual = visual && visual.ok ? visual.document ?? undefined : undefined;
+        if (data.shift === true) {
+          const targetSectionId = text("targetSectionId");
+          if (!targetSectionId) break;
+          commit(moveBlockToSection(site, path, sectionId, targetSectionId, itemId, text("targetId"), false), true, nextVisual);
+          break;
+        }
+        commit(moveFlowBlockById(site, path, sectionId, itemId, text("neighborId"), decision.delta > 0), true, nextVisual);
+        break;
+      }
+      case "4eos-select-node": {
+        const sections = (page?.sections ?? []).map((section) => ({
+          id: section.id,
+          blocks: section.type === "flow" ? section.blocks : [],
+          items: section.type === "freeform" ? section.items : section.type === "preset" ? section.overlay ?? [] : [],
+        }));
+        const target = selectionTargetForNode(sections, data);
+        if (target) setSelection(selectionFor(target.sectionId, target.itemId));
+        else {
+          const nodeId = nodeIdFromCanvasMessage(data);
+          if (nodeId) setNodeIds(selectNodeId(nodeId).nodeIds);
+        }
         break;
       }
       case "4eos-editing":
         setEditing(Boolean(data.active));
         break;
       case "4eos-text": {
+        const flags = pageCapabilityFlags(adapter, page ?? {}, path);
+        if (flags.lockContent === true) return;
+        const target = page?.sections.find((item) => item.id === text("sectionId"));
+        if (target?.editorName === "Sidebar" ? flags.editSidebar !== true : flags.editBody !== true) return;
         const marks = readMarks(data.marks);
-        commitText(applyText(site, path, text("sectionId"), text("field") || "text", text("value"), text("itemId") || undefined, marks), `${text("sectionId")}:${text("itemId")}:${text("field")}`);
+        const itemId = text("itemId");
+        const nodeId = richBlocks.current.get(itemId);
+        const nextVisual = nodeId ? writeRichMarks(visualDocument, nodeId, text("value"), marks ?? []) : null;
+        commitText(applyText(site, path, text("sectionId"), text("field") || "text", text("value"), itemId || undefined, marks), `${text("sectionId")}:${itemId}:${text("field")}`);
+        if (nextVisual) setVisualDocument(nextVisual);
         break;
       }
       case "4eos-nav":
@@ -738,6 +1504,7 @@ export function EditorShell(props: {
         break;
       case "4eos-chrome": {
         const field = text("field");
+        if (headerChromeField(field) && pageCapabilityFlags(adapter, page ?? {}, path).editHeader !== true) return;
         const value = text("value");
         const chrome = structuredClone(site.chrome);
         if (field === "buttonLabel") chrome.header.buttonLabel = value;
@@ -751,11 +1518,56 @@ export function EditorShell(props: {
         break;
       }
       case "4eos-move":
+        if (dropIgnored.current) { dropIgnored.current = false; break; }
+        dragActive.current = false;
         commit(moveSectionById(site, path, text("sectionId"), text("beforeId")), true);
         break;
-      case "4eos-reorder-block":
-        commit(moveFlowBlockById(site, path, text("sectionId"), text("itemId"), text("targetId"), Boolean(data.after)), true);
+      case "4eos-reparent": {
+        if (dropIgnored.current) { dropIgnored.current = false; break; }
+        dragActive.current = false;
+        const fromSection = text("sectionId");
+        const toSection = text("targetSectionId") || fromSection;
+        const layoutReason = layoutChangeRefused(pageCapabilityFlags(adapter, page ?? {}, path), fromSection === toSection);
+        if (layoutReason) {
+          setDragReason("locked");
+          break;
+        }
+        if (fromSection === toSection) {
+          const next = moveFlowBlockById(site, path, fromSection, text("itemId"), text("targetId"), Boolean(data.after));
+          const nextVisual = flowReorder(visualDocument, text("itemId"), text("targetId"), Boolean(data.after));
+          commit(next, true, nextVisual ?? undefined);
+          break;
+        }
+        const next = moveBlockToSection(site, path, fromSection, toSection, text("itemId"), text("targetId"), Boolean(data.after));
+        const drop = {
+          nodeId: text("itemId"),
+          parentId: text("targetSectionId"),
+          targetId: text("targetId"),
+          after: Boolean(data.after),
+          draggedLocked: false,
+          childType: "text",
+          childParents: { allowedParents: ["section", "container", "stack", "grid", "group", "card"] },
+          parentType: "section",
+          parentChildren: { acceptsChildren: true },
+        };
+        const exited = groupExit(visualDocument, drop);
+        if (exited && exited.ok === false) {
+          setDragReason(exited.reason);
+          break;
+        }
+        const entered = exited && exited.ok ? exited : groupEnter(visualDocument, drop);
+        if (entered && entered.ok === false) {
+          setDragReason(entered.reason);
+          break;
+        }
+        const result = entered && entered.ok ? entered : reparent(visualDocument, drop);
+        if (result && result.ok === false) {
+          setDragReason(result.reason);
+          break;
+        }
+        commit(next, true, result && result.ok ? result.document : undefined);
         break;
+      }
       case "4eos-insert":
         if (!props.canEdit) return;
         setInsert({ beforeId: text("beforeId") });
@@ -763,6 +1575,36 @@ export function EditorShell(props: {
       case "4eos-insert-type": {
         const entry = entryById(text("libraryType"));
         if (entry) insertEntry(entry, { beforeId: text("beforeId") });
+        break;
+      }
+      case "4eos-library-drop": {
+        const factoryId = text("libraryType") || libraryFactory.current;
+        const raw = data.box;
+        const record = raw && typeof raw === "object" ? raw as { x?: unknown; y?: unknown; w?: unknown; h?: unknown } : null;
+        const fractions = record ? { x: Number(record.x), y: Number(record.y), w: Number(record.w), h: Number(record.h) } : null;
+        const box = fractions && [fractions.x, fractions.y, fractions.w, fractions.h].every(Number.isFinite)
+          ? { x: toPercent(fractions.x * 100, 100), y: toPercent(fractions.y * 100, 100), w: toPercent(fractions.w * 100, 100), h: toPercent(fractions.h * 100, 100) }
+          : undefined;
+        const result = libraryDrop(visualDocument, {
+          factoryId,
+          parentId: text("sectionId"),
+          parentType: text("parentType") || "section",
+          parentLocked: data.locked === true,
+          box,
+        });
+        if (!result.ok) {
+          setDragReason(result.reason);
+          break;
+        }
+        if (data.canvas === true && factoryId === "element:button" && fractions) {
+          const sectionId = text("sectionId");
+          const added = addZoneItem(site, path, sectionId, "button", false);
+          const created = pageByRoute(added, path)?.sections.find((item) => item.id === sectionId);
+          const item = created && created.type === "freeform" ? created.items[created.items.length - 1] : null;
+          if (!item) break;
+          commit(placeItems(added, path, sectionId, "desktop", [{ id: item.id, placement: fractions }]), true, result.document ?? undefined);
+          notify("Button added to the zone.");
+        }
         break;
       }
       case "4eos-action": {
@@ -781,10 +1623,24 @@ export function EditorShell(props: {
         break;
       }
       case "4eos-place": {
+        if (dropIgnored.current) { dropIgnored.current = false; break; }
+        dragActive.current = false;
         if (!Array.isArray(data.items)) return;
         const name = data.viewport === "mobile" || data.viewport === "tablet" ? data.viewport : "desktop";
         const items = (data.items as { id: string; placement: { x: number; y: number; w: number; h: number } }[]).filter((item) => item && item.placement);
-        commit(placeItems(site, path, text("sectionId"), name, items, Boolean(data.overlay)), false);
+        let nextVisual: unknown = visualDocument;
+        for (const item of items) {
+          const updated = placeOnCanvas(nextVisual, {
+            nodeId: item.id,
+            breakpoint: name,
+            x: toPercent(item.placement.x * 100, 100),
+            y: toPercent(item.placement.y * 100, 100),
+            w: toPercent(item.placement.w * 100, 100),
+            h: toPercent(item.placement.h * 100, 100),
+          });
+          if (updated) nextVisual = updated;
+        }
+        commit(placeItems(site, path, text("sectionId"), name, items, Boolean(data.overlay)), false, nextVisual !== visualDocument ? nextVisual : undefined);
         break;
       }
       case "4eos-drop":
@@ -809,7 +1665,41 @@ export function EditorShell(props: {
     undoRef.current = undo;
   });
 
-  useCanvasMessages(onMessage);
+  useCanvasMessages(onMessage, props.websiteId);
+
+  useEffect(() => {
+    const node = document.getElementById("site-preview") as HTMLIFrameElement | null;
+    if (!node) return;
+    const point = (event: DragEvent) => {
+      const rect = node.getBoundingClientRect();
+      return {
+        x: (event.clientX - rect.left) / (scale || 1),
+        y: (event.clientY - rect.top) / (scale || 1),
+      };
+    };
+    const libraryDrag = (event: DragEvent) => {
+      const types = [...(event.dataTransfer?.types ?? [])];
+      return types.includes("application/x-4eos-library") || libraryFactory.current.startsWith("element:");
+    };
+    const over = (event: DragEvent) => {
+      if (!libraryDrag(event)) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+      node.contentWindow?.postMessage({ type: "4eos-library-probe", ...point(event), commit: false }, "*");
+    };
+    const drop = (event: DragEvent) => {
+      if (!libraryDrag(event)) return;
+      event.preventDefault();
+      const factoryId = event.dataTransfer?.getData("application/x-4eos-library") || libraryFactory.current;
+      node.contentWindow?.postMessage({ type: "4eos-library-probe", ...point(event), commit: true, libraryType: factoryId }, "*");
+    };
+    node.addEventListener("dragover", over);
+    node.addEventListener("drop", drop);
+    return () => {
+      node.removeEventListener("dragover", over);
+      node.removeEventListener("drop", drop);
+    };
+  }, [scale, version]);
 
   useEffect(() => {
     toFrame({ type: "4eos-config", scale, clipboard: Boolean(clipboard) });
@@ -850,8 +1740,17 @@ export function EditorShell(props: {
       } else if (event.key === "?" && !document.querySelector(".ed-dialog")) {
         event.preventDefault();
         setShortcuts(true);
-      } else if (event.key === "Escape" && !document.querySelector(".ed-dialog") && (selection.sectionId || selection.chrome)) {
-        clearSelection();
+      } else if (event.key === "Escape") {
+        const decision = cancelDrag({ dragging: dragActive.current, dialogOpen: Boolean(document.querySelector(".ed-dialog")), key: event.key });
+        if (decision.cancel) {
+          event.preventDefault();
+          dropIgnored.current = true;
+          dragActive.current = false;
+          if (decision.clearStatus) setDragReason(null);
+          toFrame({ type: "4eos-cancel-drag" });
+          return;
+        }
+        if (!document.querySelector(".ed-dialog") && (selection.sectionId || selection.chrome)) clearSelection();
       }
     }
     window.addEventListener("keydown", onKey);
@@ -861,13 +1760,26 @@ export function EditorShell(props: {
   const mediaWithUse = media.map((item) => ({ ...item, usedBy: imageUsage(site, posts, item.filename) }));
   const api: EditorApi = {
     websiteId: props.websiteId,
+    siteContext: activeSiteContext(siteState.site, props.websiteId),
+    adapterId,
+    adapter,
     site,
     path,
     page,
     canEdit: props.canEdit,
+    role: props.role,
     viewport,
     selection,
-    commit,
+    visualDocument,
+    commit: (next, reload, nextVisual) => {
+      const blockId = selection.itemId;
+      const nodeId = blockId ? linkBlocks.current.get(blockId) : undefined;
+      const buttonId = blockId ? buttonBlocks.current.get(blockId) : undefined;
+      const href = blockId ? flowBlockHref(next, path, blockId) : "";
+      const previous = blockId ? flowBlockHref(site, path, blockId) : "";
+      const updated = nodeId && href !== previous ? writeLinkHref(visualDocument, nodeId, href) : buttonId && href !== previous ? writeButtonField(visualDocument, buttonId, "href", href) : null;
+      commit(next, reload, nextVisual ?? updated ?? undefined);
+    },
     commitText,
     notify,
     selectNode,
@@ -878,15 +1790,18 @@ export function EditorShell(props: {
     media: mediaWithUse,
   };
 
-  const width = VIEWPORTS.find((item) => item.id === viewport)?.width ?? 1280;
+  const width = breakpointWidth(adapter, viewport);
+  const devices = (["desktop", "tablet", "mobile"] as const).map((id) => ({ id, label: previewRadioLabel[id] }));
   const recommended = recommendedFor(page?.sections ?? []);
   const recommendedHere = recommendedFor(page?.sections ?? [], section?.type === "flow" && !selection.locked);
   const templates = site.sectionTemplates.map((item) => ({ id: item.id, name: item.name }));
   const canPlaceImage = Boolean(selection.sectionId && (selection.kind === "image" || imageSrc(selection.sectionId, selection.itemId)));
-  const pageTitle = page?.title ?? activePost?.title ?? (path === "/" ? "Home" : path);
+  const pageTitle = pageState?.title ?? page?.title ?? activePost?.title ?? (path === "/" ? "Home" : path);
   const statusMessage = !props.canEdit
     ? "You can look around, but this account cannot change the site."
-    : managedRoute
+    : preservedArticle
+      ? "This article body stays as published HTML. Search details and the header can still change."
+      : managedRoute
       ? "This page is managed for you. Pick a page on the left to edit."
       : selection.locked
         ? "This part is managed for you."
@@ -933,13 +1848,14 @@ export function EditorShell(props: {
   }
 
   return (
-    <div className="ed-root">
+    <div className="ed-root" data-adapter={adapterId ?? undefined} data-experience={experience} data-error={editorError?.code} data-nodes={nodeIds.join(" ")} data-visual-nodes={visualNodeIds.join(" ")}>
       <TopBar
         websiteName={props.websiteName}
         pageTitle={pageTitle}
         onPages={() => setRail("pages")}
         onNewPage={() => setAddingPage(true)}
         viewport={viewport}
+        devices={devices}
         onViewport={setViewport}
         canUndo={history.canUndo}
         canRedo={history.canRedo}
@@ -957,6 +1873,9 @@ export function EditorShell(props: {
         }}
         userName={props.userName}
         role={props.role}
+        experience={experience}
+        canAdminister={props.canAdminister}
+        onExperience={(mode) => setExperience(persistExperience(window.localStorage, props.websiteId, mode, props.canAdminister))}
         onConfirm={() => void confirmIdentity()}
         onShortcuts={() => setShortcuts(true)}
       />
@@ -969,17 +1888,58 @@ export function EditorShell(props: {
                 <div className="ed-panel-head">
                   <h2>Add</h2>
                 </div>
-                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommendedHere} templates={templates} onChoose={(entry) => insertEntry(entry)} onTemplate={(id) => insertTemplate(id)} dense />
+                <LibraryBrowser canEmbed={props.canEmbed} recent={recentLibrary} recommended={recommendedHere} templates={templates} adapter={adapter} onLibraryDrag={(id) => { libraryFactory.current = id; }} onLibraryDrop={(drop) => {
+                  const node = document.getElementById("site-preview") as HTMLIFrameElement | null;
+                  if (!node) return;
+                  const rect = node.getBoundingClientRect();
+                  const inside = drop.x >= rect.left && drop.x <= rect.right && drop.y >= rect.top && drop.y <= rect.bottom;
+                  if (!inside) {
+                    setDragReason("parent_rejected");
+                    return;
+                  }
+                  node.contentWindow?.postMessage({
+                    type: "4eos-library-probe",
+                    x: (drop.x - rect.left) / (scale || 1),
+                    y: (drop.y - rect.top) / (scale || 1),
+                    commit: true,
+                    libraryType: drop.factoryId,
+                  }, "*");
+                }} onChoose={(entry) => insertEntry(entry)} onElement={(node) => {
+                  if (node.componentId === "generic.text") insertCreatedParagraph(node);
+                  else if (node.componentId === "generic.richtext") insertCreatedRichText(node);
+                  else if (node.componentId === "generic.link") insertCreatedLink(node);
+                  else if (node.componentId === "generic.button" || node.componentId === "generic.icon-button") insertCreatedButton(node);
+                  else if (node.componentId === "generic.image") insertCreatedImage(node);
+                  else if (node.componentId === "generic.gallery") insertCreatedGallery(node);
+                  else if (node.componentId === "generic.video") insertCreatedVideo(node);
+                  else if (node.componentId === "generic.icon") insertCreatedIcon(node);
+                  else if (node.componentId === "generic.divider") insertCreatedDivider(node);
+                  else if (node.componentId === "generic.spacer") insertCreatedSpacer(node);
+                  else if (node.componentId === "generic.container") insertCreatedContainer(node);
+                  else if (node.componentId === "generic.stack") insertCreatedStack(node);
+                  else if (node.componentId === "generic.grid") insertCreatedGrid(node);
+                  else if (node.componentId === "generic.canvas") insertCreatedCanvas(node);
+                  else if (node.componentId === "generic.group") insertCreatedGroup(node);
+                  else if (node.componentId === "generic.card") insertCreatedCard(node);
+                  else if (node.componentId === "generic.cta") insertCreatedCta(node);
+                  else if (node.componentId === "generic.testimonial") insertCreatedTestimonial(node);
+                  else if (node.componentId === "generic.faq") insertCreatedFaq(node);
+                  else if (node.componentId === "generic.form") insertCreatedForm(node);
+                  else if (node.componentId === "generic.input" || node.componentId === "generic.textarea" || node.componentId === "generic.select" || node.componentId === "generic.checkbox") insertCreatedInput(node);
+                  else insertCreatedHeading(node);
+                }} onCustom={(definition) => insertCreatedCustom(definition)} onTemplate={(id) => insertTemplate(id)} dense />
               </div>
             ) : null}
             {rail === "pages" ? (
               <PagesPanel
                 site={site}
                 posts={posts}
+                visualDocument={visualDocument}
                 path={path}
                 canEdit={props.canEdit}
                 onOpen={openPage}
                 onAddPage={() => setAddingPage(true)}
+                articlePattern={articleRoute}
                 onNewPost={() => void createInsight()}
                 onSettings={(route) => {
                   if (route !== path) openPage(route);
@@ -988,7 +1948,7 @@ export function EditorShell(props: {
                 commit={commit}
               />
             ) : null}
-            {rail === "layers" ? <LayersPanel api={api} chromeFocus={selection.chrome} onSelect={selectNode} onChrome={selectChrome} /> : null}
+            {rail === "layers" ? <LayersPanel api={api} experience={experience} nodeIds={nodeIds} chromeFocus={selection.chrome} onSelect={selectNode} onChrome={selectChrome} /> : null}
             {rail === "design" ? <DesignPanel site={site} canEdit={props.canEdit} commit={commit} commitText={commitText} /> : null}
             {rail === "media" ? (
               <MediaPanel
@@ -1016,6 +1976,8 @@ export function EditorShell(props: {
               </button>
             </div>
           ) : null}
+          <DragStatus reason={dragReason} />
+          {keyboardStatus ? <p className="ed-keyboard-status" role="status" aria-live="polite">{keyboardStatus}</p> : null}
           <Canvas
             src={previewSrc}
             width={width}
@@ -1029,6 +1991,7 @@ export function EditorShell(props: {
             }}
           />
         </main>
+        <FieldIssueProvider onReport={reportFieldIssues}>
         <Inspector
           api={api}
           post={activePost}
@@ -1038,7 +2001,141 @@ export function EditorShell(props: {
           onOpenPage={openPage}
           onClear={clearSelection}
           managedRoute={managedRoute}
+          overflow={contentOverflow}
+          generated={genericByBlock[selection.itemId] ?? null}
+          onGeneratedName={(name) => {
+            const blockId = selection.itemId;
+            const current = genericByBlock[blockId];
+            const sectionId = selection.sectionId;
+            if (!current || !sectionId) return;
+            const renamed = renameGeneratedNode(current, name);
+            setGenericByBlock((items) => ({ ...items, [blockId]: renamed }));
+            const nextVisual = renameVisualNode(visualDocument, current.id, name);
+            commit(setEditorName(site, path, sectionId, name, blockId), false, nextVisual ?? undefined);
+          }}
+          onGeneratedProp={(prop, value) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            const current = genericByBlock[blockId];
+            if (!current || !sectionId) return;
+            const nextNode = writeGeneratedProp(current, prop, value);
+            setGenericByBlock((items) => ({ ...items, [blockId]: nextNode }));
+            if (prop !== "text" && prop !== "label" && prop !== "quote" && prop !== "title" && prop !== "heading" && prop !== "intro" && prop !== "tagline" && prop !== "positioning") return;
+            commitText(applyText(site, path, sectionId, "text", value, blockId), `${blockId}:${prop}`, true);
+          }}
+          onGeneratedStyle={(key, value) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            const current = genericByBlock[blockId];
+            if (!current || !sectionId) return;
+            setGenericByBlock((items) => ({ ...items, [blockId]: writeGeneratedStyle(current, key, value) }));
+            const resolved = value.startsWith("token:") ? adapterColorTokens(adapter).find((token) => token.id === value.slice(6))?.value ?? "" : value;
+            if (!/^#[0-9a-fA-F]{6}$/.test(resolved)) return;
+            if (key === "background") commit(patchFlowBlock(site, path, sectionId, blockId, { background: resolved }), true);
+            if (key === "color") commit(patchFlowBlock(site, path, sectionId, blockId, { textStyle: { color: resolved } }), true);
+          }}
+          sectionLayout={!selection.itemId ? genericBySection[selection.sectionId] ?? null : null}
+          layoutAllowed={definitionAllowsLayout(componentDefinitions(adapter), genericBySection[selection.sectionId]?.componentId ?? "", genericBySection[selection.sectionId]?.allowLayoutConversion)}
+          onLayoutMode={(mode) => {
+            const sectionId = selection.sectionId;
+            const current = genericBySection[sectionId];
+            if (!current?.layout) return;
+            const nextNode = confirmLayoutMode(current, mode);
+            commit(applySectionLayout(site, path, sectionId, mode), true);
+            setGenericBySection((items) => ({ ...items, [sectionId]: nextNode }));
+          }}
+          onLayoutSetting={(key, value) => {
+            const sectionId = selection.sectionId;
+            setGenericBySection((items) => {
+              const current = items[sectionId];
+              if (!current) return items;
+              return { ...items, [sectionId]: writeLayoutSetting(current, key, value) };
+            });
+          }}
+          visibility={(() => {
+            const current = genericByBlock[selection.itemId];
+            const flowBlock = section?.type === "flow" ? section.blocks.find((item) => item.id === selection.itemId) : undefined;
+            if (!current || !flowBlock) return null;
+            return { hidden: flowBlock.hidden, hideOn: flowBlock.hideOn ?? [] };
+          })()}
+          onVisibility={(device, hidden) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            const flowBlock = section?.type === "flow" ? section.blocks.find((item) => item.id === blockId) : undefined;
+            if (!blockId || !sectionId || !flowBlock) return;
+            const next = writeHideOn({ hidden: flowBlock.hidden, hideOn: flowBlock.hideOn ?? [] }, device, hidden);
+            commit(applyBlockVisibility(site, path, sectionId, blockId, next), true);
+          }}
+          onLink={(href) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            const next = acceptLink(href);
+            if (!blockId || !sectionId || !next) return;
+            commit(patchFlowBlock(site, path, sectionId, blockId, { href: next }), true);
+          }}
+          onLinkTarget={(target) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            if (!blockId || !sectionId) return;
+            commit(patchFlowBlock(site, path, sectionId, blockId, { target }), true);
+          }}
+          onImageAlt={(alt) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            const current = genericByBlock[blockId];
+            if (!blockId || !sectionId) return;
+            if (current) setGenericByBlock((items) => ({ ...items, [blockId]: { ...current, props: { ...current.props, alt } } }));
+            commitText(applyText(site, path, sectionId, "alt", alt, blockId), `${blockId}:alt`, true);
+          }}
+          onImageFit={(fit) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            if (!blockId || !sectionId) return;
+            commit(patchFlowBlock(site, path, sectionId, blockId, { fit }), true);
+          }}
+          onImageFocal={(focal) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            if (!blockId || !sectionId) return;
+            commit(patchFlowBlock(site, path, sectionId, blockId, { focal }), true);
+          }}
+          onButton={(key, value) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            const current = genericByBlock[blockId];
+            if (!current || !blockId || !sectionId) return;
+            setGenericByBlock((items) => ({ ...items, [blockId]: { ...current, props: { ...current.props, [key]: value } } }));
+            if (key === "label") {
+              commitText(applyText(site, path, sectionId, "text", value, blockId), `${blockId}:label`, true);
+              return;
+            }
+            if (key === "href") {
+              const href = acceptLink(value);
+              if (href) commit(patchFlowBlock(site, path, sectionId, blockId, { href }), true);
+              return;
+            }
+            const patch = buttonFlowPatch(key, value);
+            if (patch) commit(patchFlowBlock(site, path, sectionId, blockId, patch as Parameters<typeof patchFlowBlock>[4]), true);
+          }}
+          onButtonState={(state, key, value) => {
+            const blockId = selection.itemId;
+            const current = genericByBlock[blockId];
+            if (!current) return;
+            setGenericByBlock((items) => ({ ...items, [blockId]: { ...current, props: writeButtonState(current.props, state, key, value) } }));
+          }}
+          onTextStyle={(key, value) => {
+            const blockId = selection.itemId;
+            const sectionId = selection.sectionId;
+            const patch = textStylePatch(key, value);
+            if (!blockId || !sectionId || !patch) return;
+            commit(patchFlowBlock(site, path, sectionId, blockId, { textStyle: patch }), true);
+          }}
+          registered={props.registered}
+          inspectorSlots={props.inspectorSlots}
+          experience={experience}
+          canAdminister={props.canAdminister}
         />
+        </FieldIssueProvider>
       </div>
       <StatusBar message={statusMessage} viewport={viewport} scale={scale} zoom={zoom} onZoom={setZoom} role={props.role} editing={editing} onShortcuts={() => setShortcuts(true)} />
       <div className="ed-toasts" aria-live="polite">
@@ -1057,7 +2154,7 @@ export function EditorShell(props: {
                 {toast.action.label}
               </button>
             ) : null}
-            <button type="button" className="ed-icon is-small" aria-label="Dismiss" onClick={() => setToasts((items) => items.filter((item) => item.id !== toast.id))}>
+            <button type="button" className="ed-icon is-small" aria-label="Dismiss" onClick={() => { setToasts((items) => items.filter((item) => item.id !== toast.id)); setEditorError(dismissEditorError(site).error); }}>
               <X size={13} aria-hidden="true" />
             </button>
           </div>
@@ -1069,8 +2166,13 @@ export function EditorShell(props: {
           recent={recentLibrary}
           recommended={recommended}
           templates={templates}
+          adapter={adapter}
           onChoose={(entry) => {
             insertEntry(entry, insert);
+            setInsert(null);
+          }}
+          onCustom={(definition) => {
+            insertCreatedCustom(definition, insert);
             setInsert(null);
           }}
           onTemplate={(id) => {
@@ -1080,7 +2182,7 @@ export function EditorShell(props: {
           onClose={() => setInsert(null)}
         />
       ) : null}
-      {addingPage ? <AddPageDialog site={site} onCreate={createPageFrom} onClose={() => setAddingPage(false)} /> : null}
+      {addingPage ? <AddPageDialog site={site} adapter={adapter} onCreate={createPageFrom} onClose={() => setAddingPage(false)} /> : null}
       {picker ? <ImagePickerDialog websiteId={props.websiteId} media={mediaWithUse} progress={progress} onChoose={chooseImage} onUpload={uploadOnly} onClose={() => setPicker(false)} /> : null}
       {crop ? (
         <CropDialog

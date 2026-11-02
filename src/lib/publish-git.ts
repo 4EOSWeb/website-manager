@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import path from "node:path";
 import { promisify } from "node:util";
 
 const exec = promisify(execFile);
@@ -54,6 +55,11 @@ export function assertBranchName(branch: string) {
   }
 }
 
+export function editorBranchName(slug: string, suffix: string) {
+  const safe = slug.replace(/[^a-z0-9-]/gi, "").toLowerCase() || "site";
+  return `editor/${safe}/${suffix}`;
+}
+
 async function git(cwd: string, args: string[]) {
   const result = await exec("git", args, { cwd, env: gitEnv() });
   return result.stdout.trim();
@@ -77,10 +83,14 @@ export async function currentCommit(cwd: string) {
 
 export async function commitAllowedChanges(options: {
   cwd: string;
+  workspace: string;
   branch: string;
   files: string[];
   message: string;
 }) {
+  if (path.resolve(options.cwd) !== path.resolve(options.workspace)) {
+    throw new Error("That workspace is not this site.");
+  }
   assertBranchName(options.branch);
   for (const file of options.files) assertAllowedPath(file);
   if (options.message.includes("\n") || options.message.length > 200) {

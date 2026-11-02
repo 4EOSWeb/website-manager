@@ -36,9 +36,10 @@ function ZoneItem({ item }: { item: NonNullable<EditorSection["items"]>[number] 
   } as CSSProperties;
   return (
     <div
-      className={`ff-item${item.tablet ? " has-tablet" : ""}${item.mobile ? " has-mobile" : ""}${item.hidden ? " is-hidden" : ""}`}
+      className={`ff-item${item.tablet ? " has-tablet" : ""}${item.mobile ? " has-mobile" : ""}${item.strategy === "scale" ? " has-scale" : ""}${item.hidden ? " is-hidden" : ""}`}
       style={style}
       data-item-id={item.id}
+      data-z={item.zIndex}
       data-kind={previewMode ? item.kind : undefined}
       data-group={item.groupId}
       data-item-locked={item.locked ? "true" : undefined}
@@ -108,20 +109,25 @@ export function FreeformZone({
         .ff-item.is-hidden { opacity: 0.45; }
         @media (max-width: 1099px) {
           .ff-item.has-tablet { left: calc(var(--tx) * 100%); top: calc(var(--ty) * 100%); width: calc(var(--tw) * 100%); height: calc(var(--th) * 100%); }
-          .ff-item:not(.has-tablet) { position: static; width: auto; height: auto; margin: 0.75rem 0; }
-          .ff-section:not(:has(.has-tablet)) { min-height: 0; }
+          .ff-item.has-scale:not(.has-tablet) { position: absolute; left: calc(var(--dx) * 100%); top: calc(var(--dy) * 100%); width: calc(var(--dw) * 100%); height: calc(var(--dh) * 100%); }
+          .ff-item:not(.has-tablet):not(.has-scale) { position: static; width: auto; height: auto; margin: 0.75rem 0; }
+          .ff-section:not(:has(.has-tablet)):not(:has(.has-scale)) { min-height: 0; }
         }
         @media (max-width: 499px) {
-          .ff-item.has-mobile { position: absolute; left: calc(var(--mx) * 100%); top: calc(var(--my) * 100%); width: calc(var(--mw) * 100%); height: calc(var(--mh) * 100%); }
-          .ff-item:not(.has-mobile) { position: static; width: auto; height: auto; margin: 0.75rem 0; }
-          .ff-section:not(:has(.has-mobile)) { min-height: 0; }
+          .ff-zone .ff-item.has-mobile { position: absolute; left: calc(var(--mx) * 100%); top: calc(var(--my) * 100%); width: calc(var(--mw) * 100%); height: calc(var(--mh) * 100%); }
+          .ff-zone .ff-item.has-scale:not(.has-mobile) { position: absolute; left: calc(var(--dx) * 100%); top: calc(var(--dy) * 100%); width: calc(var(--dw) * 100%); height: calc(var(--dh) * 100%); }
+          .ff-zone .ff-item:not(.has-mobile):not(.has-scale) { position: static; width: auto; height: auto; margin: 0.75rem 0; }
+          .ff-section:not(:has(.has-mobile)):not(:has(.has-scale)) { min-height: 0; }
         }
       `}</style>
       {items.length === 0 && overlay && previewMode ? <button type="button" data-zone-hit className="pointer-events-auto absolute bottom-3 left-6 bg-transparent p-0 text-sm text-plum">Click to add content</button> : null}
       {items.length === 0 && !overlay ? <Empty>Click to add content</Empty> : null}
-      {items.map((item) => (
-        <ZoneItem key={item.id} item={item} />
-      ))}
+      {items
+        .map((item, index) => ({ item, index }))
+        .sort((left, right) => left.item.zIndex - right.item.zIndex || left.index - right.index)
+        .map(({ item }) => (
+          <ZoneItem key={item.id} item={item} />
+        ))}
     </div>
   );
 }
@@ -286,7 +292,7 @@ function renderSection(section: EditorSection) {
         {fields.map((field, index) => (
           <label key={field.id} className="grid gap-1 text-sm">
             <span data-field={`fields.${index}.label`}>{field.label}</span>
-            {field.kind === "textarea" ? <textarea className="border border-stone px-3 py-2" name={field.id} required={field.required} /> : <input className="border border-stone px-3 py-2" name={field.id} type={field.kind} required={field.required} />}
+            {field.kind === "checkbox" ? <input className="size-4" name={field.id} type="checkbox" defaultChecked={field.checked === true} /> : field.kind === "textarea" ? <textarea className="border border-stone px-3 py-2" name={field.id} required={field.required} /> : field.kind === "select" ? <select className="border border-stone px-3 py-2" name={field.id} required={field.required}>{(field.options ?? []).map((option) => <option key={option} value={option}>{option}</option>)}</select> : <input className="border border-stone px-3 py-2" name={field.id} type={field.kind} required={field.required} />}
           </label>
         ))}
         <button className="min-h-11 bg-plum px-4 font-semibold text-white" type="button" data-field="buttonLabel">{section.buttonLabel}</button>

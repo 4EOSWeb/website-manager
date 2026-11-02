@@ -4,7 +4,7 @@ import { authorize, authzResponse } from "@/lib/authorize";
 import { recordAudit } from "@/lib/audit";
 import { blogDraftSchema } from "@/lib/content-schema";
 import { imageUsage } from "@/lib/editor-ops";
-import { imageSize, mediaRoot, storeImage } from "@/lib/media";
+import { imageSize, mediaRoot, readMediaById, storeImage } from "@/lib/media";
 import { normalizeSiteDraft } from "@/lib/page-documents";
 import { prisma } from "@/lib/prisma";
 
@@ -35,7 +35,16 @@ export async function GET(request: Request, { params }: Params) {
   const { websiteId } = await params;
   try {
     await authorize(websiteId, "view");
-    const name = new URL(request.url).searchParams.get("name");
+    const url = new URL(request.url);
+    const id = url.searchParams.get("id");
+    if (id) {
+      const read = await readMediaById(websiteId, id);
+      if (!read) return Response.json({ message: "That image is not available." }, { status: 404 });
+      return new Response(read.bytes, {
+        headers: { "content-type": contentType(read.asset.filename), "cache-control": "private, max-age=3600" },
+      });
+    }
+    const name = url.searchParams.get("name");
     if (name) {
       if (!/^[\w.-]+$/.test(name)) return Response.json({ message: "That image is not available." }, { status: 400 });
       const file = path.join(mediaRoot(websiteId), name);
@@ -56,6 +65,7 @@ export async function GET(request: Request, { params }: Params) {
         const size = imageSize(bytes);
         const usedBy = sites.flatMap((site) => imageUsage(site, blogs, item.filename));
         return {
+          id: item.id,
           src: `/media/${item.filename}`,
           alt: item.altText,
           filename: item.filename,
@@ -92,6 +102,7 @@ export async function POST(request: Request, { params }: Params) {
     const stored = fs.readFileSync(path.join(mediaRoot(websiteId), saved.filename));
     const size = imageSize(stored);
     return Response.json({
+      id: saved.id,
       src: `/media/${saved.filename}`,
       alt: saved.altText,
       filename: saved.filename,

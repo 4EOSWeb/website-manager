@@ -1,4 +1,6 @@
 import type { BlogDraft, FlowBlock, FreeformItem, PageDocument, Placement, Section, SiteDraft } from "@/lib/content-schema";
+import { distributeBoxes, type DistributeAxis } from "@/platform/canvas/distribute";
+import { bringForward, bringToFront, sendBackward, sendToBack } from "@/platform/canvas/z-order";
 import { sanitizeMarks, type RichMark } from "@/lib/rich-text";
 import { clampPlacement, createFreeformItem, createId, createSection, templateSections, type LibraryBlock } from "@/lib/page-documents";
 
@@ -238,13 +240,36 @@ export function placeItems(
   });
 }
 
+/** Drops a tablet or mobile placement so that breakpoint inherits again. The desktop box stays. */
+export function clearItemBreakpoint(
+  site: SiteDraft,
+  route: string,
+  sectionId: string,
+  itemId: string,
+  viewport: "tablet" | "mobile",
+  overlay = false,
+): SiteDraft {
+  const apply = (items: FreeformItem[]) =>
+    items.map((item) => {
+      if (item.id !== itemId) return item;
+      const next = { ...item };
+      delete next[viewport];
+      return next;
+    });
+  return mapSection(site, route, sectionId, (section) => {
+    if (overlay && section.type === "preset") return { ...section, overlay: apply(section.overlay ?? []) };
+    if (section.type !== "freeform") return section;
+    return { ...section, items: apply(section.items) };
+  });
+}
+
 export function alignItems(
   site: SiteDraft,
   route: string,
   sectionId: string,
   itemIds: string[],
   viewport: "desktop" | "tablet" | "mobile",
-  mode: "left" | "center" | "right" | "top" | "middle",
+  mode: "left" | "center" | "right" | "top" | "middle" | "bottom",
   overlay = false,
 ): SiteDraft {
   return mapSection(site, route, sectionId, (section) => {
@@ -267,7 +292,103 @@ export function alignItems(
       if (mode === "center") box.x = midX - box.w / 2;
       if (mode === "top") box.y = boxes.length === 1 ? 0 : minY;
       if (mode === "middle") box.y = midY - box.h / 2;
+      if (mode === "bottom") box.y = (boxes.length === 1 ? 1 : maxBottom) - box.h;
       return { ...item, [viewport]: clampPlacement(box) };
+    });
+    if (overlay && section.type === "preset") return { ...section, overlay: items };
+    if (section.type === "freeform") return { ...section, items };
+    return section;
+  });
+}
+
+export function distributeItems(
+  site: SiteDraft,
+  route: string,
+  sectionId: string,
+  itemIds: string[],
+  viewport: "desktop" | "tablet" | "mobile",
+  axis: DistributeAxis,
+  overlay = false,
+): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    const source = overlay && section.type === "preset" ? section.overlay ?? [] : section.type === "freeform" ? section.items : null;
+    if (!source || itemIds.length < 3) return section;
+    const chosen = source.filter((item) => itemIds.includes(item.id));
+    if (chosen.length < 3) return section;
+    const nextBoxes = distributeBoxes(chosen.map((item) => item[viewport] ?? item.desktop), axis);
+    const byId = new Map(chosen.map((item, index) => [item.id, nextBoxes[index]]));
+    const items = source.map((item) => {
+      const box = byId.get(item.id);
+      if (!box) return item;
+      return { ...item, [viewport]: clampPlacement({ ...(item[viewport] ?? item.desktop), x: box.x, y: box.y }) };
+    });
+    if (overlay && section.type === "preset") return { ...section, overlay: items };
+    if (section.type === "freeform") return { ...section, items };
+    return section;
+  });
+}
+
+export function bringForwardItems(site: SiteDraft, route: string, sectionId: string, itemId: string, overlay = false): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    const source = overlay && section.type === "preset" ? section.overlay ?? [] : section.type === "freeform" ? section.items : null;
+    if (!source) return section;
+    const ordered = bringForward(source.map((item) => ({ id: item.id, z: item.zIndex, locked: item.locked })), itemId);
+    const byId = new Map(ordered.map((item) => [item.id, item.z]));
+    const items = source.map((item) => {
+      const z = byId.get(item.id);
+      return z === undefined || z === item.zIndex ? item : { ...item, zIndex: z };
+    });
+    if (overlay && section.type === "preset") return { ...section, overlay: items };
+    if (section.type === "freeform") return { ...section, items };
+    return section;
+  });
+}
+
+export function bringToFrontItems(site: SiteDraft, route: string, sectionId: string, itemId: string, overlay = false): { site: SiteDraft; refused: boolean } {
+  let refused = false;
+  const next = mapSection(site, route, sectionId, (section) => {
+    const source = overlay && section.type === "preset" ? section.overlay ?? [] : section.type === "freeform" ? section.items : null;
+    if (!source) return section;
+    const ordered = bringToFront(source.map((item) => ({ id: item.id, z: item.zIndex, locked: item.locked })), itemId);
+    refused = ordered.refused;
+    if (ordered.refused) return section;
+    const byId = new Map(ordered.nodes.map((item) => [item.id, item.z]));
+    const items = source.map((item) => {
+      const z = byId.get(item.id);
+      return z === undefined || z === item.zIndex ? item : { ...item, zIndex: z };
+    });
+    if (overlay && section.type === "preset") return { ...section, overlay: items };
+    if (section.type === "freeform") return { ...section, items };
+    return section;
+  });
+  return { site: next, refused };
+}
+
+export function sendBackwardItems(site: SiteDraft, route: string, sectionId: string, itemId: string, overlay = false): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    const source = overlay && section.type === "preset" ? section.overlay ?? [] : section.type === "freeform" ? section.items : null;
+    if (!source) return section;
+    const ordered = sendBackward(source.map((item) => ({ id: item.id, z: item.zIndex, locked: item.locked })), itemId);
+    const byId = new Map(ordered.map((item) => [item.id, item.z]));
+    const items = source.map((item) => {
+      const z = byId.get(item.id);
+      return z === undefined || z === item.zIndex ? item : { ...item, zIndex: z };
+    });
+    if (overlay && section.type === "preset") return { ...section, overlay: items };
+    if (section.type === "freeform") return { ...section, items };
+    return section;
+  });
+}
+
+export function sendToBackItems(site: SiteDraft, route: string, sectionId: string, itemId: string, overlay = false): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    const source = overlay && section.type === "preset" ? section.overlay ?? [] : section.type === "freeform" ? section.items : null;
+    if (!source) return section;
+    const ordered = sendToBack(source.map((item) => ({ id: item.id, z: item.zIndex, locked: item.locked })), itemId);
+    const byId = new Map(ordered.map((item) => [item.id, item.z]));
+    const items = source.map((item) => {
+      const z = byId.get(item.id);
+      return z === undefined || z === item.zIndex ? item : { ...item, zIndex: z };
     });
     if (overlay && section.type === "preset") return { ...section, overlay: items };
     if (section.type === "freeform") return { ...section, items };
@@ -289,6 +410,24 @@ export function groupItems(site: SiteDraft, route: string, sectionId: string, it
           return next;
         }
         return { ...item, groupId };
+      });
+    };
+    if (overlay && section.type === "preset") return { ...section, overlay: apply(section.overlay ?? []) };
+    if (section.type !== "freeform") return section;
+    return { ...section, items: apply(section.items) };
+  });
+}
+
+export function ungroupItems(site: SiteDraft, route: string, sectionId: string, itemId: string, overlay = false): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    const apply = (items: FreeformItem[]) => {
+      const groupId = items.find((item) => item.id === itemId)?.groupId;
+      if (!groupId) return items;
+      return items.map((item) => {
+        if (item.groupId !== groupId) return item;
+        const next = { ...item };
+        delete next.groupId;
+        return next;
       });
     };
     if (overlay && section.type === "preset") return { ...section, overlay: apply(section.overlay ?? []) };
@@ -358,8 +497,6 @@ export function setImageSource(site: SiteDraft, route: string, sectionId: string
   });
 }
 
-const RESERVED = new Set(["/", "/about", "/approach", "/solutions", "/team", "/references", "/insights", "/contact", "/privacy", "/terms", "/prototype-notes"]);
-
 export function slugify(title: string) {
   const slug = title
     .toLowerCase()
@@ -370,20 +507,20 @@ export function slugify(title: string) {
 }
 
 /** Returns why a page address can't be used, or "" when it can. */
-export function routeProblem(site: SiteDraft, route: string, current?: string) {
+export function routeProblem(site: SiteDraft, route: string, current?: string, reserved: readonly string[] = []) {
   if (!/^\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(route)) return "Use a short address such as /new-service.";
-  if (route !== current && (RESERVED.has(route) || site.pages.some((page) => page.route === route))) return "That address is already used.";
+  if (route !== current && (reserved.includes(route) || site.pages.some((page) => page.route === route))) return "That address is already used.";
   return "";
 }
 
 export function createPage(
   site: SiteDraft,
   input: { title: string; route: string; template: PageDocument["template"]; navVisible: boolean; seoTitle: string; metaDescription: string },
+  reserved: readonly string[] = [],
 ): { site: SiteDraft; error?: string } {
   const route = input.route.startsWith("/") ? input.route : `/${input.route}`;
-  const problem = routeProblem(site, route);
+  const problem = routeProblem(site, route, undefined, reserved);
   if (problem) return { site, error: problem };
-  if (input.template === "home" || input.template === "marketing" || input.template === "legal") return { site, error: "Choose a starting layout." };
   const next: PageDocument = {
     id: createId("page"),
     route,
@@ -395,16 +532,19 @@ export function createPage(
     seoTitle: input.seoTitle,
     metaDescription: input.metaDescription,
     sections: templateSections(input.template),
+    editBody: true,
+    ...(input.template === "article" ? { editHeader: true, editSidebar: true } : {}),
+    ...(input.template === "landing" ? { editCta: true } : {}),
   };
   return { site: { ...site, pages: [...site.pages, next] }, error: undefined };
 }
 
-export function duplicatePage(site: SiteDraft, route: string): { site: SiteDraft; route?: string; error?: string } {
+export function duplicatePage(site: SiteDraft, route: string, reserved: readonly string[] = []): { site: SiteDraft; route?: string; error?: string } {
   const page = pageByRoute(site, route);
   if (!page || page.locked || page.route === "/") return { site, error: "This page cannot be duplicated." };
   let copyRoute = `${page.route}-copy`;
   let n = 2;
-  while (site.pages.some((item) => item.route === copyRoute) || RESERVED.has(copyRoute)) {
+  while (site.pages.some((item) => item.route === copyRoute) || reserved.includes(copyRoute)) {
     copyRoute = `${page.route}-copy-${n}`;
     n += 1;
   }
@@ -424,12 +564,12 @@ export function duplicatePage(site: SiteDraft, route: string): { site: SiteDraft
 }
 
 /** Moves a page you created to a new address, and points its sub-pages and on-site links there. */
-export function changePageRoute(site: SiteDraft, from: string, input: string): { site: SiteDraft; route?: string; error?: string } {
+export function changePageRoute(site: SiteDraft, from: string, input: string, reserved: readonly string[] = []): { site: SiteDraft; route?: string; error?: string } {
   const page = pageByRoute(site, from);
-  if (!page || page.locked || RESERVED.has(from)) return { site, error: "This page keeps its address." };
+  if (!page || page.locked || reserved.includes(from)) return { site, error: "This page keeps its address." };
   const route = input.trim().startsWith("/") ? input.trim() : `/${input.trim()}`;
   if (route === from) return { site, route };
-  const problem = routeProblem(site, route, from);
+  const problem = routeProblem(site, route, from, reserved);
   if (problem) return { site, error: problem };
   const relink = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(relink);
@@ -522,13 +662,38 @@ export function moveFlowBlockById(site: SiteDraft, route: string, sectionId: str
   return moveFlowBlock(site, route, sectionId, from, after ? target + 1 : target);
 }
 
+/** Moves one flow block into a different section. One call is one undo step. */
+export function moveBlockToSection(site: SiteDraft, route: string, fromSectionId: string, toSectionId: string, blockId: string, targetId: string, after: boolean): SiteDraft {
+  if (fromSectionId === toSectionId) return site;
+  const page = pageByRoute(site, route);
+  if (!page || page.locked) return site;
+  const source = page.sections.find((section) => section.id === fromSectionId);
+  const destination = page.sections.find((section) => section.id === toSectionId);
+  if (!source || !destination || source.type !== "flow" || destination.type !== "flow") return site;
+  const block = source.blocks.find((item) => item.id === blockId);
+  if (!block || block.locked) return site;
+  const targetIndex = targetId ? destination.blocks.findIndex((item) => item.id === targetId) : -1;
+  const index = targetIndex < 0 ? destination.blocks.length : after ? targetIndex + 1 : targetIndex;
+  const nextDestination = destination.blocks.slice();
+  nextDestination.splice(index, 0, block);
+  const nextSource = source.blocks.filter((item) => item.id !== blockId);
+  return mapPage(site, route, (current) => ({
+    ...current,
+    sections: current.sections.map((section) => {
+      if (section.id === fromSectionId && section.type === "flow") return { ...section, blocks: nextSource };
+      if (section.id === toSectionId && section.type === "flow") return { ...section, blocks: nextDestination };
+      return section;
+    }),
+  }));
+}
+
 export function insertSectionCopy(site: SiteDraft, route: string, afterSectionId: string, section: Section): SiteDraft {
   const sections = pageByRoute(site, route)?.sections ?? [];
   const at = sections.findIndex((item) => item.id === afterSectionId);
   return insertSection(site, route, at < 0 ? sections.length : at + 1, cloneSection(section));
 }
 
-type BlockPatch = Partial<Pick<FlowBlock, "kind" | "href" | "alt" | "fit" | "focal" | "textStyle" | "variant" | "size" | "align" | "target" | "icon" | "width" | "listStyle" | "editorName">>;
+type BlockPatch = Partial<Pick<FlowBlock, "kind" | "href" | "alt" | "fit" | "focal" | "textStyle" | "variant" | "size" | "align" | "target" | "icon" | "width" | "listStyle" | "editorName" | "background">>;
 
 export function patchFlowBlock(site: SiteDraft, route: string, sectionId: string, blockId: string, patch: BlockPatch): SiteDraft {
   return mapSection(site, route, sectionId, (section) => {
@@ -577,6 +742,17 @@ export function addFlowBlock(site: SiteDraft, route: string, sectionId: string, 
     } else if (kind === "list") block.text = { text: "First point\nSecond point", marks: [] };
     else if (kind === "eyebrow") block.text = { text: "Small heading", marks: [] };
     else if (kind === "quote") block.text = { text: "A short quote from a client.", marks: [] };
+    const blocks = [...section.blocks];
+    const at = afterBlockId ? blocks.findIndex((item) => item.id === afterBlockId) : -1;
+    blocks.splice(at < 0 ? blocks.length : at + 1, 0, block);
+    return { ...section, blocks };
+  });
+}
+
+/** Inserts a block that was already built, after the selected block or at the end. */
+export function insertFlowBlock(site: SiteDraft, route: string, sectionId: string, block: FlowBlock, afterBlockId?: string): SiteDraft {
+  return mapSection(site, route, sectionId, (section) => {
+    if (section.type !== "flow") return section;
     const blocks = [...section.blocks];
     const at = afterBlockId ? blocks.findIndex((item) => item.id === afterBlockId) : -1;
     blocks.splice(at < 0 ? blocks.length : at + 1, 0, block);
