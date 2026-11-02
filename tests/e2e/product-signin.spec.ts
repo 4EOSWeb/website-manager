@@ -36,3 +36,17 @@ test("the sign-in screen uses the product system and development sign-in still w
   await expect(page).not.toHaveURL(/\/signin/);
   await expect(page.getByRole("heading", { name: "Choose a website" })).toBeVisible();
 });
+
+test("the button says signing you in while the request is in flight", async ({ page }) => {
+  await page.goto("/signin");
+  await page.route("**/*", async (route) => {
+    if (route.request().method() === "POST") await new Promise((resolve) => setTimeout(resolve, 900));
+    await route.continue();
+  });
+  const click = page.getByRole("button", { name: "Continue as 4EOS administrator" }).click();
+  await expect(page.getByRole("button", { name: "Signing you in" })).toBeVisible();
+  await expect(page.locator("main").getByRole("alert")).toHaveCount(0);
+  await page.screenshot({ path: "docs/product-hallmark/after/login-pending.png" });
+  await click;
+  await expect(page).not.toHaveURL(/\/signin/);
+});

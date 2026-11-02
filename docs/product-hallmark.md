@@ -23,3 +23,5 @@ After:
 - Checked at 1440, 768, and 390. The page does not scroll sideways.
 
 18.1 has no standalone page. These components are first used here.
+
+There is no separate callback URL. While a sign-in request is in flight, the button label is “Signing you in” and the button will not submit again. That state does not show an error.

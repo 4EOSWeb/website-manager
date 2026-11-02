@@ -1,5 +1,5 @@
 import { signInAsAdministrator, signInAsEditor, signInAsHarborEditor, signInWithMicrosoft } from "@/app/signin/actions";
-import { ProductButton } from "@/components/product/button";
+import { SignInSubmit } from "@/app/signin/callback-status";
 import { ProductCard } from "@/components/product/card";
 import { devAuthEnabled, entraConfigured } from "@/lib/dev-auth";
 
@@ -13,7 +13,7 @@ export default function SignInPage() {
       <p>Edit the pages, pictures, and navigation on a website you already work on.</p>
       {entra ? (
         <form action={signInWithMicrosoft}>
-          <ProductButton type="submit">Sign in with Microsoft</ProductButton>
+          <SignInSubmit label="Sign in with Microsoft" variant="primary" />
         </form>
       ) : (
         <ProductCard>
@@ -23,13 +23,13 @@ export default function SignInPage() {
       {dev ? (
         <div className="product-dev">
           <form action={signInAsAdministrator}>
-            <ProductButton type="submit" variant="quiet">Continue as 4EOS administrator</ProductButton>
+            <SignInSubmit label="Continue as 4EOS administrator" />
           </form>
           <form action={signInAsEditor}>
-            <ProductButton type="submit" variant="quiet">Continue as client editor</ProductButton>
+            <SignInSubmit label="Continue as client editor" />
           </form>
           <form action={signInAsHarborEditor}>
-            <ProductButton type="submit" variant="quiet">Continue as Harbor editor</ProductButton>
+            <SignInSubmit label="Continue as Harbor editor" />
           </form>
         </div>
       ) : null}

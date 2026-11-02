@@ -91,16 +91,6 @@
   cursor: progress;
 }
 
-.product-button[data-state="loading"]::after {
-  content: "";
-  width: 0.7rem;
-  height: 0.7rem;
-  margin-left: auto;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  border-radius: 50%;
-}
-
 .product-field {
   display: flex;
   flex-direction: column;
