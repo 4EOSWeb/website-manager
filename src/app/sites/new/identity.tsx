@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { websiteIdExists } from "./actions";
+import { PathFields, adapterPathOnboarding } from "./paths";
 import { RepositoryFields, branchOnboarding, repositoryProblems } from "./repository";
 import { siteIdPattern, siteIdProblem } from "./site-id";
 
@@ -15,6 +16,8 @@ export function SiteIdentity() {
   const [repository, setRepository] = useState("");
   const [branch, setBranch] = useState("main");
   const [repoErrors, setRepoErrors] = useState({ owner: "", repository: "", branch: "" });
+  const [adapterPath, setAdapterPath] = useState("");
+  const [adapterError, setAdapterError] = useState("");
 
   async function check(value: string) {
     const exists = siteIdPattern.test(value) ? await websiteIdExists(value) : false;
@@ -29,7 +32,9 @@ export function SiteIdentity() {
         event.preventDefault();
         const names = repositoryProblems(owner, repository);
         const nextBranch = branchOnboarding(branch);
+        const nextAdapter = adapterPathOnboarding(adapterPath);
         setRepoErrors({ ...names, branch: nextBranch.ok ? "" : nextBranch.problem });
+        setAdapterError(nextAdapter.ok ? "" : nextAdapter.problem);
       }}
     >
       <label className="block text-sm text-[var(--ink)]">
@@ -62,6 +67,7 @@ export function SiteIdentity() {
         onRepository={setRepository}
         onBranch={setBranch}
       />
+      <PathFields adapterPath={adapterPath} adapterError={adapterError} onAdapterPath={setAdapterPath} />
       <button className="border border-[var(--ink)] px-4 py-3 text-left" type="submit">Continue</button>
     </form>
   );
