@@ -44,7 +44,7 @@ export function PagesPanel(props: {
   const pages = listedPages(props.visualDocument, props.site.pages).filter((page) => match(`${page.title} ${page.navLabel ?? ""} ${page.route}`));
   const groups = pageGroups(pages);
   return (
-    <div className="ed-panel">
+    <div className="ed-panel product-pages">
       <div className="ed-panel-head">
         <h2>Pages</h2>
         {props.canEdit ? (
@@ -104,7 +104,7 @@ export function PagesPanel(props: {
           </ul>
         </Group>
       ) : null}
-      {pages.length === 0 ? <Empty title="No pages match">Try part of the page name or its address.</Empty> : null}
+      {pages.length === 0 ? <Empty title="No pages match">Use part of a name or an address.</Empty> : null}
     </div>
   );
 }

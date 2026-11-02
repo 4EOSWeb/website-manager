@@ -105,3 +105,27 @@ After:
 - Tab reaches “Your websites,” and the focus ring is visible.
 - The Harbor path still reaches the compatibility report. GitHub is not configured here, so the connection check fails and Activate stays off. The form keeps the typed values and says “Nothing was connected.”
 - This route has no loading file. A client editor still sees “That page is not available.”
+
+## Pages panel
+
+Hallmark, before:
+
+- The heading is a small uppercase label, “PAGES.”
+- The group label is uppercase, “IN THE MENU.”
+- Rows are 26 pixels tall, packed against a search field that is 28 pixels tall.
+- A search with no matches says “Try part of the page name or its address.”
+
+Humanizer:
+
+- The heading is “Pages,” in the product serif, not small capitals.
+- The group reads “In the menu.”
+- A search with no matches says “No pages match” and “Use part of a name or an address.”
+
+After:
+
+- The panel stays in the editor’s dark surface. Type size and row height follow the product spacing.
+- Harbor still lists Home, Work, Studio, Journal, and Visit. It does not list Approach.
+- Opening Work changes the current page. Add page still opens the dialog, and Escape closes it without adding a page.
+- Keyboard focus on Home uses the editor focus ring.
+- Checked at 1440, 768, and 390. The panel fits. The editor page is 3 pixels wider than the viewport at 390, from the existing editor chrome.
+- Layers and the other panels keep their previous type.
