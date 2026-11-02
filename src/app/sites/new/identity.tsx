@@ -26,6 +26,23 @@ export function SiteIdentity() {
   const [themeError, setThemeError] = useState("");
   const [navigationSource, setNavigationSource] = useState("document");
   const [navigationError, setNavigationError] = useState("");
+  const [connectionError, setConnectionError] = useState("");
+
+  async function checkConnection(nextOwner: string, nextRepository: string) {
+    setConnectionError("");
+    try {
+      const response = await fetch("/api/sites/onboarding/connection", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ owner: nextOwner, repository: nextRepository }),
+      });
+      const payload = await response.json().catch(() => null);
+      const message = payload && typeof payload.problem === "string" ? payload.problem : payload && typeof payload.message === "string" ? payload.message : "";
+      if (!response.ok || payload?.ok === false) setConnectionError(message || "That repository could not be checked.");
+    } catch {
+      setConnectionError("That repository could not be checked.");
+    }
+  }
 
   async function check(value: string) {
     const exists = siteIdPattern.test(value) ? await websiteIdExists(value) : false;
@@ -51,6 +68,12 @@ export function SiteIdentity() {
         setMediaError(nextMedia.ok ? "" : nextMedia.problem);
         setThemeError(nextTheme.ok ? "" : nextTheme.problem);
         setNavigationError(nextNavigation.ok ? "" : nextNavigation.problem);
+        const ready = !names.owner && !names.repository && nextBranch.ok && nextAdapter.ok && nextContent.ok && nextMedia.ok && nextTheme.ok && nextNavigation.ok;
+        if (!ready) {
+          setConnectionError("");
+          return;
+        }
+        void checkConnection(owner.trim(), repository.trim());
       }}
     >
       <label className="block text-sm text-[var(--ink)]">
@@ -100,6 +123,7 @@ export function SiteIdentity() {
         navigationError={navigationError}
         onNavigationSource={setNavigationSource}
       />
+      {connectionError ? <p className="text-sm text-[var(--accent)]" role="alert">{connectionError}</p> : null}
       <button className="border border-[var(--ink)] px-4 py-3 text-left" type="submit">Continue</button>
     </form>
   );
