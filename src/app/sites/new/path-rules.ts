@@ -8,7 +8,7 @@ function insideRepository(value: string, emptyMessage: string): string {
   return "";
 }
 
-function relativeField(value: string, emptyMessage: string, key: "adapterPath" | "contentPath") {
+function relativeField(value: string, emptyMessage: string, key: "adapterPath" | "contentPath" | "mediaPath") {
   const problem = insideRepository(value, emptyMessage);
   if (problem) return { ok: false as const, problem };
   return { ok: true as const, onboarding: { [key]: value.trim() } };
@@ -22,4 +22,9 @@ export function adapterPathOnboarding(value: string) {
 /** The content directory stays on the onboarding draft. */
 export function contentPathOnboarding(value: string) {
   return relativeField(value, "Enter the content path.", "contentPath");
+}
+
+/** The public media directory stays a relative path. Nothing is uploaded. */
+export function mediaPathOnboarding(value: string) {
+  return relativeField(value, "Enter the media path.", "mediaPath");
 }

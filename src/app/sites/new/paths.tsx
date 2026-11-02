@@ -1,6 +1,6 @@
 "use client";
 
-export { adapterPathOnboarding, contentPathOnboarding } from "./path-rules";
+export { adapterPathOnboarding, contentPathOnboarding, mediaPathOnboarding } from "./path-rules";
 
 function PathField(props: { label: string; value: string; placeholder: string; error: string; onChange: (value: string) => void }) {
   return (
@@ -28,11 +28,15 @@ export function PathFields(props: {
   contentPath: string;
   contentError: string;
   onContentPath: (value: string) => void;
+  mediaPath: string;
+  mediaError: string;
+  onMediaPath: (value: string) => void;
 }) {
   return (
     <>
       <PathField label="Adapter path" value={props.adapterPath} placeholder="adapter.ts" error={props.adapterError} onChange={props.onAdapterPath} />
       <PathField label="Content path" value={props.contentPath} placeholder="src/content" error={props.contentError} onChange={props.onContentPath} />
+      <PathField label="Media path" value={props.mediaPath} placeholder="public/media" error={props.mediaError} onChange={props.onMediaPath} />
     </>
   );
 }

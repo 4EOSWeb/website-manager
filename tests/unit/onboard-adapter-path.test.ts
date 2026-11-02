@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { adapterPathOnboarding, contentPathOnboarding } from "../../src/app/sites/new/path-rules.ts";
+import { adapterPathOnboarding, contentPathOnboarding, mediaPathOnboarding } from "../../src/app/sites/new/path-rules.ts";
 
 test("a relative adapter path passes and a parent path fails", () => {
   assert.deepEqual(adapterPathOnboarding("adapter.ts"), { ok: true, onboarding: { adapterPath: "adapter.ts" } });
@@ -16,4 +16,11 @@ test("a relative content path passes and a parent path fails", () => {
   const parent = contentPathOnboarding("..");
   assert.equal(parent.ok, false);
   if (!parent.ok) assert.match(parent.problem, /repository/);
+});
+
+test("a relative media path passes and an absolute path fails", () => {
+  assert.deepEqual(mediaPathOnboarding("public/media"), { ok: true, onboarding: { mediaPath: "public/media" } });
+  const absolute = mediaPathOnboarding("/var/media");
+  assert.equal(absolute.ok, false);
+  if (!absolute.ok) assert.match(absolute.problem, /repository/);
 });
