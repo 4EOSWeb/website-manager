@@ -8,9 +8,18 @@ function insideRepository(value: string, emptyMessage: string): string {
   return "";
 }
 
+function relativeField(value: string, emptyMessage: string, key: "adapterPath" | "contentPath") {
+  const problem = insideRepository(value, emptyMessage);
+  if (problem) return { ok: false as const, problem };
+  return { ok: true as const, onboarding: { [key]: value.trim() } };
+}
+
 /** The adapter file stays a relative path. The client does not import it. */
 export function adapterPathOnboarding(value: string) {
-  const problem = insideRepository(value, "Enter the adapter path.");
-  if (problem) return { ok: false as const, problem };
-  return { ok: true as const, onboarding: { adapterPath: value.trim() } };
+  return relativeField(value, "Enter the adapter path.", "adapterPath");
+}
+
+/** The content directory stays on the onboarding draft. */
+export function contentPathOnboarding(value: string) {
+  return relativeField(value, "Enter the content path.", "contentPath");
 }

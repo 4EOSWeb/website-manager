@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { websiteIdExists } from "./actions";
-import { PathFields, adapterPathOnboarding } from "./paths";
+import { PathFields, adapterPathOnboarding, contentPathOnboarding } from "./paths";
 import { RepositoryFields, branchOnboarding, repositoryProblems } from "./repository";
 import { siteIdPattern, siteIdProblem } from "./site-id";
 
@@ -18,6 +18,8 @@ export function SiteIdentity() {
   const [repoErrors, setRepoErrors] = useState({ owner: "", repository: "", branch: "" });
   const [adapterPath, setAdapterPath] = useState("");
   const [adapterError, setAdapterError] = useState("");
+  const [contentPath, setContentPath] = useState("");
+  const [contentError, setContentError] = useState("");
 
   async function check(value: string) {
     const exists = siteIdPattern.test(value) ? await websiteIdExists(value) : false;
@@ -33,8 +35,10 @@ export function SiteIdentity() {
         const names = repositoryProblems(owner, repository);
         const nextBranch = branchOnboarding(branch);
         const nextAdapter = adapterPathOnboarding(adapterPath);
+        const nextContent = contentPathOnboarding(contentPath);
         setRepoErrors({ ...names, branch: nextBranch.ok ? "" : nextBranch.problem });
         setAdapterError(nextAdapter.ok ? "" : nextAdapter.problem);
+        setContentError(nextContent.ok ? "" : nextContent.problem);
       }}
     >
       <label className="block text-sm text-[var(--ink)]">
@@ -67,7 +71,14 @@ export function SiteIdentity() {
         onRepository={setRepository}
         onBranch={setBranch}
       />
-      <PathFields adapterPath={adapterPath} adapterError={adapterError} onAdapterPath={setAdapterPath} />
+      <PathFields
+        adapterPath={adapterPath}
+        adapterError={adapterError}
+        onAdapterPath={setAdapterPath}
+        contentPath={contentPath}
+        contentError={contentError}
+        onContentPath={setContentPath}
+      />
       <button className="border border-[var(--ink)] px-4 py-3 text-left" type="submit">Continue</button>
     </form>
   );

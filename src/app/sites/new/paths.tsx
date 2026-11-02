@@ -1,26 +1,38 @@
 "use client";
 
-export { adapterPathOnboarding } from "./path-rules";
+export { adapterPathOnboarding, contentPathOnboarding } from "./path-rules";
+
+function PathField(props: { label: string; value: string; placeholder: string; error: string; onChange: (value: string) => void }) {
+  return (
+    <>
+      <label className="block text-sm text-[var(--ink)]">
+        {props.label}
+        <input
+          className="mt-2 w-full border border-[var(--line)] px-3 py-2"
+          value={props.value}
+          placeholder={props.placeholder}
+          autoCapitalize="none"
+          spellCheck={false}
+          onChange={(event) => props.onChange(event.target.value)}
+        />
+      </label>
+      {props.error ? <p className="text-sm text-[var(--accent)]" role="alert">{props.error}</p> : null}
+    </>
+  );
+}
 
 export function PathFields(props: {
   adapterPath: string;
   adapterError: string;
   onAdapterPath: (value: string) => void;
+  contentPath: string;
+  contentError: string;
+  onContentPath: (value: string) => void;
 }) {
   return (
     <>
-      <label className="block text-sm text-[var(--ink)]">
-        Adapter path
-        <input
-          className="mt-2 w-full border border-[var(--line)] px-3 py-2"
-          value={props.adapterPath}
-          placeholder="adapter.ts"
-          autoCapitalize="none"
-          spellCheck={false}
-          onChange={(event) => props.onAdapterPath(event.target.value)}
-        />
-      </label>
-      {props.adapterError ? <p className="text-sm text-[var(--accent)]" role="alert">{props.adapterError}</p> : null}
+      <PathField label="Adapter path" value={props.adapterPath} placeholder="adapter.ts" error={props.adapterError} onChange={props.onAdapterPath} />
+      <PathField label="Content path" value={props.contentPath} placeholder="src/content" error={props.contentError} onChange={props.onContentPath} />
     </>
   );
 }
