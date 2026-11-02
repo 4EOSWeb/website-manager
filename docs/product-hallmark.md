@@ -53,3 +53,9 @@ After:
 - Checked at 1440, 768, and 390. The page does not scroll sideways.
 - Tab reaches Connect a website with the product focus ring.
 - This route has no loading file and no error file. A signed-out visit goes to sign-in. Loading and error screens are later steps.
+
+## Empty website list
+
+There was no empty screen before this. A person with no sites saw the heading and a blank list.
+
+The empty state is a card with a small page mark and one sentence. An administrator sees “Nothing is connected yet.” and Connect a website. A client editor sees “No website is assigned to you.” and no connect action. A person who already has sites still sees the cards. The mark does not move, so reduced motion has nothing extra to stop. Keyboard focus lands on Connect a website in the administrator empty state. There is still no loading or error file on this route.

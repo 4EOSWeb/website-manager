@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/product/card";
+import { ProductEmpty } from "@/components/product/empty";
 import { requirePageActor } from "@/lib/authorize";
 import { prisma } from "@/lib/prisma";
 import { canConnectWebsite } from "@/lib/roles";
@@ -30,24 +31,35 @@ export default async function SitesPage() {
     <main className="product-sites">
       <div className="product-sites-bar">
         <h1 className="product-display">Your websites</h1>
-        {connect ? (
+        {connect && websites.length > 0 ? (
           <Link className="product-button product-button-primary product-button-inline" href="/sites/new">
             Connect a website
           </Link>
         ) : null}
       </div>
-      <ul className="product-sites-list">
-        {websites.map((website) => (
-          <li key={website.id}>
-            <ProductCard title={website.name} className="product-site-card">
-              <p className="product-quiet">{siteHost(website.productionUrl)}</p>
-              <Link className="product-button product-button-quiet product-button-inline" href={`/sites/${website.id}/editor`} aria-label={`Edit ${website.name}`}>
-                Edit
-              </Link>
-            </ProductCard>
-          </li>
-        ))}
-      </ul>
+      {websites.length === 0 ? (
+        <ProductEmpty label={connect ? "No websites" : "No website assigned"}>
+          <p>{connect ? "Nothing is connected yet." : "No website is assigned to you."}</p>
+          {connect ? (
+            <Link className="product-button product-button-primary product-button-inline" href="/sites/new">
+              Connect a website
+            </Link>
+          ) : null}
+        </ProductEmpty>
+      ) : (
+        <ul className="product-sites-list">
+          {websites.map((website) => (
+            <li key={website.id}>
+              <ProductCard title={website.name} className="product-site-card">
+                <p className="product-quiet">{siteHost(website.productionUrl)}</p>
+                <Link className="product-button product-button-quiet product-button-inline" href={`/sites/${website.id}/editor`} aria-label={`Edit ${website.name}`}>
+                  Edit
+                </Link>
+              </ProductCard>
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   );
 }

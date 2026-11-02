@@ -275,6 +275,32 @@ a.product-button {
   margin: 0;
 }
 
+.product-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--product-space-3);
+  width: 100%;
+  padding: var(--product-space-5);
+  border: 1px solid var(--product-line);
+  border-radius: 2px;
+  background: var(--product-surface);
+  color: var(--product-ink);
+}
+
+.product-empty-mark {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--product-accent);
+}
+
+.product-empty p {
+  margin: 0;
+  max-width: 36rem;
+  font-size: var(--product-text-lg);
+  line-height: 1.45;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .product-button,
   .product-field input {
