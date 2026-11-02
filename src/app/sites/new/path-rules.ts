@@ -28,3 +28,16 @@ export function contentPathOnboarding(value: string) {
 export function mediaPathOnboarding(value: string) {
   return relativeField(value, "Enter the media path.", "mediaPath");
 }
+
+/** Tokens come from the adapter or a CSS file in the repository. A remote URL is not fetched. */
+export function themeSourceOnboarding(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return { ok: false as const, problem: "Enter the theme source." };
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("//")) {
+    return { ok: false as const, problem: "Use the adapter or a CSS file in the repository." };
+  }
+  if (trimmed === "adapter") return { ok: true as const, onboarding: { themeSource: "adapter" as const } };
+  const problem = insideRepository(trimmed, "Enter the theme source.");
+  if (problem) return { ok: false as const, problem };
+  return { ok: true as const, onboarding: { themeSource: trimmed } };
+}
