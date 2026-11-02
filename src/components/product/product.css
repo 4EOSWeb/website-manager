@@ -171,6 +171,43 @@
   line-height: 1.5;
 }
 
+.product-signin {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--product-space-4);
+  width: min(100%, 32rem);
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding: var(--product-space-6) var(--product-space-4);
+  overflow-x: clip;
+}
+
+.product-signin > p:not(.product-kicker) {
+  font-size: var(--product-text-lg);
+  line-height: 1.5;
+}
+
+.product-unavailable {
+  margin: 0;
+  font-size: var(--product-text-lg);
+  line-height: 1.45;
+}
+
+.product-dev {
+  display: flex;
+  flex-direction: column;
+  gap: var(--product-space-2);
+  margin-top: var(--product-space-4);
+  padding-top: var(--product-space-4);
+  border-top: 1px solid var(--product-line);
+}
+
+.product-dev .product-button {
+  color: var(--product-muted);
+  font-size: var(--product-text-sm);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .product-button,
   .product-field input {
