@@ -161,3 +161,9 @@ After:
 - A new PNG shows its size, and Delete is available because the picture is not in use.
 - Checked at 1440, 768, and 390. The panel fits.
 - The empty library copy is still the previous sentence. That empty state is the next step.
+
+## Empty media library
+
+Harbor’s library had no pictures. The old line was “No images yet,” then “Upload a picture to use it anywhere on the site.”
+
+The empty state now says “No images have been added.” and offers Choose a file. The drop area above it still accepts a file. A search through a library that has pictures still says “No images match.” A picture that is uploaded replaces the empty state with a tile. Harbor’s empty library does not list another site’s files. Quantum Age still refuses to delete a picture that is in use.

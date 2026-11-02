@@ -477,7 +477,7 @@ export function MediaPanel(props: {
           <Upload size={16} aria-hidden="true" />
           <span>{props.progress !== null ? `Uploading ${props.progress}%` : "Drop an image, or choose a file."}</span>
           <span className="ed-hint">PNG, JPEG, WebP, or SVG</span>
-          <input className="sr-only" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={(event) => { const file = event.target.files?.[0]; if (file) props.onUpload(file); event.target.value = ""; }} />
+          <input id="media-upload" className="sr-only" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={(event) => { const file = event.target.files?.[0]; if (file) props.onUpload(file); event.target.value = ""; }} />
         </label>
       ) : null}
       {props.progress !== null ? <progress className="ed-progress" max={100} value={props.progress} aria-label="Upload progress" /> : null}
@@ -492,7 +492,20 @@ export function MediaPanel(props: {
         </Group>
       ) : null}
       <Group title={`All images (${items.length})`}>
-        {items.length ? <ul className="ed-media-list">{items.map(tile)}</ul> : <Empty title={props.media.length ? "No images match" : "No images yet"}>{props.media.length ? "Try another word." : "Upload a picture to use it anywhere on the site."}</Empty>}
+        {items.length ? (
+          <ul className="ed-media-list">{items.map(tile)}</ul>
+        ) : props.media.length === 0 ? (
+          <ProductEmpty label="No images">
+            <p>No images have been added.</p>
+            {props.canEdit ? (
+              <label className="product-button product-button-primary product-button-inline" htmlFor="media-upload">
+                Choose a file
+              </label>
+            ) : null}
+          </ProductEmpty>
+        ) : (
+          <Empty title="No images match">Try another word.</Empty>
+        )}
       </Group>
     </div>
   );

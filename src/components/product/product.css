@@ -447,7 +447,8 @@ a.product-card {
   font-size: var(--product-text-sm);
 }
 
-.product-pages .product-empty {
+.product-pages .product-empty,
+.product-media .product-empty {
   width: auto;
   margin: var(--product-space-3);
 }
