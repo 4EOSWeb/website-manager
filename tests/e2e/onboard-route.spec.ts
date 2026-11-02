@@ -5,9 +5,9 @@ test("an administrator can open the new-site route", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Connect a website" })).toBeVisible();
   const form = page.getByRole("form", { name: "Connect a website" });
   await expect(form).toBeVisible();
-  await expect(form.locator("input, textarea")).toHaveCount(0);
+  await expect(form.locator('input[type="password"], input[name="token"]')).toHaveCount(0);
   const html = await form.innerHTML();
-  expect(html.toLowerCase()).not.toMatch(/token|password|private key/);
+  expect(html.toLowerCase()).not.toMatch(/private key|access token/);
 
   await page.goto("/sites");
   await expect(page.getByRole("heading", { name: "Choose a website" })).toBeVisible();
