@@ -37,6 +37,17 @@ test("the sign-in screen uses the product system and development sign-in still w
   await expect(page.getByRole("heading", { name: "Choose a website" })).toBeVisible();
 });
 
+test("a failed sign-in shows one sentence and a later sign-in clears it", async ({ page }) => {
+  await page.goto("/signin?error=CredentialsSignin");
+  await expect(page.locator("main").getByRole("alert")).toHaveText("Sign-in did not complete. Try again.");
+  const html = await page.locator("main").innerHTML();
+  expect(html).not.toMatch(/CredentialsSignin|Error:|at\s+\//);
+  await page.screenshot({ path: "docs/product-hallmark/after/login-error.png" });
+  await page.getByRole("button", { name: "Continue as 4EOS administrator" }).click();
+  await expect(page.getByRole("heading", { name: "Choose a website" })).toBeVisible();
+  await expect(page.getByText("Sign-in did not complete. Try again.")).toHaveCount(0);
+});
+
 test("the button says signing you in while the request is in flight", async ({ page }) => {
   await page.goto("/signin");
   await page.route("**/*", async (route) => {

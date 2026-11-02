@@ -178,6 +178,13 @@
   line-height: 1.5;
 }
 
+.product-error {
+  margin: 0;
+  color: var(--product-accent);
+  font-size: var(--product-text);
+  line-height: 1.45;
+}
+
 .product-unavailable {
   margin: 0;
   font-size: var(--product-text-lg);

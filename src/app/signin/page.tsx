@@ -3,14 +3,17 @@ import { SignInSubmit } from "@/app/signin/callback-status";
 import { ProductCard } from "@/components/product/card";
 import { devAuthEnabled, entraConfigured } from "@/lib/dev-auth";
 
-export default function SignInPage() {
+export default async function SignInPage({ searchParams }: PageProps<"/signin">) {
   const dev = devAuthEnabled();
   const entra = entraConfigured();
+  const params = await searchParams;
+  const failed = typeof params.error === "string" && params.error.length > 0;
   return (
     <main className="product-signin">
       <p className="product-kicker">4EOS</p>
       <h1 className="product-display">Website editor</h1>
       <p>Edit the pages, pictures, and navigation on a website you already work on.</p>
+      {failed ? <p className="product-error" role="alert">Sign-in did not complete. Try again.</p> : null}
       {entra ? (
         <form action={signInWithMicrosoft}>
           <SignInSubmit label="Sign in with Microsoft" variant="primary" />
