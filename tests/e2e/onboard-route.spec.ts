@@ -10,7 +10,7 @@ test("an administrator can open the new-site route", async ({ page }) => {
   expect(html.toLowerCase()).not.toMatch(/private key|access token/);
 
   await page.goto("/sites");
-  await expect(page.getByRole("heading", { name: "Choose a website" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your websites" })).toBeVisible();
 });
 
 test("a client editor cannot open the new-site route", async ({ browser }) => {

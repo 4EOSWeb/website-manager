@@ -34,7 +34,7 @@ test("the sign-in screen uses the product system and development sign-in still w
 
   await page.getByRole("button", { name: "Continue as 4EOS administrator" }).click();
   await expect(page).not.toHaveURL(/\/signin/);
-  await expect(page.getByRole("heading", { name: "Choose a website" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your websites" })).toBeVisible();
 });
 
 test("development access is secondary and both roles still sign in", async ({ browser }) => {
@@ -67,7 +67,7 @@ test("a failed sign-in shows one sentence and a later sign-in clears it", async 
   expect(html).not.toMatch(/CredentialsSignin|Error:|at\s+\//);
   await page.screenshot({ path: "docs/product-hallmark/after/login-error.png" });
   await page.getByRole("button", { name: "Continue as 4EOS administrator" }).click();
-  await expect(page.getByRole("heading", { name: "Choose a website" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your websites" })).toBeVisible();
   await expect(page.getByText("Sign-in did not complete. Try again.")).toHaveCount(0);
 });
 
