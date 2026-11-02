@@ -29,5 +29,10 @@ test("activate stays off when the report has a failure", async ({ page }) => {
   await form.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByRole("region", { name: "Compatibility report" })).toBeVisible();
   await expect(form.getByRole("button", { name: "Activate" })).toBeDisabled();
+  await expect(form.getByText("Nothing was connected.")).toBeVisible();
+  await expect(form.getByRole("textbox", { name: "Site name" })).toHaveValue("North Harbor");
+  await expect(form.getByRole("textbox", { name: "Owner" })).toHaveValue("harbor");
   expect(await quantumDrafts()).toBe(before);
+  await page.goto("/sites");
+  await expect(page.getByText("web_report_demo")).toHaveCount(0);
 });

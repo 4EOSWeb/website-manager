@@ -5,7 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { canConnectWebsite } from "@/lib/roles";
 import { siteDraftFromAdapter } from "@/lib/adapter-draft";
 import { editorAdapterView } from "@/platform/editor-adapter";
+import path from "node:path";
 import { activationDecision } from "@/platform/onboarding/activate";
+import { nothingConnected, recoverFailedConnection } from "@/platform/onboarding/recover";
 import { validateAdapterFile } from "@/platform/onboarding/validate-adapter";
 import { assembleReport } from "@/app/sites/new/assemble";
 import { siteIdPattern } from "@/app/sites/new/site-id";
@@ -45,7 +47,14 @@ export async function POST(request: Request) {
       audience: actor.platformRole === "SUPER_ADMIN" ? "super-admin" : "client-admin",
     });
     const decision = activationDecision(sections);
-    if (!decision.ok) return Response.json({ message: decision.message }, { status: decision.status });
+    if (!decision.ok) {
+      const recovery = recoverFailedConnection({
+        root: path.join(process.cwd(), ".workspaces"),
+        websiteId,
+        inserted: false,
+      });
+      return Response.json({ message: decision.message, recovery: recovery.message || nothingConnected }, { status: decision.status });
+    }
     const parsed = await validateAdapterFile(process.cwd(), draft.adapterPath);
     if (!parsed.ok) return Response.json({ message: "Fix the failed checks before connecting this website." }, { status: 400 });
     const view = editorAdapterView(parsed.adapter);
