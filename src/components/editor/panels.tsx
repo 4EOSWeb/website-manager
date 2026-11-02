@@ -23,7 +23,8 @@ import { useLayerKeyboard } from "@/components/editor/layers/keyboard";
 import { LayerTree, useLayerOpen } from "@/components/editor/layers/tree";
 import { layerIdText, layoutModeLabel, managedLabel, typeLabel, type LayerExperience } from "@/components/editor/layers/labels";
 import { defaultOpenIds, legacyTarget, visualPageRoot } from "@/components/editor/layers/rows";
-import { listedPages, pageGroups } from "@/components/editor/page-list";
+import { ProductEmpty } from "@/components/product/empty";
+import { listedPages, pageGroups, pageListState } from "@/components/editor/page-list";
 import { articleRouteFor } from "@/components/editor/state/page";
 
 export function PagesPanel(props: {
@@ -41,13 +42,15 @@ export function PagesPanel(props: {
 }) {
   const [query, setQuery] = useState("");
   const match = (text: string) => text.toLowerCase().includes(query.trim().toLowerCase());
-  const pages = listedPages(props.visualDocument, props.site.pages).filter((page) => match(`${page.title} ${page.navLabel ?? ""} ${page.route}`));
+  const allPages = listedPages(props.visualDocument, props.site.pages);
+  const pages = allPages.filter((page) => match(`${page.title} ${page.navLabel ?? ""} ${page.route}`));
+  const listState = pageListState(allPages.length, pages.length);
   const groups = pageGroups(pages);
   return (
     <div className="ed-panel product-pages">
       <div className="ed-panel-head">
         <h2>Pages</h2>
-        {props.canEdit ? (
+        {props.canEdit && listState !== "empty" ? (
           <button type="button" className="ed-button is-small" onClick={props.onAddPage}>
             <Plus size={14} aria-hidden="true" /> Add page
           </button>
@@ -104,7 +107,17 @@ export function PagesPanel(props: {
           </ul>
         </Group>
       ) : null}
-      {pages.length === 0 ? <Empty title="No pages match">Use part of a name or an address.</Empty> : null}
+      {listState === "search" ? <Empty title="No pages match">Use part of a name or an address.</Empty> : null}
+      <div className="product-empty-wrap" hidden={listState !== "empty"}>
+        <ProductEmpty label="No pages">
+          <p>This site has no pages yet.</p>
+          {props.canEdit ? (
+            <button type="button" className="product-button product-button-primary product-button-inline" onClick={props.onAddPage}>
+              Add page
+            </button>
+          ) : null}
+        </ProductEmpty>
+      </div>
     </div>
   );
 }

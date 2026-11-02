@@ -424,6 +424,11 @@ a.product-card {
   font-size: var(--product-text-sm);
 }
 
+.product-pages .product-empty {
+  width: auto;
+  margin: var(--product-space-3);
+}
+
 .product-empty {
   display: flex;
   flex-direction: column;

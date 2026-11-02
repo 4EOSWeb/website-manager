@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { listedPages, pageGroups } from "../../src/components/editor/page-list.ts";
+import { listedPages, pageGroups, pageListState } from "../../src/components/editor/page-list.ts";
 
 const legacy = [
   { route: "/", title: "Home", navVisible: true, archived: false },
@@ -24,4 +24,15 @@ test("a partial visual document falls back to the version 3 page list", () => {
   assert.equal(lowered.includes("quantum"), false);
   assert.equal(lowered.includes("insights"), false);
   assert.equal(lowered.includes("hero"), false);
+});
+
+test("a document with zero pages is empty and a site with pages is not", () => {
+  const emptyDocument = { version: 1, pages: [] };
+  assert.deepEqual(listedPages(emptyDocument, []), []);
+  assert.equal(pageListState(0, 0), "empty");
+  assert.equal(pageListState(listedPages(undefined, legacy).length, legacy.length), "pages");
+  assert.equal(pageListState(legacy.length, 0), "search");
+  const panel = readFileSync("src/components/editor/panels.tsx", "utf8");
+  assert.equal(panel.includes("This site has no pages yet."), true);
+  assert.equal(panel.includes("Add page"), true);
 });

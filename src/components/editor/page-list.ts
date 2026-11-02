@@ -44,6 +44,13 @@ export function listedPages(visual: unknown, legacy: readonly ListedPage[]): Lis
   return next;
 }
 
+/** An empty document is not a search miss. A search miss still has pages. */
+export function pageListState(total: number, visible: number): "pages" | "search" | "empty" {
+  if (total === 0) return "empty";
+  if (visible === 0) return "search";
+  return "pages";
+}
+
 export function pageGroups(pages: readonly ListedPage[]): { title: string; items: ListedPage[] }[] {
   return [
     { title: "In the menu", items: pages.filter((page) => !page.archived && page.navVisible) },

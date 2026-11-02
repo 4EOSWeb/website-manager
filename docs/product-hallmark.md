@@ -129,3 +129,11 @@ After:
 - Keyboard focus on Home uses the editor focus ring.
 - Checked at 1440, 768, and 390. The panel fits. The editor page is 3 pixels wider than the viewport at 390, from the existing editor chrome.
 - Layers and the other panels keep their previous type.
+
+## Empty page list
+
+There was no empty page state. A search with no matches said “No pages match.” A document with pages showed the list.
+
+A stored draft has at least one page, so Harbor and Quantum Age cannot be saved empty. The empty branch is still in the Pages panel. It stays hidden while any page is listed. A document with zero pages, covered by the unit fixture, shows “This site has no pages yet.” and Add page.
+
+A search that matches nothing still says “No pages match,” not the empty-document sentence. Quantum Age still lists Home and Approach. Harbor still lists its pages. Keyboard focus on Add page in that branch uses the product ring. The panel does not animate the empty card.
