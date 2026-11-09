@@ -1,0 +1,162 @@
+=== layout ===
+TAP version 13
+# Subtest: shared header follows the capability flag
+ok 1 - shared header follows the capability flag
+  ---
+  duration_ms: 1.27864
+  ...
+# Subtest: canvas layout parses without child coordinates
+ok 2 - canvas layout parses without child coordinates
+  ---
+  duration_ms: 2.734442
+  ...
+# Subtest: a wrapping row parses
+ok 3 - a wrapping row parses
+  ---
+  duration_ms: 2.495451
+  ...
+# Subtest: vertical flow parses and freeform does not
+ok 4 - vertical flow parses and freeform does not
+  ---
+  duration_ms: 1.733875
+  ...
+# Subtest: grid, flow, and flex parse through the shared layout schema
+ok 5 - grid, flow, and flex parse through the shared layout schema
+  ---
+  duration_ms: 2.866894
+  ...
+# Subtest: switching layout stores the previous settings and keeps child boxes
+ok 6 - switching layout stores the previous settings and keeps child boxes
+  ---
+  duration_ms: 3.044541
+  ...
+# Subtest: confirm stores the previous layout and undo restores the mode and settings
+ok 7 - confirm stores the previous layout and undo restores the mode and settings
+  ---
+  duration_ms: 1.052529
+  ...
+# Subtest: layout conversion is on for a generic container and off when the flag is false
+ok 8 - layout conversion is on for a generic container and off when the flag is false
+  ---
+  duration_ms: 4.193625
+  ...
+# Subtest: converting a stack section to canvas keeps the original section until undo
+ok 9 - converting a stack section to canvas keeps the original section until undo
+  ---
+  duration_ms: 0.259919
+  ...
+# Subtest: arrow keys move the active layer and leave a rename field alone
+ok 10 - arrow keys move the active layer and leave a rename field alone
+  ---
+  duration_ms: 1.21808
+  ...
+# Subtest: a heading row says Heading unless it was renamed
+ok 11 - a heading row says Heading unless it was renamed
+  ---
+  duration_ms: 0.538869
+  ...
+# Subtest: custom rows use the registry display name and that name is not hardcoded
+ok 12 - custom rows use the registry display name and that name is not hardcoded
+  ---
+  duration_ms: 0.227026
+  ...
+# Subtest: node types and paragraph and canvas have words
+ok 13 - node types and paragraph and canvas have words
+  ---
+  duration_ms: 0.21904
+  ...
+# Subtest: basic layers hide component ids and advanced layers show them
+ok 14 - basic layers hide component ids and advanced layers show them
+  ---
+  duration_ms: 0.115278
+  ...
+# Subtest: containers show a layout mode and other nodes do not
+ok 15 - containers show a layout mode and other nodes do not
+  ---
+  duration_ms: 0.116096
+  ...
+# Subtest: provider-managed rows say Managed and a paragraph does not
+ok 16 - provider-managed rows say Managed and a paragraph does not
+  ---
+  duration_ms: 0.058514
+  ...
+# Subtest: locking a paragraph sets the flag and leaves the text
+ok 17 - locking a paragraph sets the flag and leaves the text
+  ---
+  duration_ms: 0.644237
+  ...
+# Subtest: a layer name does not change the heading text
+ok 18 - a layer name does not change the heading text
+  ---
+  duration_ms: 0.635097
+  ...
+# Subtest: a rename field does not start a layer drag
+ok 19 - a rename field does not start a layer drag
+  ---
+  duration_ms: 0.631291
+  ...
+# Subtest: the lower half of a row inserts after that sibling
+ok 20 - the lower half of a row inserts after that sibling
+  ---
+  duration_ms: 0.13127
+  ...
+# Subtest: a canvas parent reorders children and leaves z alone
+ok 21 - a canvas parent reorders children and leaves z alone
+  ---
+  duration_ms: 1.019279
+  ...
+# Subtest: a paragraph dropped on another section moves once
+ok 22 - a paragraph dropped on another section moves once
+  ---
+  duration_ms: 1.505121
+  ...
+# Subtest: an illegal layer target does not move the node
+ok 23 - an illegal layer target does not move the node
+  ---
+  duration_ms: 0.260591
+  ...
+# Subtest: every node has a row, including a provider-managed node
+ok 24 - every node has a row, including a provider-managed node
+  ---
+  duration_ms: 0.949792
+  ...
+# Subtest: the root and the next level start open
+ok 25 - the root and the next level start open
+  ---
+  duration_ms: 0.159547
+  ...
+# Subtest: a layer click resolves the section and block, and the matching row is selected
+ok 26 - a layer click resolves the section and block, and the matching row is selected
+  ---
+  duration_ms: 0.860389
+  ...
+# Subtest: every id in the shared selection highlights its row
+ok 27 - every id in the shared selection highlights its row
+  ---
+  duration_ms: 0.19907
+  ...
+# Subtest: a missing visual document keeps the version 3 list
+ok 28 - a missing visual document keeps the version 3 list
+  ---
+  duration_ms: 0.236816
+  ...
+# Subtest: hiding a node sets visibility.hidden and keeps hideOn
+ok 29 - hiding a node sets visibility.hidden and keeps hideOn
+  ---
+  duration_ms: 0.93744
+  ...
+# Subtest: a locked layout hides conversion and still allows text when content is open
+ok 30 - a locked layout hides conversion and still allows text when content is open
+  ---
+  duration_ms: 1.374259
+  ...
+1..30
+# tests 30
+# suites 0
+# pass 30
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1142.162542
+EXIT 0
