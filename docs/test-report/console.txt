@@ -1,0 +1,10 @@
+Collected in `tests/e2e/product-routes.spec.ts`.
+
+Allowed:
+
+- A sandbox or cookie warning, if the browser emits one.
+- 404 responses for the intentional missing routes `/this-page-is-missing` and `/sites/web_missing/editor`.
+- A favicon 404.
+- The development-only forced editor error used to photograph the error state.
+
+Any other console error or failed response fails the spec. The passing run is `docs/test-report/product-routes.txt` after the denied screenshot was added. If that later run fails, this note is stale and the log wins.
