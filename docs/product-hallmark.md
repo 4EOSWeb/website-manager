@@ -167,3 +167,85 @@ After:
 Harbor’s library had no pictures. The old line was “No images yet,” then “Upload a picture to use it anywhere on the site.”
 
 The empty state now says “No images have been added.” and offers Choose a file. The drop area above it still accepts a file. A search through a library that has pictures still says “No images match.” A picture that is uploaded replaces the empty state with a tile. Harbor’s empty library does not list another site’s files. Quantum Age still refuses to delete a picture that is in use.
+
+## Loading
+
+The editor loading screen was a spinner and the sentence “Opening the editor…”. The site list had no loading file.
+
+Both routes now use a labeled skeleton. The site list says “Loading your websites.” The editor says “Opening the editor.” The bars pulse, and reduced motion turns that pulse off. A delayed site list shows the skeleton, then the website list. A delayed editor still opens the Pages panel after the wait.
+
+## Error
+
+The editor error screen said “The editor could not open” and offered Try again and Back to websites.
+
+It now says “This page did not load.” Try again calls the Next.js reset. The product page does not print the error or a stack. A healthy editor route does not show this screen.
+
+## Settings
+
+There was no settings page.
+
+Administrators see a read-only Adapter and Commands list. Harbor and Quantum Age are both Level 2. Harbor’s “Can send for review” is No. Quantum Age’s is Yes. The labels are sentences, not flag ids. A client editor is sent to the access-denied page. Opening settings does not write the adapter file.
+
+## Account
+
+The account menu already showed the name, a role line, experience choices, confirm, shortcuts, and sign out. It had no page.
+
+The Account link opens a page with the name, email, and role. Sign out still ends the session and returns to sign-in. The menu keeps Sign out.
+
+## Add a page
+
+The dialog fields were Page name, Web address, and a Starting layout menu.
+
+The address field is now “Address.” Invalid and duplicate addresses still explain the problem. Focus moves into the dialog and returns when it closes. Creating a page still works.
+
+## Template cards
+
+Starting layout was a menu.
+
+It is now a set of radio cards: Blank page, Blank canvas, Landing page, Service page, Article, then that site’s own templates. Blank canvas can be selected. Harbor includes Visit and does not list Insights landing. Quantum Age includes Insights landing and does not list Visit.
+
+## Review
+
+The review dialog is “Send changes for review.” Confirm it’s you stays before the send. The public site is described as staying as it is until a reviewer approves. If GitHub is not connected, the copy stays on this machine. Harbor does not show Submit for review. Quantum Age does.
+
+While the request runs, the status says “Sending for review.” It does not say the site is published. A local save says “Saved for review on this copy. A pull request was not opened.” A review that was actually sent says “Sent for review.” A server failure shows that message, or “The review could not be sent.” when the message is not safe. Send for review stays available, so a later success replaces the failure. The change list still names what will be sent.
+
+## Access denied
+
+A Harbor-only editor opening Quantum Age used to see “That page is not available.”
+
+The page now says “You do not have access to this website.” and links to Your websites. It does not show the other site’s pages or draft. An administrator still opens both editors.
+
+## Not found
+
+The hub not-found heading was “That page is not available.”
+
+It is now “This page is not here.” A signed-in person gets Your websites. A signed-out person gets Sign in. Checked at 1440, 768, and 390. Tab reaches the link. The public site’s own missing-page handling is a different file and was not changed.
+
+## Route checklist
+
+Public Quantum Age pages are out of scope.
+
+| Route | Hallmark note | Humanizer note | Before | After |
+| --- | --- | --- | --- | --- |
+| Sign-in | Sign-in | Sign-in | `docs/product-hallmark/before/` login shots from step 18.2 | `docs/product-hallmark/after/login.png` |
+| Website list | Website list | Website list | earlier before shots | `docs/product-hallmark/after/sites.png` |
+| Empty website list | Empty website list | Empty website list | no empty screen before | `docs/product-hallmark/after/sites-empty-admin.png` |
+| Dashboard | Site dashboard | Site dashboard | missing before this step | `docs/product-hallmark/after/dashboard.png` |
+| Connect a website | Connect a website | Connect a website | earlier before shots | `docs/product-hallmark/after/new-site.png` |
+| Pages | Pages panel | Pages panel | earlier before shots | `docs/product-hallmark/after/pages.png` |
+| Empty pages | Empty page list | Empty page list | hidden empty node | `docs/product-hallmark/after/pages-empty.png` |
+| Media | Media library | Media library | earlier before shots | `docs/product-hallmark/after/media.png` |
+| Empty media | Empty media library | Empty media library | Harbor had no pictures | `docs/product-hallmark/after/media-empty.png` |
+| Loading | Loading | Loading | before screenshot missing. The old UI was a spinner and “Opening the editor…” | `docs/product-hallmark/after/loading.png` |
+| Error | Error | Error | before screenshot missing | `docs/product-hallmark/after/error.png` |
+| Settings | Settings | Settings | no page before | `docs/product-hallmark/after/settings-harbor.png` |
+| Account | Account | Account | menu only, before screenshot missing | `docs/product-hallmark/after/account.png` |
+| Add page | Add a page | Add a page | before screenshot missing | `docs/product-hallmark/after/add-page.png` |
+| Templates | Template cards | Template cards | same dialog shot | `docs/product-hallmark/after/add-page.png` |
+| Review | Review | Review | before screenshot missing | `docs/product-hallmark/after/review.png` |
+| Publishing | Review | Review | pending shot | `docs/product-hallmark/after/review-pending.png` |
+| Access denied | Access denied | Access denied | before screenshot missing | `docs/product-hallmark/after/denied.png` |
+| Not found | Not found | Not found | before screenshot missing | `docs/product-hallmark/after/not-found.png` |
+
+A missing before file stays missing. The after files listed here are the ones this pass captured or that already existed.
