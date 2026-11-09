@@ -4,6 +4,7 @@ import { ProductEmpty } from "@/components/product/empty";
 import { requirePageActor } from "@/lib/authorize";
 import { prisma } from "@/lib/prisma";
 import { canConnectWebsite } from "@/lib/roles";
+import { devPause } from "@/lib/dev-pause";
 import { websitesFor } from "@/lib/websites";
 
 function siteHost(url: string) {
@@ -14,7 +15,9 @@ function siteHost(url: string) {
   }
 }
 
-export default async function SitesPage() {
+export default async function SitesPage({ searchParams }: { searchParams: Promise<{ slow?: string }> }) {
+  const query = await searchParams;
+  await devPause(query.slow);
   const actor = await requirePageActor();
   const [websites, memberships] = await Promise.all([
     websitesFor(actor.user),
