@@ -10,6 +10,7 @@ export class AuthzError extends Error {
   constructor(
     public status: 401 | 403 | 404,
     message: string,
+    public reason?: "no-membership",
   ) {
     super(message);
   }
@@ -85,7 +86,7 @@ export async function authorize(websiteId: string, action: Action): Promise<Acto
       target: websiteId,
       metadata: { reason: "no-membership", requested: action },
     });
-    throw new AuthzError(404, "That website is not available.");
+    throw new AuthzError(404, "That website is not available.", "no-membership");
   }
   if (website.editorStatus !== "APPROVED" && platformRole !== "SUPER_ADMIN") {
     await recordAudit({

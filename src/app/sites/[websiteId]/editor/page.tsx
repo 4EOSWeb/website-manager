@@ -1,4 +1,5 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { devPause } from "@/lib/dev-pause";
 import { EditorShell } from "@/components/editor-shell";
 import "@/components/editor/editor.css";
 import { AuthzError, authorize } from "@/lib/authorize";
@@ -17,12 +18,24 @@ import { can, permissionsFor, roleLabel } from "@/lib/roles";
 import fs from "node:fs";
 import path from "node:path";
 
-export default async function EditorPage({ params }: { params: Promise<{ websiteId: string }> }) {
+export default async function EditorPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ websiteId: string }>;
+  searchParams: Promise<{ slow?: string; boom?: string }>;
+}) {
   const { websiteId } = await params;
+  const query = await searchParams;
+  if (process.env.NODE_ENV !== "production" && query.boom === "1") {
+    throw new Error("forced editor error");
+  }
+  await devPause(query.slow);
   let actor;
   try {
     actor = await authorize(websiteId, "view");
   } catch (error) {
+    if (error instanceof AuthzError && error.reason === "no-membership") redirect(`/sites/${websiteId}/denied`);
     if (error instanceof AuthzError) notFound();
     throw error;
   }

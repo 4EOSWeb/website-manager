@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ProductCard } from "@/components/product/card";
 import { dashboardActions } from "@/app/sites/[websiteId]/dashboard-actions";
 import { AuthzError, authorize } from "@/lib/authorize";
@@ -19,6 +19,7 @@ export default async function SiteDashboardPage({ params }: { params: Promise<{ 
   try {
     actor = await authorize(websiteId, "view");
   } catch (error) {
+    if (error instanceof AuthzError && error.reason === "no-membership") redirect(`/sites/${websiteId}/denied`);
     if (error instanceof AuthzError) notFound();
     throw error;
   }

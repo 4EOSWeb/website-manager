@@ -36,7 +36,7 @@ test("a Harbor member cannot open Quantum Age directly", async ({ page, browser 
   await expect(page).not.toHaveURL(/\/signin/);
 
   await page.goto("/sites/web_quantum_age/editor");
-  await expect(page.getByRole("heading", { name: "That page is not available" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "You do not have access to this website." })).toBeVisible();
   const body = await page.content();
   expect(body).not.toContain("draft_0ddb6f7c7f7a");
   expect(body).not.toContain("4EOSWeb/quantum-age");
