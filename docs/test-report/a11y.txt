@@ -1,0 +1,19 @@
+
+Running 6 tests using 1 worker
+
+(node:30380) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:30380) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [setup] › tests/e2e/auth.setup.ts:3:6 › sign in as the administrator (2.4s)
+(node:30530) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:30530) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 [editor] › tests/e2e/a11y.spec.ts:7:7 › accessibility › the account menu opens, moves, and closes from the keyboard (3.9s)
+  ✓  3 [editor] › tests/e2e/a11y.spec.ts:27:7 › accessibility › the selection menu opens from the keyboard and arrow keys move through it (4.0s)
+  ✓  4 [editor] › tests/e2e/a11y.spec.ts:49:7 › accessibility › a dialog traps focus and Escape closes it (3.9s)
+  ✓  5 [editor] › tests/e2e/a11y.spec.ts:65:7 › accessibility › icon buttons have accessible names and a keyboard focus ring (3.5s)
+  ✓  6 [editor] › tests/e2e/a11y.spec.ts:91:7 › accessibility › reduced motion shortens editor transitions (3.6s)
+
+  6 passed (22.7s)
