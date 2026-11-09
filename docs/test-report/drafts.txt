@@ -1,0 +1,150 @@
+=== draft-saving ===
+TAP version 13
+# Subtest: backing up a draft copies the payload and leaves the source row alone
+not ok 1 - backing up a draft copies the payload and leaves the source row alone
+  ---
+  duration_ms: 288.831259
+  location: '/workspace/tests/unit/draft-backup.test.ts:6:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(before)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/tests/unit/draft-backup.test.ts:11:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: detectVersion returns 3, 1, or unknown without changing the value
+ok 2 - detectVersion returns 3, 1, or unknown without changing the value
+  ---
+  duration_ms: 0.877377
+  ...
+# Subtest: a mismatched website id is rejected and a version 3 body leaves the visual document out
+ok 3 - a mismatched website id is rejected and a version 3 body leaves the visual document out
+  ---
+  duration_ms: 23.267273
+  ...
+# Subtest: a version 3 save does not clear the stored visual document
+not ok 4 - a version 3 save does not clear the stored visual document
+  ---
+  duration_ms: 267.853504
+  location: '/workspace/tests/unit/draft-put-site.test.ts:37:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(row?.visualDocument)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/tests/unit/draft-put-site.test.ts:41:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: a failed save does not replace the in-memory documents, and address changes still use the page id
+ok 5 - a failed save does not replace the in-memory documents, and address changes still use the page id
+  ---
+  duration_ms: 0.91204
+  ...
+# Subtest: an editor error keeps the message and drops the stack
+ok 6 - an editor error keeps the message and drops the stack
+  ---
+  duration_ms: 0.629566
+  ...
+# Subtest: dismissing an error keeps the typed document
+ok 7 - dismissing an error keeps the typed document
+  ---
+  duration_ms: 0.589249
+  ...
+# Subtest: moving a section reorders it without touching the others
+ok 8 - moving a section reorders it without touching the others
+  ---
+  duration_ms: 1.586829
+  ...
+# Subtest: moving a section onto its own slot changes nothing
+ok 9 - moving a section onto its own slot changes nothing
+  ---
+  duration_ms: 0.337685
+  ...
+# Subtest: duplicating a section inserts a copy after it with new ids and no anchor
+ok 10 - duplicating a section inserts a copy after it with new ids and no anchor
+  ---
+  duration_ms: 3.970931
+  ...
+# Subtest: hiding a section keeps it in the draft
+ok 11 - hiding a section keeps it in the draft
+  ---
+  duration_ms: 0.255169
+  ...
+# Subtest: deleting a section removes only that section
+ok 12 - deleting a section removes only that section
+  ---
+  duration_ms: 0.189139
+  ...
+# Subtest: locked pages ignore structural changes
+ok 13 - locked pages ignore structural changes
+  ---
+  duration_ms: 0.175754
+  ...
+# Subtest: blocks move, duplicate, hide, and delete inside a flow section
+ok 14 - blocks move, duplicate, hide, and delete inside a flow section
+  ---
+  duration_ms: 0.486325
+  ...
+# Subtest: locked blocks cannot be hidden, duplicated, deleted, or restyled
+ok 15 - locked blocks cannot be hidden, duplicated, deleted, or restyled
+  ---
+  duration_ms: 0.307972
+  ...
+# Subtest: text style patches merge, and clearing a step removes it
+ok 16 - text style patches merge, and clearing a step removes it
+  ---
+  duration_ms: 0.430606
+  ...
+# Subtest: anchors are cleaned, limited, and unique per page
+ok 17 - anchors are cleaned, limited, and unique per page
+  ---
+  duration_ms: 0.396931
+  ...
+# Subtest: slugify makes a short lowercase address
+ok 18 - slugify makes a short lowercase address
+  ---
+  duration_ms: 0.157907
+  ...
+# Subtest: new pages need a valid, unused address
+ok 19 - new pages need a valid, unused address
+  ---
+  duration_ms: 0.493576
+  ...
+# Subtest: links accept site paths, https, email, and phone only
+ok 20 - links accept site paths, https, email, and phone only
+  ---
+  duration_ms: 0.311527
+  ...
+# Subtest: a created page can move to a new address, and links follow it
+ok 21 - a created page can move to a new address, and links follow it
+  ---
+  duration_ms: 0.897109
+  ...
+1..21
+# tests 21
+# suites 0
+# pass 19
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10696.556201
+EXIT 1
