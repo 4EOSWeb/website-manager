@@ -96,6 +96,7 @@ function AccountMenu(props: {
           </div>
           <button type="button" role="menuitem" onClick={() => { setOpen(false); props.onConfirm(); }}><ShieldCheck size={14} aria-hidden="true" /> Confirm it’s you</button>
           <button type="button" role="menuitem" onClick={() => { setOpen(false); props.onShortcuts(); }}><Keyboard size={14} aria-hidden="true" /> Keyboard shortcuts</button>
+          <a href="/account" role="menuitem">Account</a>
           <form action={signOutUser}>
             <button type="submit" role="menuitem"><LogOut size={14} aria-hidden="true" /> Sign out</button>
           </form>
