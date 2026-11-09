@@ -1,10 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
-async function layoutValues(page: import("@playwright/test").Page) {
+async function layoutValues(page: Page) {
   await page.getByRole("button", { name: "Add page" }).click();
-  const select = page.getByRole("combobox", { name: "Starting layout" });
-  await expect(select).toBeVisible();
-  return select.locator("option").evaluateAll((nodes) => nodes.map((node) => (node as HTMLOptionElement).value));
+  const group = page.getByRole("radiogroup", { name: "Starting layout" });
+  await expect(group).toBeVisible();
+  return group.getByRole("radio").evaluateAll((nodes) => nodes.map((node) => (node as HTMLInputElement).value));
 }
 
 test("Add page lists only that site's templates", async ({ page }) => {
@@ -13,14 +13,21 @@ test("Add page lists only that site's templates", async ({ page }) => {
   const harbor = await layoutValues(page);
   expect(harbor).toContain("harbor.visit");
   expect(harbor).toContain("blank");
+  expect(harbor).toContain("canvas");
   expect(harbor).not.toContain("insights-landing");
   expect(harbor.some((id) => id.includes("quantum-age"))).toBe(false);
+  await expect(page.getByRole("radio", { name: "Visit" })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "Insights landing" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
 
   await page.goto("/sites/web_quantum_age/editor");
   const quantum = await layoutValues(page);
   expect(quantum).toContain("insights-landing");
   expect(quantum).toContain("blank");
+  expect(quantum).toContain("canvas");
   expect(quantum).not.toContain("harbor.visit");
-  await page.getByRole("combobox", { name: "Starting layout" }).selectOption("insights-landing");
-  await expect(page.getByRole("combobox", { name: "Starting layout" })).toHaveValue("insights-landing");
+  await page.getByRole("radio", { name: "Blank canvas" }).check();
+  await expect(page.getByRole("radio", { name: "Blank canvas" })).toBeChecked();
+  await page.getByRole("radio", { name: "Insights landing" }).check();
+  await expect(page.getByRole("radio", { name: "Insights landing" })).toBeChecked();
 });

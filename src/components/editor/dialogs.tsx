@@ -6,7 +6,7 @@ import type { PageDocument, SiteDraft } from "@/lib/content-schema";
 import { slugify } from "@/lib/editor-ops";
 import type { LibraryEntry } from "@/lib/library";
 import type { MediaItem, Publication } from "@/components/editor/types";
-import { Dialog, Field, Kbd, Select, TextArea, TextInput, Toggle } from "@/components/editor/ui";
+import { Dialog, Field, Kbd, TextArea, TextInput, Toggle } from "@/components/editor/ui";
 import { LibraryBrowser } from "@/components/editor/library";
 import type { CustomDefinition } from "@/platform/elements/custom";
 import { slugPatternOf, slugProblem } from "@/platform/pages/slug";
@@ -52,12 +52,23 @@ export function AddPageDialog(props: { site: SiteDraft; adapter: Record<string, 
         <Field label="Page name">
           <TextInput value={form.title} maxLength={80} placeholder="Our services" onChange={(title) => { setError(""); setForm({ ...form, title, route: routeTouched ? form.route : title ? `/${slugify(title)}` : "" }); }} />
         </Field>
-        <Field label="Web address" hint={taken ? "That address is already used." : addressError || "Lowercase words joined by dashes."}>
+        <Field label="Address" hint={taken ? "That address is already used." : addressError || "Lowercase words joined by dashes."}>
           <TextInput value={route} placeholder="/our-services" onChange={(value) => { setError(""); setRouteTouched(true); setForm({ ...form, route: value }); }} />
         </Field>
-        <Field label="Starting layout">
-          <Select label="Starting layout" value={form.template} options={choices.map((item) => ({ value: item.id as PageForm["template"], label: item.name }))} onChange={(template) => setForm({ ...form, template })} />
-        </Field>
+        <div className="product-templates" role="radiogroup" aria-label="Starting layout">
+          {choices.map((item) => (
+            <label key={item.id} className={form.template === item.id ? "product-template is-selected" : "product-template"}>
+              <input
+                type="radio"
+                name="starting-layout"
+                value={item.id}
+                checked={form.template === item.id}
+                onChange={() => setForm({ ...form, template: item.id as PageForm["template"] })}
+              />
+              <span>{item.name}</span>
+            </label>
+          ))}
+        </div>
         <Toggle label="Show in the menu" checked={form.navVisible} onChange={(navVisible) => setForm({ ...form, navVisible })} />
         <Field label="Title in search results" count={{ value: form.seoTitle.length, max: 60 }}>
           <TextInput value={form.seoTitle} maxLength={70} onChange={(seoTitle) => setForm({ ...form, seoTitle })} />
@@ -266,17 +277,17 @@ export function PublishDialog(props: {
       title="Send changes for review"
       wide
       onClose={props.onClose}
-      description="This sends a review copy to your website provider. The live site changes only after they approve it."
+      description="A person confirms this is you, then the changes go out for review. The public site stays as it is until a reviewer approves them. If GitHub is not connected, the copy stays on this machine."
       footer={
         <>
           <button type="button" className="ed-button" onClick={props.onConfirm}><ShieldCheck size={14} aria-hidden="true" /> Confirm it’s you</button>
           <span className="ed-grow" />
           <button type="button" className="ed-button" onClick={props.onClose}>Close</button>
-          <button type="button" className="ed-button is-primary" disabled={props.busy} onClick={props.onSend}>{props.busy ? "Sending…" : "Send for review"}</button>
+          <button type="button" className="ed-button is-primary" disabled={props.busy} onClick={props.onSend}>{props.busy ? "Sending for review" : "Send for review"}</button>
         </>
       }
     >
-      {props.message ? <p className="ed-callout" role="status">{props.message}</p> : null}
+      {props.busy ? <p className="ed-callout" role="status">Sending for review</p> : props.message ? <p className="ed-callout" role="status">{props.message}</p> : null}
       <h3 className="ed-subhead">What will be sent</h3>
       {lines.length ? (
         <ul className="ed-change-list">{lines.map((line, index) => <li key={`${index}-${line}`}>{line}</li>)}</ul>

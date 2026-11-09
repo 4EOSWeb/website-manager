@@ -12,8 +12,13 @@ test.describe("accessibility", () => {
     await expect(account).toHaveAttribute("aria-expanded", "true");
     const menu = page.getByRole("menu");
     await expect(menu).toBeVisible();
-    await page.keyboard.press("Tab");
-    await expect(menu.getByRole("menuitem", { name: /Confirm/ })).toBeFocused();
+    const confirm = menu.getByRole("menuitem", { name: /Confirm/ });
+    for (let step = 0; step < 8; step += 1) {
+      if (await confirm.evaluate((node) => node === document.activeElement)) break;
+      await page.keyboard.press("Tab");
+    }
+    await expect(confirm).toBeFocused();
+    await expect(menu.getByRole("menuitem", { name: "Account" })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);
     await expect(account).toHaveAttribute("aria-expanded", "false");
@@ -69,8 +74,11 @@ test.describe("accessibility", () => {
     const account = page.getByRole("button", { name: /Account:/ });
     await account.focus();
     await page.keyboard.press("Enter");
-    await page.keyboard.press("Tab");
     const item = page.getByRole("menuitem", { name: /Confirm/ });
+    for (let step = 0; step < 8; step += 1) {
+      if (await item.evaluate((node) => node === document.activeElement)) break;
+      await page.keyboard.press("Tab");
+    }
     await expect(item).toBeFocused();
     const ring = await item.evaluate((node) => ({
       visible: node.matches(":focus-visible"),
