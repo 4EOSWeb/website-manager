@@ -1,0 +1,7 @@
+Viewport 390×844. Source: `docs/test-report/product-routes.txt`.
+
+- `/signin` overflow 0
+- `/sites` overflow 0
+- `/sites/web_harbor/editor` overflow 3px. The widest layout box is `DIV.ed-frame` at 1200, which is the scaled canvas inside the editor frame. The document itself is 3px wider than the viewport.
+
+Result: failed for the editor document. Sign-in and the site list pass. The canvas was not clipped with `overflow: hidden` on the body.
