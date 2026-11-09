@@ -1,0 +1,18 @@
+
+Running 2 tests using 1 worker
+
+(node:31106) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:31106) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [setup] › tests/e2e/auth.setup.ts:3:6 › sign in as the administrator (2.2s)
+(node:31248) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:31248) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+OVERFLOW /signin 0:
+OVERFLOW /sites 0:
+OVERFLOW /sites/web_harbor/editor 3:DIV.ed-frame 1200
+  ✓  2 [editor] › tests/e2e/product-routes.spec.ts:37:5 › product routes use the product shell (5.5s)
+
+  2 passed (8.9s)

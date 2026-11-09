@@ -1,0 +1,51 @@
+
+Running 7 tests using 1 worker
+
+(node:18059) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:18059) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [setup] › tests/e2e/auth.setup.ts:3:6 › sign in as the administrator (4.8s)
+(node:18321) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:18321) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 [editor] › tests/e2e/a11y.spec.ts:7:7 › accessibility › the account menu opens, moves, and closes from the keyboard (5.1s)
+  ✓  3 [editor] › tests/e2e/a11y.spec.ts:27:7 › accessibility › the selection menu opens from the keyboard and arrow keys move through it (3.9s)
+  ✓  4 [editor] › tests/e2e/a11y.spec.ts:49:7 › accessibility › a dialog traps focus and Escape closes it (3.7s)
+  ✓  5 [editor] › tests/e2e/a11y.spec.ts:65:7 › accessibility › icon buttons have accessible names and a keyboard focus ring (3.4s)
+  ✓  6 [editor] › tests/e2e/a11y.spec.ts:91:7 › accessibility › reduced motion shortens editor transitions (3.6s)
+  ✘  7 [editor] › tests/e2e/product-routes.spec.ts:21:5 › product routes use the product shell (6.1s)
+
+
+  1) [editor] › tests/e2e/product-routes.spec.ts:21:5 › product routes use the product shell ───────
+
+    Error: /sites/web_harbor/editor
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+      52 |   for (const path of ["/signin", "/sites", "/sites/web_harbor/editor"]) {
+      53 |     await page.goto(path);
+    > 54 |     expect(await noOverflow(page), path).toBe(false);
+         |                                          ^
+      55 |   }
+      56 |   await page.setViewportSize({ width: 1440, height: 900 });
+      57 |   await page.goto("/sites/web_harbor/editor");
+        at /workspace/tests/e2e/product-routes.spec.ts:54:42
+
+    Error Context: test-results/product-routes-product-routes-use-the-product-shell-editor/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/product-routes-product-routes-use-the-product-shell-editor/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/product-routes-product-routes-use-the-product-shell-editor/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [editor] › tests/e2e/product-routes.spec.ts:21:5 › product routes use the product shell ────────
+  6 passed (32.4s)
