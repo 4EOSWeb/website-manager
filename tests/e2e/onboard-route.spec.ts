@@ -20,7 +20,7 @@ test("a client editor cannot open the new-site route", async ({ browser }) => {
   await page.getByRole("button", { name: "Continue as client editor" }).click();
   await expect(page).not.toHaveURL(/\/signin/);
   await page.goto("/sites/new");
-  await expect(page.getByRole("heading", { name: "That page is not available" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "This page is not here." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Connect a website" })).toHaveCount(0);
   await context.close();
 });

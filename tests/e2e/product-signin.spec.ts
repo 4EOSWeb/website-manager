@@ -55,7 +55,7 @@ test("development access is secondary and both roles still sign in", async ({ br
   await editorPage.getByRole("button", { name: "Continue as client editor" }).click();
   await expect(editorPage).not.toHaveURL(/\/signin/);
   await editorPage.goto("/sites/new");
-  await expect(editorPage.getByRole("heading", { name: "That page is not available" })).toBeVisible();
+  await expect(editorPage.getByRole("heading", { name: "This page is not here." })).toBeVisible();
   await expect(editorPage.getByRole("heading", { name: "Connect a website" })).toHaveCount(0);
   await editor.close();
 });
