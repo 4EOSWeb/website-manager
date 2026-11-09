@@ -2,6 +2,8 @@
 
 The editor still reads and writes version 3 drafts. The visual document is stored beside them. These shims stay until the step named here. None of them are removed by this note.
 
+Step 19.25 did not run. Document schema tests failed because the saved Quantum Age draft snapshot is not in this database. Migration rollback and version 3 save tests failed for the same snapshot. Draft rows for Quantum Age are absent, so `visual_document` cannot be confirmed for every Quantum Age draft. The public Quantum Age production build did not run: there is no `.qa/public-site` checkout and `SITE_SOURCE_DIR` is empty. Dual-write stays. `draft_backups` was not deleted. `src/platform/migrate/parse-v3.ts` stays on the migration path.
+
 | Shim | Where | Remove |
 | --- | --- | --- |
 | Seed re-export | `src/lib/flow-seed.ts` re-exports the adapter seed | Step 19.25 |

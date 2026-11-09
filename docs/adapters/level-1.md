@@ -18,4 +18,4 @@ Level 1 is the safe content adapter. A site keeps its existing pages and compone
 
 ## Upgrade
 
-Implement the level 2 fields and set `level: 2`. The product UI does not show a level badge yet.
+Implement the level 2 fields and set `level: 2`. Site settings shows the current level to an administrator.
