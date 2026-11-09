@@ -1,0 +1,232 @@
+=== elements ===
+TAP version 13
+# Subtest: a button node is new and does not use the header label
+ok 1 - a button node is new and does not use the header label
+  ---
+  duration_ms: 9.023808
+  ...
+# Subtest: changing one button label leaves the header and the other button alone
+ok 2 - changing one button label leaves the header and the other button alone
+  ---
+  duration_ms: 2.772384
+  ...
+# Subtest: a canvas uses canvas layout and keeps its id on the freeform section
+ok 3 - a canvas uses canvas layout and keeps its id on the freeform section
+  ---
+  duration_ms: 15.197448
+  ...
+# Subtest: a card uses generic copy and not a site card component
+ok 4 - a card uses generic copy and not a site card component
+  ---
+  duration_ms: 7.215589
+  ...
+# Subtest: a checkbox starts unchecked and is not the review confirmation
+ok 5 - a checkbox starts unchecked and is not the review confirmation
+  ---
+  duration_ms: 8.067965
+  ...
+# Subtest: a container starts empty and can hold a heading
+ok 6 - a container starts empty and can hold a heading
+  ---
+  duration_ms: 14.313332
+  ...
+# Subtest: a call to action has three children and no site close copy
+ok 7 - a call to action has three children and no site close copy
+  ---
+  duration_ms: 7.916264
+  ...
+# Subtest: the sample catalog hides site components and the active site catalog lists them
+ok 8 - the sample catalog hides site components and the active site catalog lists them
+  ---
+  duration_ms: 1.765197
+  ...
+# Subtest: inserting a registered component uses its defaults and leaves the hero alone
+ok 9 - inserting a registered component uses its defaults and leaves the hero alone
+  ---
+  duration_ms: 4.569441
+  ...
+# Subtest: a divider is one empty node and leaves neighbor text alone
+ok 10 - a divider is one empty node and leaves neighbor text alone
+  ---
+  duration_ms: 7.455864
+  ...
+# Subtest: an FAQ has one item and does not add a route
+ok 11 - an FAQ has one item and does not add a route
+  ---
+  duration_ms: 12.387936
+  ...
+# Subtest: a form stays generic and a level 1 adapter hides the catalog entry
+ok 12 - a form stays generic and a level 1 adapter hides the catalog entry
+  ---
+  duration_ms: 6.525767
+  ...
+# Subtest: a gallery starts empty and a picked image stays on that node
+ok 13 - a gallery starts empty and a picked image stays on that node
+  ---
+  duration_ms: 13.091139
+  ...
+# Subtest: a grid starts at two columns and writes no preset id
+ok 14 - a grid starts at two columns and writes no preset id
+  ---
+  duration_ms: 7.98785
+  ...
+# Subtest: a group id uses grp and stays empty
+ok 15 - a group id uses grp and stays empty
+  ---
+  duration_ms: 16.437192
+  ...
+# Subtest: a heading node is new, unlocked, and uses the text Heading
+ok 16 - a heading node is new, unlocked, and uses the text Heading
+  ---
+  duration_ms: 5.679008
+  ...
+# Subtest: the heading is inserted into the selected container or the page root
+ok 17 - the heading is inserted into the selected container or the page root
+  ---
+  duration_ms: 0.539436
+  ...
+# Subtest: undo removes only the new heading node
+ok 18 - undo removes only the new heading node
+  ---
+  duration_ms: 0.343883
+  ...
+# Subtest: serializing a heading maps a flow block and leaves hero fields unchanged
+ok 19 - serializing a heading maps a flow block and leaves hero fields unchanged
+  ---
+  duration_ms: 2.888766
+  ...
+# Subtest: a preview heading block does not change an existing heading or the hero
+ok 20 - a preview heading block does not change an existing heading or the hero
+  ---
+  duration_ms: 0.270729
+  ...
+# Subtest: an icon button is distinct and its label is the accessible name
+ok 21 - an icon button is distinct and its label is the accessible name
+  ---
+  duration_ms: 5.084094
+  ...
+# Subtest: the serializer writes the icon and leaves a text button label alone
+ok 22 - the serializer writes the icon and leaves a text button label alone
+  ---
+  duration_ms: 2.24185
+  ...
+# Subtest: an icon is decorative until it has a label, and it is not an icon button
+ok 23 - an icon is decorative until it has a label, and it is not an icon button
+  ---
+  duration_ms: 5.661101
+  ...
+# Subtest: the serializer stores the icon name
+ok 24 - the serializer stores the icon name
+  ---
+  duration_ms: 2.132906
+  ...
+# Subtest: an image node starts empty
+ok 25 - an image node starts empty
+  ---
+  duration_ms: 4.982723
+  ...
+# Subtest: choosing a picture updates this image and leaves the hero source alone
+ok 26 - choosing a picture updates this image and leaves the hero source alone
+  ---
+  duration_ms: 2.893127
+  ...
+# Subtest: an input can sit in a form and not in a heading
+ok 27 - an input can sit in a form and not in a heading
+  ---
+  duration_ms: 7.740269
+  ...
+# Subtest: a link node has its own label and a valid address
+ok 28 - a link node has its own label and a valid address
+  ---
+  duration_ms: 5.730171
+  ...
+# Subtest: an invalid address is not written and the link is not the header button
+ok 29 - an invalid address is not written and the link is not the header button
+  ---
+  duration_ms: 3.624507
+  ...
+# Subtest: a paragraph node is new and its text is Paragraph
+ok 30 - a paragraph node is new and its text is Paragraph
+  ---
+  duration_ms: 5.555992
+  ...
+# Subtest: a paragraph is inserted after the selection and does not change nearby text
+ok 31 - a paragraph is inserted after the selection and does not change nearby text
+  ---
+  duration_ms: 0.957794
+  ...
+# Subtest: undo removes only the new paragraph
+ok 32 - undo removes only the new paragraph
+  ---
+  duration_ms: 0.357411
+  ...
+# Subtest: a paragraph serializes as its own flow block
+ok 33 - a paragraph serializes as its own flow block
+  ---
+  duration_ms: 2.144387
+  ...
+# Subtest: a preview paragraph is a new block after the selected one
+ok 34 - a preview paragraph is a new block after the selected one
+  ---
+  duration_ms: 0.271449
+  ...
+# Subtest: a rich text node starts with an empty mark list
+ok 35 - a rich text node starts with an empty mark list
+  ---
+  duration_ms: 5.602182
+  ...
+# Subtest: bold on a rich text node stores a mark and leaves the other node alone
+ok 36 - bold on a rich text node stores a mark and leaves the other node alone
+  ---
+  duration_ms: 0.584601
+  ...
+# Subtest: a rich text node serializes as a flow paragraph that keeps its marks
+ok 37 - a rich text node serializes as a flow paragraph that keeps its marks
+  ---
+  duration_ms: 2.391816
+  ...
+# Subtest: a select stores two generic options
+ok 38 - a select stores two generic options
+  ---
+  duration_ms: 7.451327
+  ...
+# Subtest: a spacer defaults to medium and has no text
+ok 39 - a spacer defaults to medium and has no text
+  ---
+  duration_ms: 10.459621
+  ...
+# Subtest: a stack starts as a column and is not a preset
+ok 40 - a stack starts as a column and is not a preset
+  ---
+  duration_ms: 12.954557
+  ...
+# Subtest: a testimonial uses generic words
+ok 41 - a testimonial uses generic words
+  ---
+  duration_ms: 12.620947
+  ...
+# Subtest: a text area is not an input and stays inside the form
+ok 42 - a text area is not an input and stays inside the form
+  ---
+  duration_ms: 11.126723
+  ...
+# Subtest: an http video address is rejected and an https address is kept
+ok 43 - an http video address is rejected and an https address is kept
+  ---
+  duration_ms: 4.974084
+  ...
+# Subtest: the serializer keeps the video address and the existing image
+ok 44 - the serializer keeps the video address and the existing image
+  ---
+  duration_ms: 2.60777
+  ...
+1..44
+# tests 44
+# suites 0
+# pass 44
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3655.210378
+EXIT 0
