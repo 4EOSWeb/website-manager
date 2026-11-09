@@ -1,0 +1,170 @@
+=== migration ===
+TAP version 13
+# Subtest: backing up a draft copies the payload and leaves the source row alone
+not ok 1 - backing up a draft copies the payload and leaves the source row alone
+  ---
+  duration_ms: 347.148534
+  location: '/workspace/tests/unit/draft-backup.test.ts:6:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(before)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/tests/unit/draft-backup.test.ts:11:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: a mismatched website id is rejected and a version 3 body leaves the visual document out
+ok 2 - a mismatched website id is rejected and a version 3 body leaves the visual document out
+  ---
+  duration_ms: 21.028891
+  ...
+# Subtest: a version 3 save does not clear the stored visual document
+not ok 3 - a version 3 save does not clear the stored visual document
+  ---
+  duration_ms: 225.685111
+  location: '/workspace/tests/unit/draft-put-site.test.ts:37:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(row?.visualDocument)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/tests/unit/draft-put-site.test.ts:41:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: a failed save does not replace the in-memory documents, and address changes still use the page id
+ok 4 - a failed save does not replace the in-memory documents, and address changes still use the page id
+  ---
+  duration_ms: 1.077876
+  ...
+# Subtest: comparison fails when a text string is missing and passes when it was copied
+ok 5 - comparison fails when a text string is missing and passes when it was copied
+  ---
+  duration_ms: 2.226569
+  ...
+# Subtest: a redacted version 3 draft assembles without writing copy into the report
+ok 6 - a redacted version 3 draft assembles without writing copy into the report
+  ---
+  duration_ms: 37.296428
+  ...
+# Subtest: detail text and chrome copy stay in the assembled document
+ok 7 - detail text and chrome copy stay in the assembled document
+  ---
+  duration_ms: 10.957565
+  ...
+# Subtest: a home-shaped draft becomes one visual page and an unknown object is rejected
+ok 8 - a home-shaped draft becomes one visual page and an unknown object is rejected
+  ---
+  duration_ms: 0.940409
+  ...
+# Subtest: the assembler does not name a site inside the platform
+ok 9 - the assembler does not name a site inside the platform
+  ---
+  duration_ms: 0.534697
+  ...
+# Subtest: execution stores a visual document beside version 3 and rolls the fixture back
+ok 10 - execution stores a visual document beside version 3 and rolls the fixture back
+  ---
+  duration_ms: 505.487516
+  ...
+# Subtest: a locked block stays locked and an unlocked paragraph stays unlocked
+ok 11 - a locked block stays locked and an unlocked paragraph stays unlocked
+  ---
+  duration_ms: 0.603462
+  ...
+# Subtest: a dropped media path fails and equal sets pass
+ok 12 - a dropped media path fails and equal sets pass
+  ---
+  duration_ms: 1.048147
+  ...
+# Subtest: an unknown key is reported and is not omitted
+ok 13 - an unknown key is reported and is not omitted
+  ---
+  duration_ms: 1.156752
+  ...
+# Subtest: rollback refuses to run without a website
+ok 14 - rollback refuses to run without a website
+  ---
+  duration_ms: 63.434058
+  ...
+# Subtest: rollback restores the newest backup and rejects a different site
+not ok 15 - rollback restores the newest backup and rejects a different site
+  ---
+  duration_ms: 242.491855
+  location: '/workspace/tests/unit/migrate-rollback.test.ts:23:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+    + []
+    - [
+    -   1,
+    -   1
+    - ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 1
+    1: 1
+  actual:
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/tests/unit/migrate-rollback.test.ts:93:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: dropping a route fails and the same set passes
+ok 16 - dropping a route fails and the same set passes
+  ---
+  duration_ms: 0.582081
+  ...
+# Subtest: a stacked version 3 conversion validates and a broken node fails
+ok 17 - a stacked version 3 conversion validates and a broken node fails
+  ---
+  duration_ms: 7.310321
+  ...
+# Subtest: the redacted version 3 draft parses and a partial document returns issues
+ok 18 - the redacted version 3 draft parses and a partial document returns issues
+  ---
+  duration_ms: 10.643485
+  ...
+# Subtest: version 3 parsing stays out of the document package
+ok 19 - version 3 parsing stays out of the document package
+  ---
+  duration_ms: 1.004954
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 16
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 21441.06727
+EXIT 1
+=== migrate:dry ===
+
+> 4eos-website-editor@0.1.0 migrate:dry
+> node --experimental-strip-types --no-warnings --import ./tests/unit/resolve-ts.mjs scripts/migrate-drafts.ts
+
+EXIT 0

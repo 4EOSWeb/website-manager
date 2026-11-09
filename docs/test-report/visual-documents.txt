@@ -1,0 +1,5 @@
+ website_id | drafts | with_visual 
+------------+--------+-------------
+ web_harbor |      2 |           1
+(1 row)
+
