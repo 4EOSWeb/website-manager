@@ -145,7 +145,10 @@ export function LibraryBrowser(props: {
     return CATEGORIES.filter((name) => names.has(name));
   }, [props.adapter, props.canEmbed]);
   const recent = props.recent.map((id) => catalog.find((entry) => entry.id === id)).filter((entry): entry is LibraryEntry => Boolean(entry)).slice(0, 4);
-  const recommended = props.recommended.map((id) => LIBRARY.find((entry) => entry.id === id)).filter((entry): entry is LibraryEntry => Boolean(entry));
+  const recommended = props.recommended
+    .map((id) => LIBRARY.find((entry) => entry.id === id))
+    .filter((entry): entry is LibraryEntry => Boolean(entry))
+    .filter((entry) => legacyLibraryVisible(entry.id, props.adapter) && libraryEntryVisible(entry.id, props.adapter));
   const browsing = !query && category === "All";
   const templates = props.templates.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()));
 

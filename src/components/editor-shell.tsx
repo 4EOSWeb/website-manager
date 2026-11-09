@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { signOutUser } from "@/app/signin/actions";
 import { defaultBlogDraft, type BlogDraft, type FlowBlock, type FreeformItem, type Section, type SiteDraft } from "@/lib/content-schema";
+import { publishFailure, publishOutcome } from "@/lib/publish-copy";
 import {
   addFlowBlock,
   changePageRoute,
@@ -1838,7 +1839,8 @@ export function EditorShell(props: {
     try {
       const response = await fetch(`/api/sites/${props.websiteId}/publish`, { method: "POST" });
       const body = (await response.json().catch(() => ({}))) as { message?: string; status?: string; reviewUrl?: string | null };
-      setPublishMessage(body.message ?? "The changes could not be sent.");
+      const outcome = response.ok ? publishOutcome(body.status, body.reviewUrl) : null;
+      setPublishMessage(outcome ?? (response.ok ? body.message ?? "The changes could not be sent." : publishFailure(body.message)));
       if (response.ok && body.status) setPublications((items) => [{ status: body.status!, summary: body.message ?? "", reviewUrl: body.reviewUrl ?? null, createdAt: new Date().toISOString() }, ...items]);
     } catch {
       setPublishMessage("The changes could not be sent. Check your connection and try again.");
@@ -1866,7 +1868,7 @@ export function EditorShell(props: {
         onRetry={retrySave}
         previewHref={`${previewSrc}&clean=1`}
         canEdit={props.canEdit}
-        canPublish={props.canPublish}
+        canPublish={props.canPublish && (adapter?.capabilities as { supportsReviewPublishing?: boolean } | undefined)?.supportsReviewPublishing === true}
         onPublish={() => {
           setPublishMessage("");
           setPublishing(true);

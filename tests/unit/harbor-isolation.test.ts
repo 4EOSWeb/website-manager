@@ -14,6 +14,10 @@ test("harbor hides blog library entries that quantum age still shows", () => {
   assert.equal(legacyLibraryVisible(insights.id, harborAdapter), false);
   assert.equal(legacyLibraryVisible(zone.id, harborAdapter), false);
   assert.equal(legacyLibraryVisible(insights.id, quantumAgeAdapter), true);
+  const form = LIBRARY.find((entry) => entry.label === "Contact form");
+  assert.ok(form);
+  assert.equal(legacyLibraryVisible(form.id, harborAdapter), false);
+  assert.equal(legacyLibraryVisible(form.id, quantumAgeAdapter), true);
   assert.equal(legacyLibraryVisible(zone.id, quantumAgeAdapter), true);
   const harborCustom = customCatalog(harborAdapter).map((item) => item.name);
   assert.equal(harborCustom.includes("Insights summary"), false);

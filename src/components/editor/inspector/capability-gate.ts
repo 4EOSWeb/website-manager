@@ -35,9 +35,11 @@ export function libraryEntryVisible(entryId: string, adapter: unknown): boolean 
 }
 
 const blogLibrary = new Set(["section:insights-summary", "section:freeform", "section:search"]);
+const formLibrary = new Set(["section:form"]);
 
-/** Version 3 section entries that belong to a blog stay with sites that publish one. */
+/** Version 3 section entries that belong to a blog or a form follow the site flags. */
 export function legacyLibraryVisible(entryId: string, adapter: unknown): boolean {
+  if (formLibrary.has(entryId)) return flag(adapter, "supportsForms");
   if (!blogLibrary.has(entryId)) return true;
   return flag(adapter, "supportsBlog");
 }
