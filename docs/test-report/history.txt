@@ -1,0 +1,57 @@
+=== undo ===
+TAP version 13
+# Subtest: one undo reverses a reparent and redo puts the node back
+ok 1 - one undo reverses a reparent and redo puts the node back
+  ---
+  duration_ms: 1.69515
+  ...
+# Subtest: undo restores the previous visual document
+ok 2 - undo restores the previous visual document
+  ---
+  duration_ms: 0.927166
+  ...
+# Subtest: undo does not cross websites
+ok 3 - undo does not cross websites
+  ---
+  duration_ms: 0.113138
+  ...
+# Subtest: redo returns the edited visual document and a new edit drops it
+ok 4 - redo returns the edited visual document and a new edit drops it
+  ---
+  duration_ms: 0.186585
+  ...
+# Subtest: a version 3 edit keeps a value snapshot without a visual document
+ok 5 - a version 3 edit keeps a value snapshot without a visual document
+  ---
+  duration_ms: 0.089519
+  ...
+# Subtest: undo returns the state before the change, and redo brings the change back
+ok 6 - undo returns the state before the change, and redo brings the change back
+  ---
+  duration_ms: 0.904297
+  ...
+# Subtest: a new change drops the redo steps
+ok 7 - a new change drops the redo steps
+  ---
+  duration_ms: 0.108688
+  ...
+# Subtest: nothing to undo or redo returns null
+ok 8 - nothing to undo or redo returns null
+  ---
+  duration_ms: 0.074924
+  ...
+# Subtest: history keeps only the newest steps
+ok 9 - history keeps only the newest steps
+  ---
+  duration_ms: 0.089244
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 192.302564
+EXIT 0
