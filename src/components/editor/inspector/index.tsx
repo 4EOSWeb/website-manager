@@ -15,6 +15,7 @@ import { adapterColorTokens, type GeneratedNode } from "@/components/editor/insp
 import { LayoutFields } from "@/components/editor/inspector/layout-fields";
 import { pageCapabilityFlags } from "@/components/editor/inspector/page-controls";
 import { isArticleRoute } from "@/platform/pages/route-flags";
+import { collectionForPath, editorCollections } from "@/platform/content/collections";
 import { layoutModeName, type LayoutModeName, type LayoutNode } from "@/components/editor/inspector/layout-model";
 import { VisibilityFields } from "@/components/editor/inspector/visibility-fields";
 import type { VisibilityDevice, VisibilityState } from "@/components/editor/inspector/visibility-model";
@@ -101,6 +102,7 @@ export function Inspector(props: {
   const page = api.page;
   const flags = pageCapabilityFlags(api.adapter, page ?? {}, api.path);
   const onArticle = isArticleRoute(api.adapter, api.path) && !page;
+  const collection = collectionForPath(editorCollections(api.adapter), api.path);
   const section = page?.sections.find((item) => item.id === selection.sectionId);
   const block = section?.type === "flow" ? section.blocks.find((item) => item.id === selection.itemId) : undefined;
   const zoneItems = section?.type === "freeform" ? section.items : section?.type === "preset" && selection.overlay ? section.overlay ?? [] : [];
@@ -146,8 +148,8 @@ export function Inspector(props: {
 
   const title =
     mode.kind === "page" ? page?.title ?? "Page"
-    : mode.kind === "article" ? "Article"
-    : mode.kind === "post" ? props.post?.title ?? "Insights post"
+    : mode.kind === "article" ? collection?.name ?? "Article"
+    : mode.kind === "post" ? props.post?.title ?? collection?.name ?? "Entry"
     : mode.kind === "header" ? "Header"
     : mode.kind === "footer" ? "Footer"
     : mode.kind === "nav" ? "Menu link"
@@ -164,7 +166,7 @@ export function Inspector(props: {
           {page ? (
             <button type="button" onClick={props.onClear}>{page.title}</button>
           ) : (
-            <span>{onArticle ? "Article" : props.post ? "Insights" : "Page"}</span>
+            <span>{collection?.name ?? (props.post ? "Entry" : "Page")}</span>
           )}
           {section && (block || zoneItem) ? (
             <>

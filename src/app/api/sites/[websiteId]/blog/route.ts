@@ -2,9 +2,11 @@ import { randomBytes } from "node:crypto";
 import { authorize, authzResponse } from "@/lib/authorize";
 import { recordAudit } from "@/lib/audit";
 import { blogDraftSchema, zodFieldErrors } from "@/lib/content-schema";
+import { editorAdapterForSite } from "@/lib/editor-adapter";
 import { normalizeSiteDraft } from "@/lib/page-documents";
 import { prisma } from "@/lib/prisma";
 import { syncDraftToWorkspace } from "@/lib/publish";
+import { collectionSaveError, editorCollections } from "@/platform/content/collections";
 
 type Params = { params: Promise<{ websiteId: string }> };
 
@@ -16,6 +18,9 @@ export async function PUT(request: Request, { params }: Params) {
     if (!parsed.success) {
       return Response.json({ message: zodFieldErrors(parsed.error) }, { status: 400 });
     }
+    const adapter = await editorAdapterForSite(websiteId);
+    const rejected = collectionSaveError(editorCollections(adapter?.fields ?? null), parsed.data);
+    if (rejected) return Response.json({ message: rejected }, { status: 400 });
     const existing = await prisma.blogPost.findUnique({
       where: { websiteId_slug: { websiteId, slug: parsed.data.slug } },
     });
@@ -70,7 +75,7 @@ export async function PUT(request: Request, { params }: Params) {
       action: "blog.draft",
       target: saved.slug,
     });
-    return Response.json({ message: "Insights draft saved.", slug: saved.slug });
+    return Response.json({ message: "Draft saved.", slug: saved.slug });
   } catch (error) {
     return authzResponse(error);
   }

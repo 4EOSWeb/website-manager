@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { capabilityLines, commandLines, levelLine } from "../../src/app/sites/[websiteId]/settings/settings-model.ts";
+import quantumAgeAdapter from "../../adapters/quantum-age/adapter.ts";
+import harborAdapter from "../../fixtures/harbor/adapter.ts";
+import { additionLine, capabilityLines, commandLines, levelLine } from "../../src/app/sites/[websiteId]/settings/settings-model.ts";
 
 test("settings labels name the capability in a sentence", () => {
   const lines = capabilityLines({ supportsPageCreation: true, supportsReviewPublishing: false });
@@ -9,4 +11,6 @@ test("settings labels name the capability in a sentence", () => {
   assert.equal(lines.some((line) => line.label.includes("supportsPageCreation")), false);
   assert.equal(levelLine(2), "Level 2");
   assert.deepEqual(commandLines({ dev: "npm run dev" })[1], { label: "Development", value: "npm run dev" });
+  assert.equal(additionLine(quantumAgeAdapter), "Insights, Articles, Forum, Forms");
+  assert.equal(additionLine(harborAdapter), "Pages only");
 });

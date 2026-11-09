@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { commandLines, capabilityLines, levelLine } from "@/app/sites/[websiteId]/settings/settings-model";
+import { additionLine, commandLines, capabilityLines, levelLine } from "@/app/sites/[websiteId]/settings/settings-model";
 import { AuthzError, authorize } from "@/lib/authorize";
 import { editorAdapterForSite } from "@/lib/editor-adapter";
 
@@ -34,6 +34,10 @@ export default async function SiteSettingsPage({ params }: { params: Promise<{ w
           <div>
             <dt>Level</dt>
             <dd>{levelLine(fields?.level)}</dd>
+          </div>
+          <div>
+            <dt>Can add</dt>
+            <dd>{additionLine(fields)}</dd>
           </div>
           {capabilityLines(capabilities).map((line) => (
             <div key={line.label}>

@@ -586,6 +586,10 @@
   padding: 2px 12px 14px;
 }
 
+.ed-group-body > .ed-button {
+  justify-self: start;
+}
+
 .ed-side .ed-group-body:has(> .ed-tree),
 .ed-side .ed-group-body:has(> .ed-media-list) {
   padding: 0 0 10px;

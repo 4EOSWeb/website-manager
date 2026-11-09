@@ -45,7 +45,8 @@ import {
 import { validLink } from "@/lib/links";
 import { blockFitsInZone, createId } from "@/lib/page-documents";
 import { entryById, recommendedFor, sectionForEntry, type LibraryEntry } from "@/lib/library";
-import { articlePatternFrom, articleRouteFor, articleSlug, selectActivePage } from "@/components/editor/state/page";
+import { articleRouteFor, articleSlug, selectActivePage } from "@/components/editor/state/page";
+import { collectionForPath, editorCollections, entryBelongs, formsEnabled, newEntryTitle, sameEntry } from "@/platform/content/collections";
 import { clearNodeSelection, clickNode, nodeIdsFromLegacy } from "@/components/editor/state/selection";
 import { activeSiteContext, createSiteState } from "@/components/editor/state/site";
 import { breakpointWidth, previewRadioLabel, type BreakpointId } from "@/components/editor/state/breakpoint";
@@ -262,16 +263,18 @@ export function EditorShell(props: {
   const toastId = useRef(0);
 
   const page = pageByRoute(site, path);
-  const articleRoute = articlePatternFrom(adapter);
+  const collections = editorCollections(adapter);
+  const here = collectionForPath(collections, path);
   const pageState = selectActivePage(
     path,
     visualDocument,
     site.pages.map((item) => ({ id: item.id, route: item.route, title: item.title })),
   );
-  const activePost = articleRoute ? posts.find((item) => articleSlug(articleRoute, path) === item.slug) : undefined;
+  const activeSlug = here ? articleSlug(here.routePattern, path) : null;
+  const activePost = activeSlug && here ? posts.find((item) => item.slug === activeSlug && entryBelongs(item, here)) : undefined;
   const onArticle = isArticleRoute(adapter, path);
-  const preservedArticle = onArticle && articleBodyKind(adapter) === "html-preserved";
-  const managedRoute = !page && !onArticle;
+  const preservedArticle = here ? here.body === "html-preserved" : onArticle && articleBodyKind(adapter) === "html-preserved";
+  const managedRoute = !page && !onArticle && !here;
   const section = page?.sections.find((item) => item.id === selection.sectionId);
 
   useEffect(() => {
@@ -642,7 +645,7 @@ export function EditorShell(props: {
     try {
       const saved = await upload(fileFromDataUrl(dataUrl, name), "");
       if (activePost && !sectionId) {
-        setPosts((items) => items.map((item) => (item.slug === activePost.slug ? { ...item, featuredImage: { src: saved.src, alt: saved.alt } } : item)));
+        setPosts((items) => items.map((item) => (sameEntry(item, activePost.slug, activePost.collection) ? { ...item, featuredImage: { src: saved.src, alt: saved.alt } } : item)));
         reloadAfter.current = true;
         return;
       }
@@ -668,7 +671,7 @@ export function EditorShell(props: {
     setPicker(false);
     if (activePost && !selection.sectionId) {
       rememberHistory();
-      setPosts((items) => items.map((post) => (post.slug === activePost.slug ? { ...post, featuredImage: { src: item.src, alt: item.alt } } : post)));
+      setPosts((items) => items.map((post) => (sameEntry(post, activePost.slug, activePost.collection) ? { ...post, featuredImage: { src: item.src, alt: item.alt } } : post)));
       reloadAfter.current = true;
       return;
     }
@@ -715,7 +718,7 @@ export function EditorShell(props: {
     history.recordText(currentSnapshot(), key, visualDocument);
     setPosts((items) =>
       items.map((post) => {
-        if (post.slug !== activePost.slug) return post;
+        if (!sameEntry(post, activePost.slug, activePost.collection)) return post;
         if (field === "title") return { ...post, title: value };
         if (field === "author") return { ...post, authorDisplayName: value };
         const blockIndex = Number(index);
@@ -754,18 +757,30 @@ export function EditorShell(props: {
     if (!props.canEdit) return;
     const key = `post:${next.slug}`;
     history.recordText(currentSnapshot(), key, visualDocument);
-    setPosts((items) => items.map((item) => (item.slug === next.slug ? next : item)));
+    setPosts((items) => items.map((item) => (sameEntry(item, next.slug, next.collection) ? next : item)));
   }
 
   function addBlogBlock(block: BlogDraft["blocks"][number]) {
     if (!activePost || !props.canEdit) return;
     rememberHistory();
     reloadAfter.current = true;
-    setPosts((items) => items.map((post) => (post.slug === activePost.slug ? { ...post, blocks: [...post.blocks, block] } : post)));
+    setPosts((items) => items.map((post) => (sameEntry(post, activePost.slug, activePost.collection) ? { ...post, blocks: [...post.blocks, block] } : post)));
   }
 
-  async function createInsight() {
-    const post = { ...defaultBlogDraft, slug: `note-${createId("n").slice(-4)}`, title: "New insight" };
+  async function createEntry(collectionId: string) {
+    const collection = collections.find((item) => item.id === collectionId);
+    if (!collection) return;
+    const title = newEntryTitle(collection);
+    const post = {
+      ...defaultBlogDraft,
+      collection: collection.id,
+      slug: `${collection.id}-${createId("n").slice(-4)}`,
+      title,
+      excerpt: "This is still a draft.",
+      authorDisplayName: "Editor",
+      seoTitle: title,
+      metaDescription: "This is still a draft.",
+    };
     setSave("saving");
     try {
       const response = await fetch(`/api/sites/${props.websiteId}/blog`, {
@@ -789,7 +804,7 @@ export function EditorShell(props: {
     setPosts((items) => [post, ...items]);
     setSave("saved");
     setDirtyState((state) => markSaved(state));
-    if (articleRoute) openPage(articleRouteFor(articleRoute, post.slug));
+    openPage(articleRouteFor(collection.routePattern, post.slug));
   }
 
   async function createPageFrom(form: PageForm) {
@@ -1941,8 +1956,10 @@ export function EditorShell(props: {
                 canEdit={props.canEdit}
                 onOpen={openPage}
                 onAddPage={() => setAddingPage(true)}
-                articlePattern={articleRoute}
-                onNewPost={() => void createInsight()}
+                collections={collections}
+                supportsForms={formsEnabled(adapter)}
+                onNewEntry={(id) => void createEntry(id)}
+                onAddForm={() => setRail("add")}
                 onSettings={(route) => {
                   if (route !== path) openPage(route);
                   else clearSelection();

@@ -1,3 +1,7 @@
+import { additionLine } from "@/platform/content/collections";
+
+export { additionLine };
+
 export const capabilityLabels = {
   supportsPageCreation: "Can create pages",
   supportsBlog: "Can edit articles",

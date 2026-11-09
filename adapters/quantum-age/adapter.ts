@@ -1,4 +1,5 @@
 import { quantumAgeArticles } from "./articles";
+import { quantumAgeCollections } from "./collections";
 import { quantumAgeBreakpoints } from "./breakpoints";
 import { quantumAgeCommands } from "./commands";
 import { quantumAgeButton } from "./components/button";
@@ -67,6 +68,7 @@ const adapter = {
   templates: quantumAgeTemplates,
   sharedLayout: { header: "optional" as const, footer: "optional" as const },
   articles: quantumAgeArticles,
+  collections: quantumAgeCollections,
   media: quantumAgeMedia,
   drafts: {
     scope: ["client", "website", "branch", "page", "user"] as const,

@@ -26,6 +26,7 @@ import { defaultOpenIds, legacyTarget, visualPageRoot } from "@/components/edito
 import { ProductEmpty } from "@/components/product/empty";
 import { listedPages, pageGroups, pageListState } from "@/components/editor/page-list";
 import { articleRouteFor } from "@/components/editor/state/page";
+import { addEntryLabel, entryBelongs, type EditorCollection } from "@/platform/content/collections";
 
 export function PagesPanel(props: {
   site: SiteDraft;
@@ -34,14 +35,22 @@ export function PagesPanel(props: {
   path: string;
   canEdit: boolean;
   onOpen: (route: string) => void;
-  articlePattern?: string | null;
+  collections?: EditorCollection[];
+  supportsForms?: boolean;
   onAddPage: () => void;
-  onNewPost: () => void;
+  onNewEntry: (collectionId: string) => void;
+  onAddForm: () => void;
   onSettings: (route: string) => void;
   commit: (next: SiteDraft, reload: boolean) => void;
 }) {
   const [query, setQuery] = useState("");
   const match = (text: string) => text.toLowerCase().includes(query.trim().toLowerCase());
+  const collections = (props.collections ?? []).filter((collection) => {
+    if (!query.trim()) return true;
+    if (match(collection.name)) return true;
+    return props.posts.some((post) => entryBelongs(post, collection) && match(`${post.title} ${post.slug}`));
+  });
+  const showForms = props.supportsForms && (!query.trim() || match("forms"));
   const allPages = listedPages(props.visualDocument, props.site.pages);
   const pages = allPages.filter((page) => match(`${page.title} ${page.navLabel ?? ""} ${page.route}`));
   const listState = pageListState(allPages.length, pages.length);
@@ -90,21 +99,43 @@ export function PagesPanel(props: {
           </Group>
         ) : null,
       )}
-      {props.articlePattern && props.posts.length ? (
-        <Group title="Articles">
-          <ul className="ed-tree">
-            {props.posts.filter((post) => match(`${post.title} ${post.slug}`)).map((post) => {
-              const route = articleRouteFor(props.articlePattern ?? "", post.slug);
-              return (
-                <li key={post.slug} className={props.path === route ? "is-active" : ""}>
-                  <button type="button" className="ed-tree-main" aria-current={props.path === route ? "page" : undefined} onClick={() => props.onOpen(route)}>
-                    <FileText size={14} aria-hidden="true" />
-                    <span className="truncate">{post.title}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+      {collections.map((collection) => {
+        const entries = props.posts.filter((post) => entryBelongs(post, collection) && match(`${post.title} ${post.slug}`));
+        return (
+          <Group key={collection.id} title={collection.name}>
+            {props.canEdit ? (
+              <button type="button" className="ed-button is-small" onClick={() => props.onNewEntry(collection.id)}>
+                <Plus size={14} aria-hidden="true" /> {addEntryLabel(collection)}
+              </button>
+            ) : null}
+            {entries.length ? (
+              <ul className="ed-tree">
+                {entries.map((post) => {
+                  const route = articleRouteFor(collection.routePattern, post.slug);
+                  return (
+                    <li key={`${collection.id}:${post.slug}`} className={props.path === route ? "is-active" : ""}>
+                      <button type="button" className="ed-tree-main" aria-current={props.path === route ? "page" : undefined} onClick={() => props.onOpen(route)}>
+                        <FileText size={14} aria-hidden="true" />
+                        <span className="truncate">{post.title}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="ed-hint">Nothing here yet.</p>
+            )}
+          </Group>
+        );
+      })}
+      {showForms ? (
+        <Group title="Forms">
+          {props.canEdit ? (
+            <button type="button" className="ed-button is-small" onClick={props.onAddForm}>
+              <Plus size={14} aria-hidden="true" /> Add a form
+            </button>
+          ) : null}
+          <p className="ed-hint">A form is placed on the page you have open.</p>
         </Group>
       ) : null}
       {listState === "search" ? <Empty title="No pages match">Use part of a name or an address.</Empty> : null}

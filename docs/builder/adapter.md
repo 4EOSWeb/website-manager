@@ -19,6 +19,7 @@
 - `templates`
 - `sharedLayout`
 - `articles`
+- `collections` — optional list of articles and forums a site can add. Each item has an id, a name, a kind (`article` or `forum`), a `:slug` address, and a body kind. When the list is omitted, the editor derives one collection from `articles` if articles are enabled. Article collections require `supportsBlog`. A forum does not. Forms stay on `supportsForms` and are added onto a page.
 - `media`
 - `drafts`
 - `preview` — iframe `postMessage`

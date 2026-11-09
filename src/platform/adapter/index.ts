@@ -3,6 +3,7 @@ import { adapterInvalid, type PlatformError } from "../errors";
 import { err, ok, type Result } from "../result";
 import { formatAdapterError } from "./errors";
 import { articlesSchema, validateArticles } from "./articles";
+import { collectionsSchema, validateCollections } from "./collections";
 import { breakpointsSchema } from "./breakpoints";
 import { validateAdapterCapabilities, adapterCapabilitiesSchema } from "./capabilities";
 import { commandsSchema } from "./commands";
@@ -47,6 +48,7 @@ export function composeAdapterSchema() {
     templates: templatesSchema,
     sharedLayout: sharedLayoutSchema,
     articles: articlesSchema,
+    collections: collectionsSchema.optional(),
     media: mediaSchema,
     drafts: draftsSchema,
     preview: previewSchema,
@@ -85,6 +87,8 @@ export function parseAdapter(value: unknown): Result<AdapterContract> {
   if (!capabilities.ok) return reject(capabilities.error);
   const articles = validateArticles(capabilities.value.supportsBlog, parsed.data.articles);
   if (!articles.ok) return reject(articles.error);
+  const collections = validateCollections(capabilities.value.supportsBlog, parsed.data.collections);
+  if (!collections.ok) return reject(collections.error);
   const navigation = validateNavigation(capabilities.value.supportsNavigationEditing, parsed.data.navigation);
   if (!navigation.ok) return reject(navigation.error);
   const fonts = validateFonts(parsed.data.level, parsed.data.fonts);

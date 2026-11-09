@@ -74,6 +74,11 @@ export const blogDraftSchema = z.object({
   seoTitle: z.string().trim().max(70),
   metaDescription: z.string().trim().max(160),
   blocks: z.array(blogBlockSchema).min(1).max(40),
+  collection: z
+    .string()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .max(40)
+    .optional(),
   featuredImage: z
     .object({
       src: mediaPath,
