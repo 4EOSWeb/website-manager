@@ -50,3 +50,7 @@ next-env.d.ts
 /test-results
 /playwright-report
 /tests/e2e/.auth
+
+# Windows Caddy launcher downloads and generated files
+/caddy.exe
+/tools/

@@ -20,6 +20,8 @@ npm run dev
 
 Open `http://127.0.0.1:3210`.
 
+On Windows, double-click `start-site.bat`. It downloads Caddy if needed, trusts a local certificate, prepares `.env` and the database, and starts the editor. Open `https://localhost`. PostgreSQL must already be running. This launcher does not publish `https://testsite.4eos.com`.
+
 On a development machine, the sign-in page offers two accounts:
 
 - 4EOS administrator — `admin@4eos.test`
