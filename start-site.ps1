@@ -310,9 +310,14 @@ if (`$LASTEXITCODE -ne 0) {
   return
 }
 Write-Host 'Preparing the database...'
+& '$quotedRoot\start-database.ps1'
+if (-not `$?) {
+  Write-Host 'The local database could not be started.'
+  return
+}
 npx prisma migrate deploy
 if (`$LASTEXITCODE -ne 0) {
-  Write-Host 'The database is not ready. Start PostgreSQL, create website_manager, and run start-site.bat again.'
+  Write-Host 'The database did not accept the editor tables. The error above is from Prisma.'
   Write-Host 'Expected DATABASE_URL: postgresql://postgres:postgres@localhost:5432/website_manager'
   return
 }
@@ -334,7 +339,7 @@ if (-not $httpOpen -or -not $httpsOpen) {
 }
 
 Write-Host 'Opened Caddy and the 4EOS editor.'
-Write-Host 'The server window installs dependencies, prepares the database, then starts the editor. Leave that window open.'
+Write-Host 'The server window installs dependencies, starts a local PostgreSQL if port 5432 is closed, then starts the editor. Leave that window open.'
 Write-Host "On this PC: https://localhost and http://127.0.0.1:$appPort"
 Write-Host 'Sign in with Continue as 4EOS administrator.'
 if ($lanIp) { Write-Host "On this network: https://$lanIp" }
