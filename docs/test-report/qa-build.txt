@@ -1,0 +1,8 @@
+BLOCKED
+
+Command not run: `env -u EDITOR_PREVIEW npx next build` in `.qa/public-site`.
+
+Reason: this checkout has no `.qa/public-site` directory and `SITE_SOURCE_DIR` is empty. The overlay sync script copies into `.workspaces/<website id>` only after a preview workspace exists. It is not a public production build of the Quantum Age repository.
+
+Exit: not run.
+No page was fetched. No visual comparison was made.

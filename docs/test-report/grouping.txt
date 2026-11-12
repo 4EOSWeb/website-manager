@@ -1,0 +1,62 @@
+=== grouping ===
+TAP version 13
+# Subtest: selected nodes become children of the new group and undo restores the parent
+ok 1 - selected nodes become children of the new group and undo restores the parent
+  ---
+  duration_ms: 3.836729
+  ...
+# Subtest: a locked node and a single node are not grouped
+ok 2 - a locked node and a single node are not grouped
+  ---
+  duration_ms: 0.420632
+  ...
+# Subtest: ungroup returns children to the parent and removes the group
+ok 3 - ungroup returns children to the parent and removes the group
+  ---
+  duration_ms: 3.850276
+  ...
+# Subtest: ungroup finds the group from a child and keeps a sibling still
+ok 4 - ungroup finds the group from a child and keeps a sibling still
+  ---
+  duration_ms: 0.752264
+  ...
+# Subtest: a missing group is not removed
+ok 5 - a missing group is not removed
+  ---
+  duration_ms: 0.423186
+  ...
+# Subtest: a heading drop makes the group its parent without copying the group
+ok 6 - a heading drop makes the group its parent without copying the group
+  ---
+  duration_ms: 1.451603
+  ...
+# Subtest: a group rejects a child it cannot hold
+ok 7 - a group rejects a child it cannot hold
+  ---
+  duration_ms: 0.297821
+  ...
+# Subtest: a child leaves the group and the empty group remains
+ok 8 - a child leaves the group and the empty group remains
+  ---
+  duration_ms: 1.399669
+  ...
+# Subtest: a locked group child stays
+ok 9 - a locked group child stays
+  ---
+  duration_ms: 0.307216
+  ...
+# Subtest: a group id uses grp and stays empty
+ok 10 - a group id uses grp and stays empty
+  ---
+  duration_ms: 7.140585
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 465.491755
+EXIT 0

@@ -19,13 +19,13 @@ export default defineConfig({
     { name: "setup", testMatch: /auth\.setup\.ts/ },
     {
       name: "editor",
-      testIgnore: /routes\.spec\.ts/,
+      testIgnore: /\/routes\.spec\.ts$/,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 }, storageState: "tests/e2e/.auth/admin.json" },
       dependencies: ["setup"],
     },
     {
       name: "routes",
-      testMatch: /routes\.spec\.ts/,
+      testMatch: /\/routes\.spec\.ts$/,
       use: { ...devices["Desktop Chrome"], storageState: "tests/e2e/.auth/admin.json" },
       dependencies: ["setup"],
     },

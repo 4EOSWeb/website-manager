@@ -1,0 +1,6 @@
+=== migrate:dry ===
+
+> 4eos-website-editor@0.1.0 migrate:dry
+> node --experimental-strip-types --no-warnings --import ./tests/unit/resolve-ts.mjs scripts/migrate-drafts.ts
+
+EXIT 0

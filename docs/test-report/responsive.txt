@@ -1,0 +1,57 @@
+=== responsive ===
+TAP version 13
+# Subtest: breakpoints require mobile and a width of at least 320
+ok 1 - breakpoints require mobile and a width of at least 320
+  ---
+  duration_ms: 2.242084
+  ...
+# Subtest: missing breakpoint overrides are valid and an unknown breakpoint fails
+ok 2 - missing breakpoint overrides are valid and an unknown breakpoint fails
+  ---
+  duration_ms: 1.851685
+  ...
+# Subtest: custom placement uses a mobile box and reflows when it is missing
+ok 3 - custom placement uses a mobile box and reflows when it is missing
+  ---
+  duration_ms: 4.856018
+  ...
+# Subtest: a missing mobile breakpoint reflows and leaves the desktop box
+ok 4 - a missing mobile breakpoint reflows and leaves the desktop box
+  ---
+  duration_ms: 0.886755
+  ...
+# Subtest: scale returns the same percentages and does not read the viewport
+ok 5 - scale returns the same percentages and does not read the viewport
+  ---
+  duration_ms: 5.312229
+  ...
+# Subtest: quantum age device widths come from the adapter
+ok 6 - quantum age device widths come from the adapter
+  ---
+  duration_ms: 1.110203
+  ...
+# Subtest: changing strategy updates the node and flow text stays hidden
+ok 7 - changing strategy updates the node and flow text stays hidden
+  ---
+  duration_ms: 0.611185
+  ...
+# Subtest: quantum age breakpoint widths match the editor config
+ok 8 - quantum age breakpoint widths match the editor config
+  ---
+  duration_ms: 4.656819
+  ...
+# Subtest: only responsive unlocked components can add a breakpoint override
+ok 9 - only responsive unlocked components can add a breakpoint override
+  ---
+  duration_ms: 0.443972
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 652.832826
+EXIT 0

@@ -1,7 +1,11 @@
 import type { StructuredPost } from "@/lib/structured-posts";
 
-/** Renders a structured Insights draft as text, never as HTML. */
-export function StructuredArticle({ post }: { post: StructuredPost }) {
+/** Renders a structured draft as text. A preserved HTML body is rendered unchanged. */
+export function StructuredArticle({ post, preserved }: { post?: StructuredPost; preserved?: { htmlPreserved?: boolean; html?: string } }) {
+  if (preserved?.htmlPreserved === true && typeof preserved.html === "string") {
+    return <div id="article-body" className="prose-article" dangerouslySetInnerHTML={{ __html: preserved.html }} />;
+  }
+  if (!post) return null;
   return (
     <div id="article-body" className="prose-article">
       {post.blocks.map((block, index) => {

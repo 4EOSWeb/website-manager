@@ -1,0 +1,17 @@
+{
+  "websiteId": "web_quantum_age",
+  "ok": true,
+  "refused": false,
+  "drafts": [
+    {
+      "id": "draft_0ddb6f7c7f7a",
+      "status": "stored",
+      "backupId": "bak_a248a41201ed"
+    },
+    {
+      "id": "draft_de7f110716c9",
+      "status": "stored",
+      "backupId": "bak_e266ef0c857a"
+    }
+  ]
+}

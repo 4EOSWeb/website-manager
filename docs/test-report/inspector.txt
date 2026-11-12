@@ -1,0 +1,107 @@
+=== inspector ===
+TAP version 13
+# Subtest: a client editor does not receive administrator fields
+ok 1 - a client editor does not receive administrator fields
+  ---
+  duration_ms: 0.963922
+  ...
+# Subtest: button fonts come from the adapter and disabled state stays on the same node
+ok 2 - button fonts come from the adapter and disabled state stays on the same node
+  ---
+  duration_ms: 1.386876
+  ...
+# Subtest: canvas percentages write the active box and stay hidden in flow
+ok 3 - canvas percentages write the active box and stay hidden in flow
+  ---
+  duration_ms: 1.136678
+  ...
+# Subtest: flags false hide canvas, form, and theme controls
+ok 4 - flags false hide canvas, form, and theme controls
+  ---
+  duration_ms: 1.817452
+  ...
+# Subtest: design token options match the active adapter and a locked component hides design
+ok 5 - design token options match the active adapter and a locked component hides design
+  ---
+  duration_ms: 2.173503
+  ...
+# Subtest: an invalid address stays a warning and a valid address clears it
+ok 6 - an invalid address stays a warning and a valid address clears it
+  ---
+  duration_ms: 0.686286
+  ...
+# Subtest: prop errors keep the typed value and default to a warning
+ok 7 - prop errors keep the typed value and default to a warning
+  ---
+  duration_ms: 3.682415
+  ...
+# Subtest: a generic heading has a name field and a read-only id
+ok 8 - a generic heading has a name field and a read-only id
+  ---
+  duration_ms: 1.411453
+  ...
+# Subtest: content props are text, label, quote, and title, and a write touches one prop
+ok 9 - content props are text, label, quote, and title, and a write touches one prop
+  ---
+  duration_ms: 0.21284
+  ...
+# Subtest: replace writes src on the selected image only, and an empty alt keeps the warning
+ok 10 - replace writes src on the selected image only, and an empty alt keeps the warning
+  ---
+  duration_ms: 0.919181
+  ...
+# Subtest: confirm stores the previous layout and undo restores the mode and settings
+ok 11 - confirm stores the previous layout and undo restores the mode and settings
+  ---
+  duration_ms: 0.999795
+  ...
+# Subtest: layout conversion is on for a generic container and off when the flag is false
+ok 12 - layout conversion is on for a generic container and off when the flag is false
+  ---
+  duration_ms: 1.980198
+  ...
+# Subtest: converting a stack section to canvas keeps the original section until undo
+ok 13 - converting a stack section to canvas keeps the original section until undo
+  ---
+  duration_ms: 0.232989
+  ...
+# Subtest: a page path saves, a javascript address does not, and new tab is target new
+ok 14 - a page path saves, a javascript address does not, and new tab is target new
+  ---
+  duration_ms: 0.827132
+  ...
+# Subtest: basic mode hides strategy, z-index, and component ids
+ok 15 - basic mode hides strategy, z-index, and component ids
+  ---
+  duration_ms: 1.4233
+  ...
+# Subtest: registered components render their own fields and an unknown slot warns an administrator
+ok 16 - registered components render their own fields and an unknown slot warns an administrator
+  ---
+  duration_ms: 1.316605
+  ...
+# Subtest: changing strategy updates the node and flow text stays hidden
+ok 17 - changing strategy updates the node and flow text stays hidden
+  ---
+  duration_ms: 0.676281
+  ...
+# Subtest: text style writes one key and does not offer a markup field
+ok 18 - text style writes one key and does not offer a markup field
+  ---
+  duration_ms: 1.491509
+  ...
+# Subtest: hide on one device leaves the others visible, and all three sets hidden
+ok 19 - hide on one device leaves the others visible, and all three sets hidden
+  ---
+  duration_ms: 1.281226
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 990.760741
+EXIT 0

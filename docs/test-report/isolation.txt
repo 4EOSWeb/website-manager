@@ -1,0 +1,82 @@
+=== isolation ===
+TAP version 13
+# Subtest: a Harbor editor with no saved draft does not receive the Quantum Age document
+ok 1 - a Harbor editor with no saved draft does not receive the Quantum Age document
+  ---
+  duration_ms: 29.501994
+  ...
+# Subtest: a commit refuses a workspace that belongs to the other site
+ok 2 - a commit refuses a workspace that belongs to the other site
+  ---
+  duration_ms: 130.579742
+  ...
+# Subtest: harbor and quantum age color tokens stay on their own sites
+ok 3 - harbor and quantum age color tokens stay on their own sites
+  ---
+  duration_ms: 0.944463
+  ...
+# Subtest: each site registry returns only that site's components
+ok 4 - each site registry returns only that site's components
+  ---
+  duration_ms: 1.016737
+  ...
+# Subtest: a draft write cannot name the other site's page
+ok 5 - a draft write cannot name the other site's page
+  ---
+  duration_ms: 389.497423
+  ...
+# Subtest: harbor and quantum age font lists do not leak
+ok 6 - harbor and quantum age font lists do not leak
+  ---
+  duration_ms: 0.918268
+  ...
+# Subtest: locking a Harbor paragraph does not change Quantum Age locks
+ok 7 - locking a Harbor paragraph does not change Quantum Age locks
+  ---
+  duration_ms: 3.167411
+  ...
+# Subtest: a harbor request for a quantum age media id is not found
+ok 8 - a harbor request for a quantum age media id is not found
+  ---
+  duration_ms: 363.725543
+  ...
+# Subtest: a Harbor member does not receive Quantum Age
+ok 9 - a Harbor member does not receive Quantum Age
+  ---
+  duration_ms: 330.53604
+  ...
+# Subtest: a harbor page read does not return a quantum age page
+ok 10 - a harbor page read does not return a quantum age page
+  ---
+  duration_ms: 253.390535
+  ...
+# Subtest: a Harbor publish list cannot include Quantum Age files
+ok 11 - a Harbor publish list cannot include Quantum Age files
+  ---
+  duration_ms: 481.759734
+  ...
+# Subtest: the editor payload keeps repository secrets off the client
+ok 12 - the editor payload keeps repository secrets off the client
+  ---
+  duration_ms: 6.057132
+  ...
+# Subtest: route discovery for one site does not return the other site's routes
+ok 13 - route discovery for one site does not return the other site's routes
+  ---
+  duration_ms: 1.730387
+  ...
+# Subtest: template pickers keep site templates on their own adapter
+ok 14 - template pickers keep site templates on their own adapter
+  ---
+  duration_ms: 0.71001
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 21423.02309
+EXIT 0

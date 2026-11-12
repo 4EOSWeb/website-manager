@@ -1,0 +1,299 @@
+=== adapters ===
+TAP version 13
+# Subtest: allowlist prefixes stay on a directory boundary
+ok 1 - allowlist prefixes stay on a directory boundary
+  ---
+  duration_ms: 0.850078
+  ...
+# Subtest: disabled articles keep a pattern that callers ignore
+ok 2 - disabled articles keep a pattern that callers ignore
+  ---
+  duration_ms: 1.32902
+  ...
+# Subtest: breakpoints require mobile and a width of at least 320
+ok 3 - breakpoints require mobile and a width of at least 320
+  ---
+  duration_ms: 3.426914
+  ...
+# Subtest: level 1 rejects a free canvas and omitted capability keys
+ok 4 - level 1 rejects a free canvas and omitted capability keys
+  ---
+  duration_ms: 2.865474
+  ...
+# Subtest: pnpm commands pass and a newline fails
+ok 5 - pnpm commands pass and a newline fails
+  ---
+  duration_ms: 1.755931
+  ...
+# Subtest: component ids are lowercase and an empty list is valid
+ok 6 - component ids are lowercase and an empty list is valid
+  ---
+  duration_ms: 2.60471
+  ...
+# Subtest: draft scope requires website and the visual document format
+ok 7 - draft scope requires website and the visual document format
+  ---
+  duration_ms: 1.456199
+  ...
+# Subtest: a missing site id names that field
+ok 8 - a missing site id names that field
+  ---
+  duration_ms: 10.969479
+  ...
+# Subtest: a sans file font passes and level 2 rejects an empty list
+ok 9 - a sans file font passes and level 2 rejects an empty list
+  ---
+  duration_ms: 2.937421
+  ...
+# Subtest: level 0 fails and the level 1 sample adapter validates
+ok 10 - level 0 fails and the level 1 sample adapter validates
+  ---
+  duration_ms: 1.91049
+  ...
+# Subtest: a missing adapter id fails and a present loader is returned
+ok 11 - a missing adapter id fails and a present loader is returned
+  ---
+  duration_ms: 0.689401
+  ...
+# Subtest: the loader does not import a site
+ok 12 - the loader does not import a site
+  ---
+  duration_ms: 0.309551
+  ...
+# Subtest: media dirs stay relative and only image extensions are accepted
+ok 13 - media dirs stay relative and only image extensions are accepted
+  ---
+  duration_ms: 2.013422
+  ...
+# Subtest: a missing repository fails and branch dev passes
+ok 14 - a missing repository fails and branch dev passes
+  ---
+  duration_ms: 2.002631
+  ...
+# Subtest: document navigation can omit items, and a closed capability cannot be editable
+ok 15 - document navigation can omit items, and a closed capability cannot be editable
+  ---
+  duration_ms: 1.384053
+  ...
+# Subtest: provider-managed pages cannot edit the body
+ok 16 - provider-managed pages cannot edit the body
+  ---
+  duration_ms: 1.630893
+  ...
+# Subtest: reserved routes are adapter data, including an empty list
+ok 17 - reserved routes are adapter data, including an empty list
+  ---
+  duration_ms: 12.250186
+  ...
+# Subtest: preview stays on the iframe protocol
+ok 18 - preview stays on the iframe protocol
+  ---
+  duration_ms: 1.503442
+  ...
+# Subtest: disabled publishing can omit files and review mode cannot
+ok 19 - disabled publishing can omit files and review mode cannot
+  ---
+  duration_ms: 1.704386
+  ...
+# Subtest: app and pages roots pass, including a nested app path
+ok 20 - app and pages roots pass, including a nested app path
+  ---
+  duration_ms: 2.220125
+  ...
+# Subtest: static routes pass and a full URL fails
+ok 21 - static routes pass and a full URL fails
+  ---
+  duration_ms: 2.36488
+  ...
+# Subtest: the default serializer writes version 1 and rejects parent paths
+ok 22 - the default serializer writes version 1 and rejects parent paths
+  ---
+  duration_ms: 5.596726
+  ...
+# Subtest: shared header follows the capability flag
+ok 23 - shared header follows the capability flag
+  ---
+  duration_ms: 2.398539
+  ...
+# Subtest: a stacked document is a valid template and an empty document is not
+ok 24 - a stacked document is a valid template and an empty document is not
+  ---
+  duration_ms: 5.249815
+  ...
+# Subtest: open token names pass and duplicate ids fail
+ok 25 - open token names pass and duplicate ids fail
+  ---
+  duration_ms: 1.966944
+  ...
+# Subtest: the default hook accepts a document and a warning does not throw
+ok 26 - the default hook accepts a document and a warning does not throw
+  ---
+  duration_ms: 0.860779
+  ...
+# Subtest: a missing version fails and version 1 with id and name passes
+ok 27 - a missing version fails and version 1 with id and name passes
+  ---
+  duration_ms: 1.680355
+  ...
+# Subtest: version 1 parses and an unknown version is rejected
+ok 28 - version 1 parses and an unknown version is rejected
+  ---
+  duration_ms: 8.286374
+  ...
+# Subtest: discovery finds the sample adapter and ignores a directory without one
+ok 29 - discovery finds the sample adapter and ignores a directory without one
+  ---
+  duration_ms: 10.966225
+  ...
+# Subtest: the editor receives serializable adapter fields for the active site
+ok 30 - the editor receives serializable adapter fields for the active site
+  ---
+  duration_ms: 18.141269
+  ...
+# Subtest: a missing adapter keeps the version 3 editor and warns
+ok 31 - a missing adapter keeps the version 3 editor and warns
+  ---
+  duration_ms: 7.613569
+  ...
+# Subtest: a failed adapter import uses the bundled serializable view
+ok 32 - a failed adapter import uses the bundled serializable view
+  ---
+  duration_ms: 9.412589
+  ...
+# Subtest: the editor page does not import overlay components
+ok 33 - the editor page does not import overlay components
+  ---
+  duration_ms: 0.599764
+  ...
+# web_harbor
+# Subtest: the harbor adapter parses and discovery finds its folder
+ok 34 - the harbor adapter parses and discovery finds its folder
+  ---
+  duration_ms: 17.644366
+  ...
+# Subtest: a relative adapter path passes and a parent path fails
+ok 35 - a relative adapter path passes and a parent path fails
+  ---
+  duration_ms: 1.380784
+  ...
+# Subtest: a relative content path passes and a parent path fails
+ok 36 - a relative content path passes and a parent path fails
+  ---
+  duration_ms: 0.129897
+  ...
+# Subtest: a relative media path passes and an absolute path fails
+ok 37 - a relative media path passes and an absolute path fails
+  ---
+  duration_ms: 0.105521
+  ...
+# Subtest: the harbor adapter file passes
+ok 38 - the harbor adapter file passes
+  ---
+  duration_ms: 239.435324
+  ...
+# Subtest: a broken adapter returns field errors
+ok 39 - a broken adapter returns field errors
+  ---
+  duration_ms: 3.335792
+  ...
+# Subtest: the quantum age adapter still parses
+ok 40 - the quantum age adapter still parses
+  ---
+  duration_ms: 1.5879
+  ...
+# Subtest: the client form does not import an adapter module
+ok 41 - the client form does not import an adapter module
+  ---
+  duration_ms: 0.29361
+  ...
+# Subtest: quantum age article behavior stays out of the platform
+ok 42 - quantum age article behavior stays out of the platform
+  ---
+  duration_ms: 9.147853
+  ...
+# Subtest: quantum age breakpoint widths match the editor config
+ok 43 - quantum age breakpoint widths match the editor config
+  ---
+  duration_ms: 2.536495
+  ...
+# Subtest: quantum age commands match the editor config
+ok 44 - quantum age commands match the editor config
+  ---
+  duration_ms: 13.368231
+  ...
+# Subtest: quantum age fonts match the overlay layout
+ok 45 - quantum age fonts match the overlay layout
+  ---
+  duration_ms: 9.43569
+  ...
+# Subtest: the quantum age adapter parses and discovery returns its id
+ok 46 - the quantum age adapter parses and discovery returns its id
+  ---
+  duration_ms: 40.445856
+  ...
+# Subtest: quantum age lock names stay in the adapter and the editor config
+ok 47 - quantum age lock names stay in the adapter and the editor config
+  ---
+  duration_ms: 19.631965
+  ...
+# Subtest: quantum age media accepts the current image types
+ok 48 - quantum age media accepts the current image types
+  ---
+  duration_ms: 2.002051
+  ...
+# Subtest: quantum age metadata matches the editor config
+ok 49 - quantum age metadata matches the editor config
+  ---
+  duration_ms: 12.128406
+  ...
+# Subtest: quantum age navigation comes from the document and has no label list
+ok 50 - quantum age navigation comes from the document and has no label list
+  ---
+  duration_ms: 10.270878
+  ...
+# Subtest: adapter reserved routes stay on the adapter
+ok 51 - adapter reserved routes stay on the adapter
+  ---
+  duration_ms: 3.035223
+  ...
+# Subtest: quantum age routes match the editor config and stay out of the platform
+ok 52 - quantum age routes match the editor config and stay out of the platform
+  ---
+  duration_ms: 10.641834
+  ...
+# Subtest: quantum age templates include insights-landing only outside the platform
+ok 53 - quantum age templates include insights-landing only outside the platform
+  ---
+  duration_ms: 12.184581
+  ...
+# Subtest: quantum age color tokens match the draft chrome
+not ok 54 - quantum age color tokens match the draft chrome
+  ---
+  duration_ms: 0.684272
+  location: '/workspace/tests/unit/qa-adapter-theme.test.ts:8:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'chrome')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/tests/unit/qa-adapter-theme.test.ts:14:23)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.start (node:internal/test_runner/test:877:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: quantum age validation warns on a missing root and does not require a hero
+ok 55 - quantum age validation warns on a missing root and does not require a hero
+  ---
+  duration_ms: 2.321038
+  ...
+1..55
+# tests 55
+# suites 0
+# pass 54
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4023.85879
+EXIT 1

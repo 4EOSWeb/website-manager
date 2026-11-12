@@ -1,0 +1,160 @@
+=== schemas ===
+TAP version 13
+# Subtest: a binding key is opaque and an invalid key fails
+ok 1 - a binding key is opaque and an invalid key fails
+  ---
+  duration_ms: 2.861284
+  ...
+# Subtest: a parent-percentage box parses and a value past 100 fails
+ok 2 - a parent-percentage box parses and a value past 100 fails
+  ---
+  duration_ms: 4.117614
+  ...
+# Subtest: generic fixtures validate and do not name a specific website
+ok 3 - generic fixtures validate and do not name a specific website
+  ---
+  duration_ms: 7.97546
+  ...
+# Subtest: a desktop-only box inherits tablet and mobile
+ok 4 - a desktop-only box inherits tablet and mobile
+  ---
+  duration_ms: 0.867738
+  ...
+# Subtest: canvas layout parses without child coordinates
+ok 5 - canvas layout parses without child coordinates
+  ---
+  duration_ms: 2.938954
+  ...
+# Subtest: a wrapping row parses
+ok 6 - a wrapping row parses
+  ---
+  duration_ms: 1.661355
+  ...
+# Subtest: vertical flow parses and freeform does not
+ok 7 - vertical flow parses and freeform does not
+  ---
+  duration_ms: 1.57543
+  ...
+# Subtest: grid, flow, and flex parse through the shared layout schema
+ok 8 - grid, flow, and flex parse through the shared layout schema
+  ---
+  duration_ms: 2.761963
+  ...
+# Subtest: switching layout stores the previous settings and keeps child boxes
+ok 9 - switching layout stores the previous settings and keeps child boxes
+  ---
+  duration_ms: 2.937845
+  ...
+# Subtest: a lock without a reason id is valid
+ok 10 - a lock without a reason id is valid
+  ---
+  duration_ms: 1.290631
+  ...
+# Subtest: version 1 stays itself and version 3 is refused
+ok 11 - version 1 stays itself and version 3 is refused
+  ---
+  duration_ms: 0.600563
+  ...
+# Subtest: custom is allowed and freeform is rejected
+ok 12 - custom is allowed and freeform is rejected
+  ---
+  duration_ms: 3.808772
+  ...
+# Subtest: a node missing an id fails and a minimal node parses
+ok 13 - a node missing an id fails and a minimal node parses
+  ---
+  duration_ms: 6.763524
+  ...
+# Subtest: a page without a title fails
+ok 14 - a page without a title fails
+  ---
+  duration_ms: 2.432334
+  ...
+# Subtest: nested plain props pass and a function fails
+ok 15 - nested plain props pass and a function fails
+  ---
+  duration_ms: 3.445822
+  ...
+# Subtest: missing breakpoint overrides are valid and an unknown breakpoint fails
+ok 16 - missing breakpoint overrides are valid and an unknown breakpoint fails
+  ---
+  duration_ms: 1.981147
+  ...
+# Subtest: fixtures keep their ids and order after JSON
+ok 17 - fixtures keep their ids and order after JSON
+  ---
+  duration_ms: 21.885375
+  ...
+# Subtest: provider-managed content does not require a site name
+ok 18 - provider-managed content does not require a site name
+  ---
+  duration_ms: 1.538335
+  ...
+# Subtest: custom placement uses a mobile box and reflows when it is missing
+ok 19 - custom placement uses a mobile box and reflows when it is missing
+  ---
+  duration_ms: 3.437764
+  ...
+# Subtest: a missing mobile breakpoint reflows and leaves the desktop box
+ok 20 - a missing mobile breakpoint reflows and leaves the desktop box
+  ---
+  duration_ms: 0.851348
+  ...
+# Subtest: scale returns the same percentages and does not read the viewport
+ok 21 - scale returns the same percentages and does not read the viewport
+  ---
+  duration_ms: 1.122573
+  ...
+# Subtest: a token color is allowed and an unknown style key fails
+ok 22 - a token color is allowed and an unknown style key fails
+  ---
+  duration_ms: 1.463208
+  ...
+# Subtest: nested nodes parse, duplicate ids fail, and depth 13 fails
+ok 23 - nested nodes parse, duplicate ids fail, and depth 13 fails
+  ---
+  duration_ms: 7.637706
+  ...
+# Subtest: the visual document version is 1 and node kinds include container and custom
+ok 24 - the visual document version is 1 and node kinds include container and custom
+  ---
+  duration_ms: 0.671288
+  ...
+# Subtest: version 1 accepts one page and rejects a bad version, an empty page list, and a repeated id
+not ok 25 - version 1 accepts one page and rejects a bad version, an empty page list, and a repeated id
+  ---
+  duration_ms: 4.807289
+  location: '/workspace/tests/unit/document-validate.test.ts:16:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/tests/unit/document-validate.test.ts:30:10)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.start (node:internal/test_runner/test:877:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: visibility is a boolean plus unique breakpoints
+ok 26 - visibility is a boolean plus unique breakpoints
+  ---
+  duration_ms: 1.520248
+  ...
+1..26
+# tests 26
+# suites 0
+# pass 25
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2035.507074
+EXIT 1

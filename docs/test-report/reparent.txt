@@ -1,0 +1,197 @@
+=== reparent ===
+TAP version 13
+# Subtest: a pointer within 24 pixels of the preview edge scrolls that way
+ok 1 - a pointer within 24 pixels of the preview edge scrolls that way
+  ---
+  duration_ms: 1.154247
+  ...
+# Subtest: scrolling stops when the drag ends and ignores the hub
+ok 2 - scrolling stops when the drag ends and ignores the hub
+  ---
+  duration_ms: 0.704932
+  ...
+# Subtest: escape during a drag clears the gesture and leaves the order
+ok 3 - escape during a drag clears the gesture and leaves the order
+  ---
+  duration_ms: 1.002725
+  ...
+# Subtest: escape outside a drag, or while a dialog is open, does not cancel
+ok 4 - escape outside a drag, or while a dialog is open, does not cancel
+  ---
+  duration_ms: 0.31519
+  ...
+# Subtest: the deepest container is first and the dragged node is excluded
+ok 5 - the deepest container is first and the dragged node is excluded
+  ---
+  duration_ms: 1.063987
+  ...
+# Subtest: a canvas point stays parent-relative when the hub panel moves
+ok 6 - a canvas point stays parent-relative when the hub panel moves
+  ---
+  duration_ms: 0.857223
+  ...
+# Subtest: the active breakpoint stores a box from 0 to 100
+ok 7 - the active breakpoint stores a box from 0 to 100
+  ---
+  duration_ms: 1.098836
+  ...
+# Subtest: locks and parent rules decide a drop
+ok 8 - locks and parent rules decide a drop
+  ---
+  duration_ms: 2.291983
+  ...
+# Subtest: a child returns its parent and the page root cannot be dragged
+ok 9 - a child returns its parent and the page root cannot be dragged
+  ---
+  duration_ms: 1.035013
+  ...
+# Subtest: row insert uses the x position and column uses a horizontal line
+ok 10 - row insert uses the x position and column uses a horizontal line
+  ---
+  duration_ms: 0.53305
+  ...
+# Subtest: a flex drop changes child order and keeps flex settings
+ok 11 - a flex drop changes child order and keeps flex settings
+  ---
+  duration_ms: 0.805474
+  ...
+# Subtest: an incompatible flex child is rejected and flow reorder still works
+ok 12 - an incompatible flex child is rejected and flow reorder still works
+  ---
+  duration_ms: 0.572061
+  ...
+# Subtest: flow direction chooses the insertion line
+ok 13 - flow direction chooses the insertion line
+  ---
+  duration_ms: 0.479853
+  ...
+# Subtest: dropping below a sibling places the node after it
+ok 14 - dropping below a sibling places the node after it
+  ---
+  duration_ms: 0.733163
+  ...
+# Subtest: a new node and a same-parent move share flow insert
+ok 15 - a new node and a same-parent move share flow insert
+  ---
+  duration_ms: 0.217616
+  ...
+# Subtest: a legacy block id reorders through the same function
+ok 16 - a legacy block id reorders through the same function
+  ---
+  duration_ms: 0.160711
+  ...
+# Subtest: a different parent is left unchanged
+ok 17 - a different parent is left unchanged
+  ---
+  duration_ms: 0.32934
+  ...
+# Subtest: the other column is the cell under the pointer
+ok 18 - the other column is the cell under the pointer
+  ---
+  duration_ms: 0.516603
+  ...
+# Subtest: the highlighted cell receives the node and the column count stays
+ok 19 - the highlighted cell receives the node and the column count stays
+  ---
+  duration_ms: 1.018828
+  ...
+# Subtest: a heading drop makes the group its parent without copying the group
+ok 20 - a heading drop makes the group its parent without copying the group
+  ---
+  duration_ms: 1.635922
+  ...
+# Subtest: a group rejects a child it cannot hold
+ok 21 - a group rejects a child it cannot hold
+  ---
+  duration_ms: 0.358599
+  ...
+# Subtest: a child leaves the group and the empty group remains
+ok 22 - a child leaves the group and the empty group remains
+  ---
+  duration_ms: 2.184678
+  ...
+# Subtest: a locked group child stays
+ok 23 - a locked group child stays
+  ---
+  duration_ms: 0.343676
+  ...
+# Subtest: a text selection or a control does not drag
+ok 24 - a text selection or a control does not drag
+  ---
+  duration_ms: 0.941671
+  ...
+# Subtest: only the handle starts a drag, and only after the threshold
+ok 25 - only the handle starts a drag, and only after the threshold
+  ---
+  duration_ms: 4.753225
+  ...
+# Subtest: alt plus down moves a flow node below the next one
+ok 26 - alt plus down moves a flow node below the next one
+  ---
+  duration_ms: 1.438733
+  ...
+# Subtest: alt plus shift moves into the next container and a locked node stays
+ok 27 - alt plus shift moves into the next container and a locked node stays
+  ---
+  duration_ms: 0.643168
+  ...
+# Subtest: a library button dropped on a canvas creates one button at that box
+ok 28 - a library button dropped on a canvas creates one button at that box
+  ---
+  duration_ms: 2.802103
+  ...
+# Subtest: an invalid library drop creates zero nodes
+ok 29 - an invalid library drop creates zero nodes
+  ---
+  duration_ms: 0.365839
+  ...
+# Subtest: a node moves to the new parent and leaves the old one
+ok 30 - a node moves to the new parent and leaves the old one
+  ---
+  duration_ms: 1.657093
+  ...
+# Subtest: a locked or incompatible node stays in place
+ok 31 - a locked or incompatible node stays in place
+  ---
+  duration_ms: 0.431849
+  ...
+# Subtest: one section move removes the block from the source
+ok 32 - one section move removes the block from the source
+  ---
+  duration_ms: 0.265355
+  ...
+# Subtest: a saved drop keeps the version 3 draft and projects the node once
+ok 33 - a saved drop keeps the version 3 draft and projects the node once
+  ---
+  duration_ms: 5.153789
+  ...
+# Subtest: movement under 4 pixels is a click and 4 pixels can drag
+ok 34 - movement under 4 pixels is a click and 4 pixels can drag
+  ---
+  duration_ms: 0.663126
+  ...
+# Subtest: one undo reverses a reparent and redo puts the node back
+ok 35 - one undo reverses a reparent and redo puts the node back
+  ---
+  duration_ms: 1.591144
+  ...
+# Subtest: a paragraph dropped on another section moves once
+ok 36 - a paragraph dropped on another section moves once
+  ---
+  duration_ms: 1.613264
+  ...
+# Subtest: an illegal layer target does not move the node
+ok 37 - an illegal layer target does not move the node
+  ---
+  duration_ms: 0.25591
+  ...
+1..37
+# tests 37
+# suites 0
+# pass 37
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1486.891308
+EXIT 0

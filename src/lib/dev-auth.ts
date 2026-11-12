@@ -16,7 +16,7 @@ export function githubAppConfigured() {
   );
 }
 
-const DEV_EMAILS = new Set(["admin@4eos.test", "editor@4eos.test"]);
+const DEV_EMAILS = new Set(["admin@4eos.test", "editor@4eos.test", "harbor@4eos.test"]);
 
 export function isDevEmail(email: string) {
   return DEV_EMAILS.has(email);

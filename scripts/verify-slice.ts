@@ -70,6 +70,7 @@ try {
   await writeFile(path.join(dir, "src/content/pages/home.json"), '{"tagline":"Edited"}\n');
   const committed = await commitAllowedChanges({
     cwd: dir,
+    workspace: dir,
     branch: "editor/quantum-age/abc123",
     files: ["src/content/pages/home.json"],
     message: "Update approved website content",

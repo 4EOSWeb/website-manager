@@ -1,0 +1,92 @@
+=== registry ===
+TAP version 13
+# Subtest: sample.text groups under text and an unknown category fails
+ok 1 - sample.text groups under text and an unknown category fails
+  ---
+  duration_ms: 0.815597
+  ...
+# Subtest: closed parents reject children and listed types pass
+ok 2 - closed parents reject children and listed types pass
+  ---
+  duration_ms: 0.490709
+  ...
+# Subtest: defaults fill missing props and keep provided ones
+ok 3 - defaults fill missing props and keep provided ones
+  ---
+  duration_ms: 0.879528
+  ...
+# Subtest: the sample adapter registers sample.text without scanning a site
+ok 4 - the sample adapter registers sample.text without scanning a site
+  ---
+  duration_ms: 22.649087
+  ...
+# Subtest: locked nodes cannot drag and unlocked draggable nodes can
+ok 5 - locked nodes cannot drag and unlocked draggable nodes can
+  ---
+  duration_ms: 0.472166
+  ...
+# Subtest: a string prop becomes a text control and unknown types are skipped
+ok 6 - a string prop becomes a text control and unknown types are skipped
+  ---
+  duration_ms: 3.568426
+  ...
+# Subtest: two adapters keep separate component registries
+ok 7 - two adapters keep separate component registries
+  ---
+  duration_ms: 11.792622
+  ...
+# Subtest: editors cannot unlock an administrator-only component
+ok 8 - editors cannot unlock an administrator-only component
+  ---
+  duration_ms: 1.347003
+  ...
+# Subtest: a button can sit in a section and not in text
+ok 9 - a button can sit in a section and not in text
+  ---
+  duration_ms: 0.848703
+  ...
+# Subtest: strict prop schemas name the extra field
+ok 10 - strict prop schemas name the extra field
+  ---
+  duration_ms: 2.949568
+  ...
+# Subtest: registries keep their own components
+ok 11 - registries keep their own components
+  ---
+  duration_ms: 0.94165
+  ...
+# Subtest: a repeated id is rejected and case is significant
+ok 12 - a repeated id is rejected and case is significant
+  ---
+  duration_ms: 0.285359
+  ...
+# Subtest: resize requires a resizable unlocked component on a canvas parent
+ok 13 - resize requires a resizable unlocked component on a canvas parent
+  ---
+  duration_ms: 0.836547
+  ...
+# Subtest: only responsive unlocked components can add a breakpoint override
+ok 14 - only responsive unlocked components can add a breakpoint override
+  ---
+  duration_ms: 0.479636
+  ...
+# Subtest: disallowed style keys fail and an empty styleable list cannot register
+ok 15 - disallowed style keys fail and an empty styleable list cannot register
+  ---
+  duration_ms: 0.750132
+  ...
+# Subtest: another website id fails and a generic button placeholder passes
+ok 16 - another website id fails and a generic button placeholder passes
+  ---
+  duration_ms: 0.656651
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1101.867877
+EXIT 0

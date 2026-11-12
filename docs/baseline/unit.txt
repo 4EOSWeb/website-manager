@@ -1,0 +1,235 @@
+
+> 4eos-website-editor@0.1.0 test
+> node --experimental-strip-types --no-warnings --import ./tests/unit/resolve-ts.mjs --test tests/unit/*.test.ts
+
+TAP version 13
+# Subtest: the preview script compiles and inlines every helper
+ok 1 - the preview script compiles and inlines every helper
+  ---
+  duration_ms: 9.397041
+  ...
+# Subtest: a press on ordinary content never starts a drag
+ok 2 - a press on ordinary content never starts a drag
+  ---
+  duration_ms: 0.666867
+  ...
+# Subtest: only the grip moves structured content
+ok 3 - only the grip moves structured content
+  ---
+  duration_ms: 0.090185
+  ...
+# Subtest: text being edited always wins over moving
+ok 4 - text being edited always wins over moving
+  ---
+  duration_ms: 0.112653
+  ...
+# Subtest: freeform items move directly unless locked
+ok 5 - freeform items move directly unless locked
+  ---
+  duration_ms: 0.061297
+  ...
+# Subtest: toolbar buttons are not drag sources
+ok 6 - toolbar buttons are not drag sources
+  ---
+  duration_ms: 0.056954
+  ...
+# Subtest: movement must pass the threshold
+ok 7 - movement must pass the threshold
+  ---
+  duration_ms: 0.773956
+  ...
+# Subtest: auto-scroll speeds up near the edges and stops in the middle
+ok 8 - auto-scroll speeds up near the edges and stops in the middle
+  ---
+  duration_ms: 0.131362
+  ...
+# Subtest: section drops ignore gaps that would not move anything
+ok 9 - section drops ignore gaps that would not move anything
+  ---
+  duration_ms: 0.167348
+  ...
+# Subtest: insertion index works for stacked and side-by-side blocks
+ok 10 - insertion index works for stacked and side-by-side blocks
+  ---
+  duration_ms: 0.666712
+  ...
+# Subtest: boxes snap to the zone centre and report the guide
+ok 11 - boxes snap to the zone centre and report the guide
+  ---
+  duration_ms: 0.359514
+  ...
+# Subtest: boxes snap to other items and stay inside the zone
+ok 12 - boxes snap to other items and stay inside the zone
+  ---
+  duration_ms: 0.176898
+  ...
+# Subtest: nudging clamps to the zone
+ok 13 - nudging clamps to the zone
+  ---
+  duration_ms: 0.091822
+  ...
+# Subtest: the toolbar sits above, flips below, and stays on screen
+ok 14 - the toolbar sits above, flips below, and stays on screen
+  ---
+  duration_ms: 0.107709
+  ...
+# Subtest: the toolbar clears a sticky header
+ok 15 - the toolbar clears a sticky header
+  ---
+  duration_ms: 0.044318
+  ...
+# Subtest: moving a section reorders it without touching the others
+ok 16 - moving a section reorders it without touching the others
+  ---
+  duration_ms: 1.632475
+  ...
+# Subtest: moving a section onto its own slot changes nothing
+ok 17 - moving a section onto its own slot changes nothing
+  ---
+  duration_ms: 0.337969
+  ...
+# Subtest: duplicating a section inserts a copy after it with new ids and no anchor
+ok 18 - duplicating a section inserts a copy after it with new ids and no anchor
+  ---
+  duration_ms: 2.118325
+  ...
+# Subtest: hiding a section keeps it in the draft
+ok 19 - hiding a section keeps it in the draft
+  ---
+  duration_ms: 0.265362
+  ...
+# Subtest: deleting a section removes only that section
+ok 20 - deleting a section removes only that section
+  ---
+  duration_ms: 0.207051
+  ...
+# Subtest: locked pages ignore structural changes
+ok 21 - locked pages ignore structural changes
+  ---
+  duration_ms: 0.178169
+  ...
+# Subtest: blocks move, duplicate, hide, and delete inside a flow section
+ok 22 - blocks move, duplicate, hide, and delete inside a flow section
+  ---
+  duration_ms: 0.466753
+  ...
+# Subtest: locked blocks cannot be hidden, duplicated, deleted, or restyled
+ok 23 - locked blocks cannot be hidden, duplicated, deleted, or restyled
+  ---
+  duration_ms: 0.291954
+  ...
+# Subtest: text style patches merge, and clearing a step removes it
+ok 24 - text style patches merge, and clearing a step removes it
+  ---
+  duration_ms: 0.800262
+  ...
+# Subtest: anchors are cleaned, limited, and unique per page
+ok 25 - anchors are cleaned, limited, and unique per page
+  ---
+  duration_ms: 0.410619
+  ...
+# Subtest: slugify makes a short lowercase address
+ok 26 - slugify makes a short lowercase address
+  ---
+  duration_ms: 0.158266
+  ...
+# Subtest: new pages need a valid, unused address
+ok 27 - new pages need a valid, unused address
+  ---
+  duration_ms: 0.5811
+  ...
+# Subtest: links accept site paths, https, email, and phone only
+ok 28 - links accept site paths, https, email, and phone only
+  ---
+  duration_ms: 0.296986
+  ...
+# Subtest: a created page can move to a new address, and links follow it
+ok 29 - a created page can move to a new address, and links follow it
+  ---
+  duration_ms: 0.922452
+  ...
+# Subtest: undo returns the state before the change, and redo brings the change back
+ok 30 - undo returns the state before the change, and redo brings the change back
+  ---
+  duration_ms: 0.927782
+  ...
+# Subtest: a new change drops the redo steps
+ok 31 - a new change drops the redo steps
+  ---
+  duration_ms: 0.135775
+  ...
+# Subtest: nothing to undo or redo returns null
+ok 32 - nothing to undo or redo returns null
+  ---
+  duration_ms: 0.074348
+  ...
+# Subtest: history keeps only the newest steps
+ok 33 - history keeps only the newest steps
+  ---
+  duration_ms: 0.099989
+  ...
+# Subtest: bold applies to the selected words only
+ok 34 - bold applies to the selected words only
+  ---
+  duration_ms: 1.000473
+  ...
+# Subtest: bold toggles off when the whole range is already bold
+ok 35 - bold toggles off when the whole range is already bold
+  ---
+  duration_ms: 0.16985
+  ...
+# Subtest: toggling part of a bold run splits it
+ok 36 - toggling part of a bold run splits it
+  ---
+  duration_ms: 0.117101
+  ...
+# Subtest: a partly bold range becomes fully bold and merges
+ok 37 - a partly bold range becomes fully bold and merges
+  ---
+  duration_ms: 0.12013
+  ...
+# Subtest: other kinds are left alone
+ok 38 - other kinds are left alone
+  ---
+  duration_ms: 5.323009
+  ...
+# Subtest: links replace an existing link with a different address
+ok 39 - links replace an existing link with a different address
+  ---
+  duration_ms: 0.198896
+  ...
+# Subtest: an empty range changes nothing
+ok 40 - an empty range changes nothing
+  ---
+  duration_ms: 0.114535
+  ...
+# Subtest: clear removes marks in the range, or everything when the range is empty
+ok 41 - clear removes marks in the range, or everything when the range is empty
+  ---
+  duration_ms: 1.269711
+  ...
+# Subtest: hasMark checks full coverage
+ok 42 - hasMark checks full coverage
+  ---
+  duration_ms: 0.297035
+  ...
+# Subtest: html nesting matches the website renderer and escapes text
+ok 43 - html nesting matches the website renderer and escapes text
+  ---
+  duration_ms: 0.401781
+  ...
+# Subtest: links must be site paths, https, email, or phone
+ok 44 - links must be site paths, https, email, or phone
+  ---
+  duration_ms: 0.184644
+  ...
+1..44
+# tests 44
+# suites 0
+# pass 44
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 362.787809
+exit:0

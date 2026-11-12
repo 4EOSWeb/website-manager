@@ -1,0 +1,67 @@
+=== capabilities ===
+TAP version 13
+# Subtest: level 1 rejects a free canvas and omitted capability keys
+ok 1 - level 1 rejects a free canvas and omitted capability keys
+  ---
+  duration_ms: 1.605601
+  ...
+# Subtest: provider-managed pages cannot edit the body
+ok 2 - provider-managed pages cannot edit the body
+  ---
+  duration_ms: 1.44984
+  ...
+# Subtest: an absent capability is false
+ok 3 - an absent capability is false
+  ---
+  duration_ms: 0.577504
+  ...
+# Subtest: flags false hide canvas, form, and theme controls
+ok 4 - flags false hide canvas, form, and theme controls
+  ---
+  duration_ms: 0.841157
+  ...
+# Subtest: basic mode hides strategy, z-index, and component ids
+ok 5 - basic mode hides strategy, z-index, and component ids
+  ---
+  duration_ms: 0.827669
+  ...
+# Subtest: a provider-managed page hides body editing and a normal page shows metadata
+ok 6 - a provider-managed page hides body editing and a normal page shows metadata
+  ---
+  duration_ms: 1.45177
+  ...
+# Subtest: privacy and terms stay provider-managed and articles are not blanket-locked
+ok 7 - privacy and terms stay provider-managed and articles are not blanket-locked
+  ---
+  duration_ms: 2.982428
+  ...
+# Subtest: locked nodes cannot drag and unlocked draggable nodes can
+ok 8 - locked nodes cannot drag and unlocked draggable nodes can
+  ---
+  duration_ms: 0.453369
+  ...
+# Subtest: resize requires a resizable unlocked component on a canvas parent
+ok 9 - resize requires a resizable unlocked component on a canvas parent
+  ---
+  duration_ms: 0.799516
+  ...
+# Subtest: only responsive unlocked components can add a breakpoint override
+ok 10 - only responsive unlocked components can add a breakpoint override
+  ---
+  duration_ms: 0.446966
+  ...
+# Subtest: disallowed style keys fail and an empty styleable list cannot register
+ok 11 - disallowed style keys fail and an empty styleable list cannot register
+  ---
+  duration_ms: 0.628213
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 794.86926
+EXIT 0

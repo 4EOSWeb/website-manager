@@ -200,6 +200,6 @@ test("a created page can move to a new address, and links follow it", () => {
   assert.equal(changePageRoute(site, "/careers", "/Bad Address").error, "Use a short address such as /new-service.");
   assert.equal(changePageRoute(site, "/careers", "/openings").error, "That address is already used.");
   assert.equal(changePageRoute(site, "/careers", "/contact").error, "That address is already used.");
-  assert.ok(changePageRoute(site, "/about", "/about-us").error, "built-in pages keep their address");
+  assert.equal(changePageRoute(site, "/about", "/about-us", ["/", "/about"]).error, "This page keeps its address.");
   assert.equal(changePageRoute(site, "/careers", "/careers").site, site);
 });

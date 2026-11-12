@@ -1,0 +1,3 @@
+`tests/e2e/product-routes.spec.ts` listens for console text matching hydration or “did not match” on sign-in, the site list, the dashboard, connect, settings, account, the editor, the denied page, and the hub not-found page.
+
+The passing run recorded no hydration warning. See `docs/test-report/product-routes.txt`.

@@ -1,24 +1,68 @@
 import Link from "next/link";
+import { ProductCard } from "@/components/product/card";
+import { ProductEmpty } from "@/components/product/empty";
 import { requirePageActor } from "@/lib/authorize";
+import { prisma } from "@/lib/prisma";
+import { canConnectWebsite } from "@/lib/roles";
+import { devPause } from "@/lib/dev-pause";
 import { websitesFor } from "@/lib/websites";
 
-export default async function SitesPage() {
+function siteHost(url: string) {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url.replace(/^https?:\/\//, "");
+  }
+}
+
+export default async function SitesPage({ searchParams }: { searchParams: Promise<{ slow?: string }> }) {
+  const query = await searchParams;
+  await devPause(query.slow);
   const actor = await requirePageActor();
-  const websites = await websitesFor(actor.user);
+  const [websites, memberships] = await Promise.all([
+    websitesFor(actor.user),
+    prisma.websiteMembership.findMany({
+      where: { userId: actor.user.id },
+      select: { role: true },
+    }),
+  ]);
+  const connect = canConnectWebsite(
+    actor.platformRole,
+    memberships.map((membership) => membership.role),
+  );
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col justify-center px-6 py-16">
-      <p className="text-sm font-medium tracking-[0.14em] text-[var(--accent)] uppercase">Your websites</p>
-      <h1 className="mt-3 font-serif text-5xl text-[var(--ink)]">Choose a website</h1>
-      <ul className="mt-10 divide-y divide-[var(--line)] border-y border-[var(--line)]">
-        {websites.map((website) => (
-          <li key={website.id}>
-            <Link className="flex items-baseline justify-between gap-6 py-5 hover:text-[var(--accent)]" href={`/sites/${website.id}/editor`}>
-              <span className="font-serif text-2xl">{website.name}</span>
-              <span className="text-sm text-[var(--muted)]">{website.productionUrl.replace("https://", "")}</span>
+    <main className="product-sites">
+      <div className="product-sites-bar">
+        <h1 className="product-display">Your websites</h1>
+        {connect && websites.length > 0 ? (
+          <Link className="product-button product-button-primary product-button-inline" href="/sites/new">
+            Connect a website
+          </Link>
+        ) : null}
+      </div>
+      {websites.length === 0 ? (
+        <ProductEmpty label={connect ? "No websites" : "No website assigned"}>
+          <p>{connect ? "Nothing is connected yet." : "No website is assigned to you."}</p>
+          {connect ? (
+            <Link className="product-button product-button-primary product-button-inline" href="/sites/new">
+              Connect a website
             </Link>
-          </li>
-        ))}
-      </ul>
+          ) : null}
+        </ProductEmpty>
+      ) : (
+        <ul className="product-sites-list">
+          {websites.map((website) => (
+            <li key={website.id}>
+              <ProductCard title={website.name} className="product-site-card">
+                <p className="product-quiet">{siteHost(website.productionUrl)}</p>
+                <Link className="product-button product-button-quiet product-button-inline" href={`/sites/${website.id}/editor`} aria-label={`Edit ${website.name}`}>
+                  Edit
+                </Link>
+              </ProductCard>
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   );
 }

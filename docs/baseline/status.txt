@@ -1,0 +1,3 @@
+source paths (src, overlays, prisma, tests): clean
+porcelain at check:
+?? docs/baseline/status.txt

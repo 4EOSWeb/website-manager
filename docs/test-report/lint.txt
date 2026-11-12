@@ -1,0 +1,137 @@
+
+> 4eos-website-editor@0.1.0 lint
+> eslint
+
+
+/workspace/fixtures/harbor/serialize.ts
+  9:52  warning  '_context' is defined but never used  @typescript-eslint/no-unused-vars
+
+/workspace/fixtures/harbor/src/app/layout.tsx
+  13:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/workspace/fixtures/harbor/src/components/harbor-hero.tsx
+  6:7  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/workspace/src/components/editor-shell.tsx
+   58:144  warning  'Viewport' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  192:5    error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/workspace/src/components/editor-shell.tsx:192:5
+  190 |   const dirtyWebsite = useRef(props.websiteId);
+  191 |   useEffect(() => {
+> 192 |     setExperience(readExperience(window.localStorage, props.websiteId, props.canAdminister));
+      |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  193 |   }, [props.websiteId, props.canAdminister]);
+  194 |   useEffect(() => {
+  195 |     mountEditorStore(props.websiteId);  react-hooks/set-state-in-effect
+
+/workspace/src/components/editor/chrome.tsx
+  82:15  warning  The attribute aria-checked is not supported by the role menuitem  jsx-a11y/role-supports-aria-props
+
+/workspace/src/components/editor/inspector/generated.tsx
+  40:19  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/workspace/src/components/editor/inspector/generated.tsx:40:19
+  38 |   const issueFor = (path: string): FieldIssue | null => propIssues.find((issue) => issue.path === path) ?? null;
+  39 |   const [name, setName] = useState(stored);
+> 40 |   useEffect(() => setName(stored), [stored, props.node.id]);
+     |                   ^^^^^^^ Avoid calling setState() directly within an effect
+  41 |   return (
+  42 |     <div className="ed-generated" data-generated="common">
+  43 |       <Field label="Name">  react-hooks/set-state-in-effect
+
+/workspace/src/components/editor/layers/reorder.tsx
+  23:3  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/workspace/src/components/editor/layers/reorder.tsx:23:3
+  21 | export function useLayerReorder(enabled: boolean, onDrop: (drop: LayerReorderDrop) => void, onReject?: (reason: "locked") => void) {
+  22 |   const onDropRef = useRef(onDrop);
+> 23 |   onDropRef.current = onDrop;
+     |   ^^^^^^^^^^^^^^^^^ Cannot update ref during render
+  24 |   const onRejectRef = useRef(onReject);
+  25 |   onRejectRef.current = onReject;
+  26 |   const enabledRef = useRef(enabled);  react-hooks/refs
+  25:3  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/workspace/src/components/editor/layers/reorder.tsx:25:3
+  23 |   onDropRef.current = onDrop;
+  24 |   const onRejectRef = useRef(onReject);
+> 25 |   onRejectRef.current = onReject;
+     |   ^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+  26 |   const enabledRef = useRef(enabled);
+  27 |   enabledRef.current = enabled;
+  28 |   const dropRef = useRef<DropHint | null>(null);                                                                                        react-hooks/refs
+  27:3  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/workspace/src/components/editor/layers/reorder.tsx:27:3
+  25 |   onRejectRef.current = onReject;
+  26 |   const enabledRef = useRef(enabled);
+> 27 |   enabledRef.current = enabled;
+     |   ^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+  28 |   const dropRef = useRef<DropHint | null>(null);
+  29 |   const [drop, setDrop] = useState<DropHint | null>(null);
+  30 |                                                                                                    react-hooks/refs
+
+/workspace/src/components/editor/layers/tree.tsx
+  15:3   error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/workspace/src/components/editor/layers/tree.tsx:15:3
+  13 |   const key = layerStorageKey(websiteId, pageId);
+  14 |   const defaultsRef = useRef(defaults);
+> 15 |   defaultsRef.current = defaults;
+     |   ^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+  16 |   const [open, setOpen] = useState<string[]>(defaults);
+  17 |   useEffect(() => {
+  18 |     const fallback = defaultsRef.current;                                                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/refs
+  26:76  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/workspace/src/components/editor/layers/tree.tsx:26:76
+  24 |     try {
+  25 |       const ids = JSON.parse(raw) as unknown;
+> 26 |       if (Array.isArray(ids) && ids.every((id) => typeof id === "string")) setOpen(ids);
+     |                                                                            ^^^^^^^ Avoid calling setState() directly within an effect
+  27 |     } catch {
+  28 |       sessionStorage.setItem(key, JSON.stringify(fallback));
+  29 |     }  react-hooks/set-state-in-effect
+
+/workspace/src/platform/adapter/serialize.ts
+  34:46  warning  '_context' is defined but never used  @typescript-eslint/no-unused-vars
+
+/workspace/src/platform/adapter/validate-hook.ts
+  21:3  warning  '_document' is defined but never used  @typescript-eslint/no-unused-vars
+  22:3  warning  '_context' is defined but never used   @typescript-eslint/no-unused-vars
+
+/workspace/tests/unit/document-node.test.ts
+  8:15  warning  '_id' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/workspace/tests/unit/document-page.test.ts
+  16:18  warning  '_title' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+✖ 17 problems (7 errors, 10 warnings)
+

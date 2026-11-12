@@ -1,0 +1,3 @@
+start-site.bat text eol=crlf
+start-site.ps1 text eol=crlf
+start-database.ps1 text eol=crlf

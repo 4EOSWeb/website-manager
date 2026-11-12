@@ -1,0 +1,2431 @@
+
+> 4eos-website-editor@0.1.0 test
+> node --experimental-strip-types --no-warnings --import ./tests/unit/resolve-ts.mjs --test tests/unit/*.test.ts
+
+TAP version 13
+# Subtest: allowlist prefixes stay on a directory boundary
+ok 1 - allowlist prefixes stay on a directory boundary
+  ---
+  duration_ms: 1.024718
+  ...
+# Subtest: disabled articles keep a pattern that callers ignore
+ok 2 - disabled articles keep a pattern that callers ignore
+  ---
+  duration_ms: 1.156398
+  ...
+# Subtest: breakpoints require mobile and a width of at least 320
+ok 3 - breakpoints require mobile and a width of at least 320
+  ---
+  duration_ms: 3.632239
+  ...
+# Subtest: level 1 rejects a free canvas and omitted capability keys
+ok 4 - level 1 rejects a free canvas and omitted capability keys
+  ---
+  duration_ms: 1.697841
+  ...
+# Subtest: pnpm commands pass and a newline fails
+ok 5 - pnpm commands pass and a newline fails
+  ---
+  duration_ms: 1.597308
+  ...
+# Subtest: component ids are lowercase and an empty list is valid
+ok 6 - component ids are lowercase and an empty list is valid
+  ---
+  duration_ms: 2.718008
+  ...
+# Subtest: the documented sample adapter parses and is not Quantum Age
+ok 7 - the documented sample adapter parses and is not Quantum Age
+  ---
+  duration_ms: 27.29596
+  ...
+# Subtest: draft scope requires website and the visual document format
+ok 8 - draft scope requires website and the visual document format
+  ---
+  duration_ms: 4.856788
+  ...
+# Subtest: a missing site id names that field
+ok 9 - a missing site id names that field
+  ---
+  duration_ms: 31.329258
+  ...
+# Subtest: a sans file font passes and level 2 rejects an empty list
+ok 10 - a sans file font passes and level 2 rejects an empty list
+  ---
+  duration_ms: 1.575681
+  ...
+# Subtest: level 0 fails and the level 1 sample adapter validates
+ok 11 - level 0 fails and the level 1 sample adapter validates
+  ---
+  duration_ms: 2.173334
+  ...
+# Subtest: a missing adapter id fails and a present loader is returned
+ok 12 - a missing adapter id fails and a present loader is returned
+  ---
+  duration_ms: 0.618551
+  ...
+# Subtest: the loader does not import a site
+ok 13 - the loader does not import a site
+  ---
+  duration_ms: 0.216461
+  ...
+# Subtest: media dirs stay relative and only image extensions are accepted
+ok 14 - media dirs stay relative and only image extensions are accepted
+  ---
+  duration_ms: 1.768381
+  ...
+# Subtest: a missing repository fails and branch dev passes
+ok 15 - a missing repository fails and branch dev passes
+  ---
+  duration_ms: 1.881263
+  ...
+# Subtest: document navigation can omit items, and a closed capability cannot be editable
+ok 16 - document navigation can omit items, and a closed capability cannot be editable
+  ---
+  duration_ms: 1.072292
+  ...
+# Subtest: provider-managed pages cannot edit the body
+ok 17 - provider-managed pages cannot edit the body
+  ---
+  duration_ms: 1.567936
+  ...
+# Subtest: reserved routes are adapter data, including an empty list
+ok 18 - reserved routes are adapter data, including an empty list
+  ---
+  duration_ms: 18.299438
+  ...
+# Subtest: preview stays on the iframe protocol
+ok 19 - preview stays on the iframe protocol
+  ---
+  duration_ms: 7.784135
+  ...
+# Subtest: disabled publishing can omit files and review mode cannot
+ok 20 - disabled publishing can omit files and review mode cannot
+  ---
+  duration_ms: 1.623747
+  ...
+# Subtest: app and pages roots pass, including a nested app path
+ok 21 - app and pages roots pass, including a nested app path
+  ---
+  duration_ms: 9.391457
+  ...
+# Subtest: static routes pass and a full URL fails
+ok 22 - static routes pass and a full URL fails
+  ---
+  duration_ms: 7.368847
+  ...
+# Subtest: the default serializer writes version 1 and rejects parent paths
+ok 23 - the default serializer writes version 1 and rejects parent paths
+  ---
+  duration_ms: 4.842715
+  ...
+# Subtest: shared header follows the capability flag
+ok 24 - shared header follows the capability flag
+  ---
+  duration_ms: 1.356132
+  ...
+# Subtest: a stacked document is a valid template and an empty document is not
+ok 25 - a stacked document is a valid template and an empty document is not
+  ---
+  duration_ms: 7.765965
+  ...
+# Subtest: open token names pass and duplicate ids fail
+ok 26 - open token names pass and duplicate ids fail
+  ---
+  duration_ms: 2.368345
+  ...
+# Subtest: the default hook accepts a document and a warning does not throw
+ok 27 - the default hook accepts a document and a warning does not throw
+  ---
+  duration_ms: 0.924188
+  ...
+# Subtest: a missing version fails and version 1 with id and name passes
+ok 28 - a missing version fails and version 1 with id and name passes
+  ---
+  duration_ms: 1.736444
+  ...
+# Subtest: version 1 parses and an unknown version is rejected
+ok 29 - version 1 parses and an unknown version is rejected
+  ---
+  duration_ms: 37.306583
+  ...
+# Subtest: conversion keeps headings and paragraphs and reports everything else
+ok 30 - conversion keeps headings and paragraphs and reports everything else
+  ---
+  duration_ms: 1.274764
+  ...
+# Subtest: an existing HTML article stays a string with a preserved flag
+ok 31 - an existing HTML article stays a string with a preserved flag
+  ---
+  duration_ms: 0.844429
+  ...
+# Subtest: align left gives every selected node the same x
+ok 32 - align left gives every selected node the same x
+  ---
+  duration_ms: 2.022953
+  ...
+# Subtest: each align action uses the selection bounds and a single node uses the parent
+ok 33 - each align action uses the selection bounds and a single node uses the parent
+  ---
+  duration_ms: 0.333593
+  ...
+# Subtest: align leaves a node outside the selection where it was
+ok 34 - align leaves a node outside the selection where it was
+  ---
+  duration_ms: 4.844578
+  ...
+# Subtest: top-left keeps x and y when the parent grows
+ok 35 - top-left keeps x and y when the parent grows
+  ---
+  duration_ms: 21.951783
+  ...
+# Subtest: center anchor keeps the center
+ok 36 - center anchor keeps the center
+  ---
+  duration_ms: 10.643929
+  ...
+# Subtest: shift resize keeps the start ratio within 1 percent
+ok 37 - shift resize keeps the start ratio within 1 percent
+  ---
+  duration_ms: 16.639929
+  ...
+# Subtest: a stored aspect survives reload
+ok 38 - a stored aspect survives reload
+  ---
+  duration_ms: 0.957572
+  ...
+# Subtest: parent bounds are the content box, not the viewport
+ok 39 - parent bounds are the content box, not the viewport
+  ---
+  duration_ms: 1.201771
+  ...
+# Subtest: the runtime copy leaves the preview script in place
+ok 40 - the runtime copy leaves the preview script in place
+  ---
+  duration_ms: 135.411736
+  ...
+# Subtest: a desktop move changes the base box and leaves tablet and mobile absent
+ok 41 - a desktop move changes the base box and leaves tablet and mobile absent
+  ---
+  duration_ms: 1.467284
+  ...
+# Subtest: three nodes end with equal gaps and two nodes stay put
+ok 42 - three nodes end with equal gaps and two nodes stay put
+  ---
+  duration_ms: 17.388765
+  ...
+# Subtest: a node outside the selection is not distributed
+ok 43 - a node outside the selection is not distributed
+  ---
+  duration_ms: 0.676797
+  ...
+# Subtest: selected nodes become children of the new group and undo restores the parent
+ok 44 - selected nodes become children of the new group and undo restores the parent
+  ---
+  duration_ms: 17.774237
+  ...
+# Subtest: a locked node and a single node are not grouped
+ok 45 - a locked node and a single node are not grouped
+  ---
+  duration_ms: 0.36336
+  ...
+# Subtest: a center guide appears within 1 percent and snaps the node
+ok 46 - a center guide appears within 1 percent and snaps the node
+  ---
+  duration_ms: 0.524819
+  ...
+# Subtest: grid snap still applies away from the center
+ok 47 - grid snap still applies away from the center
+  ---
+  duration_ms: 0.545199
+  ...
+# Subtest: an edge guide snaps to the left edge
+ok 48 - an edge guide snaps to the left edge
+  ---
+  duration_ms: 0.840028
+  ...
+# Subtest: center guides still appear and flow is not an edge guide
+ok 49 - center guides still appear and flow is not an edge guide
+  ---
+  duration_ms: 0.590258
+  ...
+# Subtest: a missing mobile key inherits, and a mobile box is custom
+ok 50 - a missing mobile key inherits, and a mobile box is custom
+  ---
+  duration_ms: 0.910104
+  ...
+# Subtest: nodes inside the rectangle are selected
+ok 51 - nodes inside the rectangle are selected
+  ---
+  duration_ms: 0.937187
+  ...
+# Subtest: a marquee does not start on a node, a handle, or a text selection
+ok 52 - a marquee does not start on a node, a handle, or a text selection
+  ---
+  duration_ms: 0.623384
+  ...
+# Subtest: width cannot exceed the parent and x plus w stays inside
+ok 53 - width cannot exceed the parent and x plus w stays inside
+  ---
+  duration_ms: 22.764858
+  ...
+# Subtest: the stored box stays inside and the minimum still applies
+ok 54 - the stored box stays inside and the minimum still applies
+  ---
+  duration_ms: 1.190594
+  ...
+# Subtest: a message for another website id is ignored
+ok 55 - a message for another website id is ignored
+  ---
+  duration_ms: 1.098547
+  ...
+# Subtest: a node message selects that node
+ok 56 - a node message selects that node
+  ---
+  duration_ms: 0.553224
+  ...
+# Subtest: width and height cannot go below the minimum
+ok 57 - width and height cannot go below the minimum
+  ---
+  duration_ms: 0.920087
+  ...
+# Subtest: a larger resize stays larger and the stored box keeps the floor
+ok 58 - a larger resize stays larger and the stored box keeps the floor
+  ---
+  duration_ms: 0.818406
+  ...
+# Subtest: a mobile move keeps desktop x and y and the tablet override
+ok 59 - a mobile move keeps desktop x and y and the tablet override
+  ---
+  duration_ms: 1.342268
+  ...
+# Subtest: two shift-clicks select two nodes and a plain click leaves one
+ok 60 - two shift-clicks select two nodes and a plain click leaves one
+  ---
+  duration_ms: 0.936303
+  ...
+# Subtest: text selection still does not become a multi-drag rule
+ok 61 - text selection still does not become a multi-drag rule
+  ---
+  duration_ms: 15.426194
+  ...
+# Subtest: overflowing text raises a warning and the label stays
+ok 62 - overflowing text raises a warning and the label stays
+  ---
+  duration_ms: 3.075668
+  ...
+# Subtest: short labels show no overflow warning
+ok 63 - short labels show no overflow warning
+  ---
+  duration_ms: 0.673712
+  ...
+# Subtest: overlap sets a warning and leaves the boxes where they are
+ok 64 - overlap sets a warning and leaves the boxes where they are
+  ---
+  duration_ms: 0.926027
+  ...
+# Subtest: separate nodes show no overlap warning
+ok 65 - separate nodes show no overlap warning
+  ---
+  duration_ms: 0.819409
+  ...
+# Subtest: percent and pixels convert inside the parent
+ok 66 - percent and pixels convert inside the parent
+  ---
+  duration_ms: 12.819918
+  ...
+# Subtest: an existing parent-relative placement still lands on the same point
+ok 67 - an existing parent-relative placement still lands on the same point
+  ---
+  duration_ms: 0.85623
+  ...
+# Subtest: reflow stacks an off-canvas desktop box, scale keeps percentages, and custom uses the mobile box
+ok 68 - reflow stacks an off-canvas desktop box, scale keeps percentages, and custom uses the mobile box
+  ---
+  duration_ms: 4.026875
+  ...
+# Subtest: resetting mobile removes that box, keeps desktop, and restores reflow when nothing else is custom
+ok 69 - resetting mobile removes that box, keeps desktop, and restores reflow when nothing else is custom
+  ---
+  duration_ms: 0.99279
+  ...
+# Subtest: a resizable image on a canvas shows four corner handles
+ok 70 - a resizable image on a canvas shows four corner handles
+  ---
+  duration_ms: 0.9026
+  ...
+# Subtest: a non-resizable locked logo shows no handles and does not resize
+ok 71 - a non-resizable locked logo shows no handles and does not resize
+  ---
+  duration_ms: 0.150612
+  ...
+# Subtest: dragging a corner changes width and height
+ok 72 - dragging a corner changes width and height
+  ---
+  duration_ms: 12.256248
+  ...
+# Subtest: selecting text does not resize
+ok 73 - selecting text does not resize
+  ---
+  duration_ms: 0.471353
+  ...
+# Subtest: the preview script compiles and inlines every helper
+ok 74 - the preview script compiles and inlines every helper
+  ---
+  duration_ms: 17.721894
+  ...
+# Subtest: aligning two nodes shows a guide
+ok 75 - aligning two nodes shows a guide
+  ---
+  duration_ms: 0.791918
+  ...
+# Subtest: hidden siblings do not show a guide
+ok 76 - hidden siblings do not show a guide
+  ---
+  duration_ms: 0.997481
+  ...
+# Subtest: a 4-point snap rounds x to a multiple of 4
+ok 77 - a 4-point snap rounds x to a multiple of 4
+  ---
+  duration_ms: 0.623236
+  ...
+# Subtest: alt leaves the raw percent and flow is outside the canvas snap
+ok 78 - alt leaves the raw percent and flow is outside the canvas snap
+  ---
+  duration_ms: 0.932621
+  ...
+# Subtest: a tablet move keeps the desktop box and leaves mobile absent
+ok 79 - a tablet move keeps the desktop box and leaves mobile absent
+  ---
+  duration_ms: 1.156861
+  ...
+# Subtest: ungroup returns children to the parent and removes the group
+ok 80 - ungroup returns children to the parent and removes the group
+  ---
+  duration_ms: 8.987465
+  ...
+# Subtest: ungroup finds the group from a child and keeps a sibling still
+ok 81 - ungroup finds the group from a child and keeps a sibling still
+  ---
+  duration_ms: 0.999957
+  ...
+# Subtest: a missing group is not removed
+ok 82 - a missing group is not removed
+  ---
+  duration_ms: 2.003046
+  ...
+# Subtest: send to back places the node behind its siblings
+ok 83 - send to back places the node behind its siblings
+  ---
+  duration_ms: 3.756742
+  ...
+# Subtest: a node already at 0 shifts the others up and undo can restore them
+ok 84 - a node already at 0 shifts the others up and undo can restore them
+  ---
+  duration_ms: 0.688149
+  ...
+# Subtest: bring to front sets z above every sibling
+ok 85 - bring to front sets z above every sibling
+  ---
+  duration_ms: 1.085569
+  ...
+# Subtest: cap 200 refuses and a node already in front stays put
+ok 86 - cap 200 refuses and a node already in front stays put
+  ---
+  duration_ms: 4.397164
+  ...
+# Subtest: a node with z 2 paints above z 1 and the value persists
+ok 87 - a node with z 2 paints above z 1 and the value persists
+  ---
+  duration_ms: 0.939082
+  ...
+# Subtest: flow order is unchanged by z
+ok 88 - flow order is unchanged by z
+  ---
+  duration_ms: 0.375822
+  ...
+# Subtest: bring forward swaps with the next sibling and does not jump to the front
+ok 89 - bring forward swaps with the next sibling and does not jump to the front
+  ---
+  duration_ms: 0.987668
+  ...
+# Subtest: send backward swaps with the previous sibling and undo restores z
+ok 90 - send backward swaps with the previous sibling and undo restores z
+  ---
+  duration_ms: 0.65733
+  ...
+# Subtest: a locked node does not change z
+ok 91 - a locked node does not change z
+  ---
+  duration_ms: 0.485631
+  ...
+# Subtest: a press on ordinary content never starts a drag
+ok 92 - a press on ordinary content never starts a drag
+  ---
+  duration_ms: 8.824584
+  ...
+# Subtest: only the grip moves structured content
+ok 93 - only the grip moves structured content
+  ---
+  duration_ms: 0.111232
+  ...
+# Subtest: text being edited always wins over moving
+ok 94 - text being edited always wins over moving
+  ---
+  duration_ms: 0.117802
+  ...
+# Subtest: freeform items move directly unless locked
+ok 95 - freeform items move directly unless locked
+  ---
+  duration_ms: 0.063346
+  ...
+# Subtest: toolbar buttons are not drag sources
+ok 96 - toolbar buttons are not drag sources
+  ---
+  duration_ms: 0.069645
+  ...
+# Subtest: movement must pass the threshold
+ok 97 - movement must pass the threshold
+  ---
+  duration_ms: 0.189556
+  ...
+# Subtest: auto-scroll speeds up near the edges and stops in the middle
+ok 98 - auto-scroll speeds up near the edges and stops in the middle
+  ---
+  duration_ms: 0.137496
+  ...
+# Subtest: section drops ignore gaps that would not move anything
+ok 99 - section drops ignore gaps that would not move anything
+  ---
+  duration_ms: 0.173
+  ...
+# Subtest: insertion index works for stacked and side-by-side blocks
+ok 100 - insertion index works for stacked and side-by-side blocks
+  ---
+  duration_ms: 0.648445
+  ...
+# Subtest: boxes snap to the zone centre and report the guide
+ok 101 - boxes snap to the zone centre and report the guide
+  ---
+  duration_ms: 0.357647
+  ...
+# Subtest: boxes snap to other items and stay inside the zone
+ok 102 - boxes snap to other items and stay inside the zone
+  ---
+  duration_ms: 0.149179
+  ...
+# Subtest: nudging clamps to the zone
+ok 103 - nudging clamps to the zone
+  ---
+  duration_ms: 0.083854
+  ...
+# Subtest: the toolbar sits above, flips below, and stays on screen
+ok 104 - the toolbar sits above, flips below, and stays on screen
+  ---
+  duration_ms: 0.105676
+  ...
+# Subtest: the toolbar clears a sticky header
+ok 105 - the toolbar clears a sticky header
+  ---
+  duration_ms: 0.044452
+  ...
+# Subtest: an absent capability is false
+ok 106 - an absent capability is false
+  ---
+  duration_ms: 0.618708
+  ...
+# Subtest: the capability matrix matches both adapters
+ok 107 - the capability matrix matches both adapters
+  ---
+  duration_ms: 0.486403
+  ...
+# Subtest: button label and href are copied, and the component id comes from the adapter
+ok 108 - button label and href are copied, and the component id comes from the adapter
+  ---
+  duration_ms: 1.761078
+  ...
+# Subtest: freeform items keep ids, tablet boxes, and reflow when mobile is missing
+ok 109 - freeform items keep ids, tablet boxes, and reflow when mobile is missing
+  ---
+  duration_ms: 1.290933
+  ...
+# Subtest: image paths are copied, and another website id is left unmapped
+ok 110 - image paths are copied, and another website id is left unmapped
+  ---
+  duration_ms: 1.095889
+  ...
+# Subtest: every version 3 page becomes one visual page with SEO and pending sections
+ok 111 - every version 3 page becomes one visual page with SEO and pending sections
+  ---
+  duration_ms: 11.566445
+  ...
+# Subtest: flow, freeform, and preset sections convert, and unknown sections stay raw
+ok 112 - flow, freeform, and preset sections convert, and unknown sections stay raw
+  ---
+  duration_ms: 2.695383
+  ...
+# Subtest: SEO fields match, and a missing field stays empty
+ok 113 - SEO fields match, and a missing field stays empty
+  ---
+  duration_ms: 1.148371
+  ...
+# Subtest: text blocks keep marks, styles, and locks, and eyebrow stays off the platform
+ok 114 - text blocks keep marks, styles, and locks, and eyebrow stays off the platform
+  ---
+  duration_ms: 2.847711
+  ...
+# Subtest: review appears only when the site supports it
+ok 115 - review appears only when the site supports it
+  ---
+  duration_ms: 0.876815
+  ...
+# Subtest: dev and build scripts fill those fields
+ok 116 - dev and build scripts fill those fields
+  ---
+  duration_ms: 0.514198
+  ...
+# Subtest: missing scripts stay empty and required
+ok 117 - missing scripts stay empty and required
+  ---
+  duration_ms: 0.431655
+  ...
+# Subtest: each lockfile maps to its package manager
+ok 118 - each lockfile maps to its package manager
+  ---
+  duration_ms: 12.75073
+  ...
+# Subtest: multiple lockfiles fail
+ok 119 - multiple lockfiles fail
+  ---
+  duration_ms: 0.229506
+  ...
+# Subtest: no lockfile fails
+ok 120 - no lockfile fails
+  ---
+  duration_ms: 0.122252
+  ...
+# Subtest: an src/app file list is the app router
+ok 121 - an src/app file list is the app router
+  ---
+  duration_ms: 3.439822
+  ...
+# Subtest: an src/pages file list is the pages router
+ok 122 - an src/pages file list is the pages router
+  ---
+  duration_ms: 0.152053
+  ...
+# Subtest: both router directories ask the administrator to choose
+ok 123 - both router directories ask the administrator to choose
+  ---
+  duration_ms: 0.224099
+  ...
+# Subtest: development access is hidden when development auth is off
+ok 124 - development access is hidden when development auth is off
+  ---
+  duration_ms: 0.569109
+  ...
+# Subtest: a visual or version 3 change is dirty until save
+ok 125 - a visual or version 3 change is dirty until save
+  ---
+  duration_ms: 0.996278
+  ...
+# Subtest: switching website drops the dirty document
+ok 126 - switching website drops the dirty document
+  ---
+  duration_ms: 0.135911
+  ...
+# Subtest: the editor still warns before unload
+ok 127 - the editor still warns before unload
+  ---
+  duration_ms: 0.437372
+  ...
+# Subtest: discovery finds the sample adapter and ignores a directory without one
+ok 128 - discovery finds the sample adapter and ignores a directory without one
+  ---
+  duration_ms: 13.68709
+  ...
+# Subtest: a binding key is opaque and an invalid key fails
+ok 129 - a binding key is opaque and an invalid key fails
+  ---
+  duration_ms: 17.873566
+  ...
+# Subtest: a parent-percentage box parses and a value past 100 fails
+ok 130 - a parent-percentage box parses and a value past 100 fails
+  ---
+  duration_ms: 7.856019
+  ...
+# Subtest: generic fixtures validate and do not name a specific website
+ok 131 - generic fixtures validate and do not name a specific website
+  ---
+  duration_ms: 6.55735
+  ...
+# Subtest: a desktop-only box inherits tablet and mobile
+ok 132 - a desktop-only box inherits tablet and mobile
+  ---
+  duration_ms: 6.915061
+  ...
+# Subtest: canvas layout parses without child coordinates
+ok 133 - canvas layout parses without child coordinates
+  ---
+  duration_ms: 2.881207
+  ...
+# Subtest: a wrapping row parses
+ok 134 - a wrapping row parses
+  ---
+  duration_ms: 4.512925
+  ...
+# Subtest: vertical flow parses and freeform does not
+ok 135 - vertical flow parses and freeform does not
+  ---
+  duration_ms: 1.40479
+  ...
+# Subtest: grid, flow, and flex parse through the shared layout schema
+ok 136 - grid, flow, and flex parse through the shared layout schema
+  ---
+  duration_ms: 6.281559
+  ...
+# Subtest: switching layout stores the previous settings and keeps child boxes
+ok 137 - switching layout stores the previous settings and keeps child boxes
+  ---
+  duration_ms: 2.920495
+  ...
+# Subtest: a lock without a reason id is valid
+ok 138 - a lock without a reason id is valid
+  ---
+  duration_ms: 1.370065
+  ...
+# Subtest: version 1 stays itself and version 3 is refused
+ok 139 - version 1 stays itself and version 3 is refused
+  ---
+  duration_ms: 0.570545
+  ...
+# Subtest: custom is allowed and freeform is rejected
+ok 140 - custom is allowed and freeform is rejected
+  ---
+  duration_ms: 9.638903
+  ...
+# Subtest: a node missing an id fails and a minimal node parses
+ok 141 - a node missing an id fails and a minimal node parses
+  ---
+  duration_ms: 19.888365
+  ...
+# Subtest: a page without a title fails
+ok 142 - a page without a title fails
+  ---
+  duration_ms: 3.342509
+  ...
+# Subtest: nested plain props pass and a function fails
+ok 143 - nested plain props pass and a function fails
+  ---
+  duration_ms: 1.830758
+  ...
+# Subtest: missing breakpoint overrides are valid and an unknown breakpoint fails
+ok 144 - missing breakpoint overrides are valid and an unknown breakpoint fails
+  ---
+  duration_ms: 5.27683
+  ...
+# Subtest: fixtures keep their ids and order after JSON
+ok 145 - fixtures keep their ids and order after JSON
+  ---
+  duration_ms: 26.06065
+  ...
+# Subtest: provider-managed content does not require a site name
+ok 146 - provider-managed content does not require a site name
+  ---
+  duration_ms: 7.666834
+  ...
+# Subtest: custom placement uses a mobile box and reflows when it is missing
+ok 147 - custom placement uses a mobile box and reflows when it is missing
+  ---
+  duration_ms: 3.681634
+  ...
+# Subtest: a missing mobile breakpoint reflows and leaves the desktop box
+ok 148 - a missing mobile breakpoint reflows and leaves the desktop box
+  ---
+  duration_ms: 0.918775
+  ...
+# Subtest: scale returns the same percentages and does not read the viewport
+ok 149 - scale returns the same percentages and does not read the viewport
+  ---
+  duration_ms: 1.13382
+  ...
+# Subtest: a token color is allowed and an unknown style key fails
+ok 150 - a token color is allowed and an unknown style key fails
+  ---
+  duration_ms: 1.430177
+  ...
+# Subtest: nested nodes parse, duplicate ids fail, and depth 13 fails
+ok 151 - nested nodes parse, duplicate ids fail, and depth 13 fails
+  ---
+  duration_ms: 3.784686
+  ...
+# Subtest: the visual document version is 1 and node kinds include container and custom
+ok 152 - the visual document version is 1 and node kinds include container and custom
+  ---
+  duration_ms: 0.554446
+  ...
+# Subtest: version 1 accepts one page and rejects a bad version, an empty page list, and a repeated id
+not ok 153 - version 1 accepts one page and rejects a bad version, an empty page list, and a repeated id
+  ---
+  duration_ms: 4.669271
+  location: '/workspace/tests/unit/document-validate.test.ts:16:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/tests/unit/document-validate.test.ts:30:10)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.start (node:internal/test_runner/test:877:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: visibility is a boolean plus unique breakpoints
+ok 154 - visibility is a boolean plus unique breakpoints
+  ---
+  duration_ms: 1.566562
+  ...
+# Subtest: backing up a draft copies the payload and leaves the source row alone
+not ok 155 - backing up a draft copies the payload and leaves the source row alone
+  ---
+  duration_ms: 291.706941
+  location: '/workspace/tests/unit/draft-backup.test.ts:6:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(before)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/tests/unit/draft-backup.test.ts:11:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: detectVersion returns 3, 1, or unknown without changing the value
+ok 156 - detectVersion returns 3, 1, or unknown without changing the value
+  ---
+  duration_ms: 0.923888
+  ...
+# Subtest: a mismatched website id is rejected and a version 3 body leaves the visual document out
+ok 157 - a mismatched website id is rejected and a version 3 body leaves the visual document out
+  ---
+  duration_ms: 16.507919
+  ...
+# Subtest: a version 3 save does not clear the stored visual document
+not ok 158 - a version 3 save does not clear the stored visual document
+  ---
+  duration_ms: 198.769963
+  location: '/workspace/tests/unit/draft-put-site.test.ts:37:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(row?.visualDocument)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/tests/unit/draft-put-site.test.ts:41:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: a failed save does not replace the in-memory documents, and address changes still use the page id
+ok 159 - a failed save does not replace the in-memory documents, and address changes still use the page id
+  ---
+  duration_ms: 1.046201
+  ...
+# Subtest: a pointer within 24 pixels of the preview edge scrolls that way
+ok 160 - a pointer within 24 pixels of the preview edge scrolls that way
+  ---
+  duration_ms: 0.953779
+  ...
+# Subtest: scrolling stops when the drag ends and ignores the hub
+ok 161 - scrolling stops when the drag ends and ignores the hub
+  ---
+  duration_ms: 0.729503
+  ...
+# Subtest: escape during a drag clears the gesture and leaves the order
+ok 162 - escape during a drag clears the gesture and leaves the order
+  ---
+  duration_ms: 0.833014
+  ...
+# Subtest: escape outside a drag, or while a dialog is open, does not cancel
+ok 163 - escape outside a drag, or while a dialog is open, does not cancel
+  ---
+  duration_ms: 0.323846
+  ...
+# Subtest: the deepest container is first and the dragged node is excluded
+ok 164 - the deepest container is first and the dragged node is excluded
+  ---
+  duration_ms: 1.139883
+  ...
+# Subtest: a canvas point stays parent-relative when the hub panel moves
+ok 165 - a canvas point stays parent-relative when the hub panel moves
+  ---
+  duration_ms: 5.795216
+  ...
+# Subtest: the active breakpoint stores a box from 0 to 100
+ok 166 - the active breakpoint stores a box from 0 to 100
+  ---
+  duration_ms: 1.206654
+  ...
+# Subtest: locks and parent rules decide a drop
+ok 167 - locks and parent rules decide a drop
+  ---
+  duration_ms: 1.05051
+  ...
+# Subtest: a child returns its parent and the page root cannot be dragged
+ok 168 - a child returns its parent and the page root cannot be dragged
+  ---
+  duration_ms: 1.036111
+  ...
+# Subtest: row insert uses the x position and column uses a horizontal line
+ok 169 - row insert uses the x position and column uses a horizontal line
+  ---
+  duration_ms: 0.554069
+  ...
+# Subtest: a flex drop changes child order and keeps flex settings
+ok 170 - a flex drop changes child order and keeps flex settings
+  ---
+  duration_ms: 0.903786
+  ...
+# Subtest: an incompatible flex child is rejected and flow reorder still works
+ok 171 - an incompatible flex child is rejected and flow reorder still works
+  ---
+  duration_ms: 0.488496
+  ...
+# Subtest: flow direction chooses the insertion line
+ok 172 - flow direction chooses the insertion line
+  ---
+  duration_ms: 0.466621
+  ...
+# Subtest: dropping below a sibling places the node after it
+ok 173 - dropping below a sibling places the node after it
+  ---
+  duration_ms: 0.697189
+  ...
+# Subtest: a new node and a same-parent move share flow insert
+ok 174 - a new node and a same-parent move share flow insert
+  ---
+  duration_ms: 0.233163
+  ...
+# Subtest: a legacy block id reorders through the same function
+ok 175 - a legacy block id reorders through the same function
+  ---
+  duration_ms: 0.171623
+  ...
+# Subtest: a different parent is left unchanged
+ok 176 - a different parent is left unchanged
+  ---
+  duration_ms: 0.344775
+  ...
+# Subtest: the other column is the cell under the pointer
+ok 177 - the other column is the cell under the pointer
+  ---
+  duration_ms: 0.501896
+  ...
+# Subtest: the highlighted cell receives the node and the column count stays
+ok 178 - the highlighted cell receives the node and the column count stays
+  ---
+  duration_ms: 1.191496
+  ...
+# Subtest: a heading drop makes the group its parent without copying the group
+ok 179 - a heading drop makes the group its parent without copying the group
+  ---
+  duration_ms: 1.418694
+  ...
+# Subtest: a group rejects a child it cannot hold
+ok 180 - a group rejects a child it cannot hold
+  ---
+  duration_ms: 0.351659
+  ...
+# Subtest: a child leaves the group and the empty group remains
+ok 181 - a child leaves the group and the empty group remains
+  ---
+  duration_ms: 1.58558
+  ...
+# Subtest: a locked group child stays
+ok 182 - a locked group child stays
+  ---
+  duration_ms: 0.304688
+  ...
+# Subtest: a text selection or a control does not drag
+ok 183 - a text selection or a control does not drag
+  ---
+  duration_ms: 0.8117
+  ...
+# Subtest: only the handle starts a drag, and only after the threshold
+ok 184 - only the handle starts a drag, and only after the threshold
+  ---
+  duration_ms: 0.664333
+  ...
+# Subtest: alt plus down moves a flow node below the next one
+ok 185 - alt plus down moves a flow node below the next one
+  ---
+  duration_ms: 1.419662
+  ...
+# Subtest: alt plus shift moves into the next container and a locked node stays
+ok 186 - alt plus shift moves into the next container and a locked node stays
+  ---
+  duration_ms: 0.666217
+  ...
+# Subtest: a library button dropped on a canvas creates one button at that box
+ok 187 - a library button dropped on a canvas creates one button at that box
+  ---
+  duration_ms: 2.493765
+  ...
+# Subtest: an invalid library drop creates zero nodes
+ok 188 - an invalid library drop creates zero nodes
+  ---
+  duration_ms: 0.350041
+  ...
+# Subtest: a node moves to the new parent and leaves the old one
+ok 189 - a node moves to the new parent and leaves the old one
+  ---
+  duration_ms: 1.496616
+  ...
+# Subtest: a locked or incompatible node stays in place
+ok 190 - a locked or incompatible node stays in place
+  ---
+  duration_ms: 0.412274
+  ...
+# Subtest: one section move removes the block from the source
+ok 191 - one section move removes the block from the source
+  ---
+  duration_ms: 0.256838
+  ...
+# Subtest: a saved drop keeps the version 3 draft and projects the node once
+ok 192 - a saved drop keeps the version 3 draft and projects the node once
+  ---
+  duration_ms: 5.050118
+  ...
+# Subtest: movement under 4 pixels is a click and 4 pixels can drag
+ok 193 - movement under 4 pixels is a click and 4 pixels can drag
+  ---
+  duration_ms: 0.63412
+  ...
+# Subtest: one undo reverses a reparent and redo puts the node back
+ok 194 - one undo reverses a reparent and redo puts the node back
+  ---
+  duration_ms: 1.559292
+  ...
+# Subtest: the editor receives serializable adapter fields for the active site
+ok 195 - the editor receives serializable adapter fields for the active site
+  ---
+  duration_ms: 17.669777
+  ...
+# Subtest: a missing adapter keeps the version 3 editor and warns
+ok 196 - a missing adapter keeps the version 3 editor and warns
+  ---
+  duration_ms: 5.879958
+  ...
+# Subtest: a failed adapter import uses the bundled serializable view
+ok 197 - a failed adapter import uses the bundled serializable view
+  ---
+  duration_ms: 4.788998
+  ...
+# Subtest: the editor page does not import overlay components
+ok 198 - the editor page does not import overlay components
+  ---
+  duration_ms: 0.602364
+  ...
+# Subtest: quantum age device widths come from the adapter
+ok 199 - quantum age device widths come from the adapter
+  ---
+  duration_ms: 1.153634
+  ...
+# Subtest: an editor error keeps the message and drops the stack
+ok 200 - an editor error keeps the message and drops the stack
+  ---
+  duration_ms: 0.620759
+  ...
+# Subtest: dismissing an error keeps the typed document
+ok 201 - dismissing an error keeps the typed document
+  ---
+  duration_ms: 0.471879
+  ...
+# Subtest: moving a section reorders it without touching the others
+ok 202 - moving a section reorders it without touching the others
+  ---
+  duration_ms: 1.742769
+  ...
+# Subtest: moving a section onto its own slot changes nothing
+ok 203 - moving a section onto its own slot changes nothing
+  ---
+  duration_ms: 0.433929
+  ...
+# Subtest: duplicating a section inserts a copy after it with new ids and no anchor
+ok 204 - duplicating a section inserts a copy after it with new ids and no anchor
+  ---
+  duration_ms: 2.120767
+  ...
+# Subtest: hiding a section keeps it in the draft
+ok 205 - hiding a section keeps it in the draft
+  ---
+  duration_ms: 0.248074
+  ...
+# Subtest: deleting a section removes only that section
+ok 206 - deleting a section removes only that section
+  ---
+  duration_ms: 0.191423
+  ...
+# Subtest: locked pages ignore structural changes
+ok 207 - locked pages ignore structural changes
+  ---
+  duration_ms: 0.163159
+  ...
+# Subtest: blocks move, duplicate, hide, and delete inside a flow section
+ok 208 - blocks move, duplicate, hide, and delete inside a flow section
+  ---
+  duration_ms: 0.473246
+  ...
+# Subtest: locked blocks cannot be hidden, duplicated, deleted, or restyled
+ok 209 - locked blocks cannot be hidden, duplicated, deleted, or restyled
+  ---
+  duration_ms: 0.325122
+  ...
+# Subtest: text style patches merge, and clearing a step removes it
+ok 210 - text style patches merge, and clearing a step removes it
+  ---
+  duration_ms: 0.489191
+  ...
+# Subtest: anchors are cleaned, limited, and unique per page
+ok 211 - anchors are cleaned, limited, and unique per page
+  ---
+  duration_ms: 0.39522
+  ...
+# Subtest: slugify makes a short lowercase address
+ok 212 - slugify makes a short lowercase address
+  ---
+  duration_ms: 0.155788
+  ...
+# Subtest: new pages need a valid, unused address
+ok 213 - new pages need a valid, unused address
+  ---
+  duration_ms: 0.501606
+  ...
+# Subtest: links accept site paths, https, email, and phone only
+ok 214 - links accept site paths, https, email, and phone only
+  ---
+  duration_ms: 0.298436
+  ...
+# Subtest: a created page can move to a new address, and links follow it
+ok 215 - a created page can move to a new address, and links follow it
+  ---
+  duration_ms: 0.874793
+  ...
+# Subtest: home opens from the visual document route
+ok 216 - home opens from the visual document route
+  ---
+  duration_ms: 0.51817
+  ...
+# Subtest: a version 3-only draft still opens
+ok 217 - a version 3-only draft still opens
+  ---
+  duration_ms: 0.102665
+  ...
+# Subtest: article routes come from the adapter pattern
+ok 218 - article routes come from the adapter pattern
+  ---
+  duration_ms: 0.478421
+  ...
+# Subtest: selecting a node stores its id
+ok 219 - selecting a node stores its id
+  ---
+  duration_ms: 0.822714
+  ...
+# Subtest: switching pages clears the ids
+ok 220 - switching pages clears the ids
+  ---
+  duration_ms: 0.202874
+  ...
+# Subtest: resetForSite clears page and selection
+ok 221 - resetForSite clears page and selection
+  ---
+  duration_ms: 0.851076
+  ...
+# Subtest: the editor route uses only the URL website id
+ok 222 - the editor route uses only the URL website id
+  ---
+  duration_ms: 0.246405
+  ...
+# Subtest: unmounting one website does not leave its label for the next
+ok 223 - unmounting one website does not leave its label for the next
+  ---
+  duration_ms: 0.555754
+  ...
+# Subtest: a save still writes the version 3 draft and the visual document
+ok 224 - a save still writes the version 3 draft and the visual document
+  ---
+  duration_ms: 0.411228
+  ...
+# Subtest: a button node is new and does not use the header label
+ok 225 - a button node is new and does not use the header label
+  ---
+  duration_ms: 5.784559
+  ...
+# Subtest: changing one button label leaves the header and the other button alone
+ok 226 - changing one button label leaves the header and the other button alone
+  ---
+  duration_ms: 2.291577
+  ...
+# Subtest: a canvas uses canvas layout and keeps its id on the freeform section
+ok 227 - a canvas uses canvas layout and keeps its id on the freeform section
+  ---
+  duration_ms: 8.455004
+  ...
+# Subtest: a card uses generic copy and not a site card component
+ok 228 - a card uses generic copy and not a site card component
+  ---
+  duration_ms: 6.752868
+  ...
+# Subtest: a checkbox starts unchecked and is not the review confirmation
+ok 229 - a checkbox starts unchecked and is not the review confirmation
+  ---
+  duration_ms: 7.319561
+  ...
+# Subtest: a container starts empty and can hold a heading
+ok 230 - a container starts empty and can hold a heading
+  ---
+  duration_ms: 7.299707
+  ...
+# Subtest: a call to action has three children and no site close copy
+ok 231 - a call to action has three children and no site close copy
+  ---
+  duration_ms: 7.881298
+  ...
+# Subtest: the sample catalog hides site components and the active site catalog lists them
+ok 232 - the sample catalog hides site components and the active site catalog lists them
+  ---
+  duration_ms: 2.016671
+  ...
+# Subtest: inserting a registered component uses its defaults and leaves the hero alone
+ok 233 - inserting a registered component uses its defaults and leaves the hero alone
+  ---
+  duration_ms: 4.747431
+  ...
+# Subtest: a divider is one empty node and leaves neighbor text alone
+ok 234 - a divider is one empty node and leaves neighbor text alone
+  ---
+  duration_ms: 6.90634
+  ...
+# Subtest: an FAQ has one item and does not add a route
+ok 235 - an FAQ has one item and does not add a route
+  ---
+  duration_ms: 7.50134
+  ...
+# Subtest: a form stays generic and a level 1 adapter hides the catalog entry
+ok 236 - a form stays generic and a level 1 adapter hides the catalog entry
+  ---
+  duration_ms: 8.498849
+  ...
+# Subtest: a gallery starts empty and a picked image stays on that node
+ok 237 - a gallery starts empty and a picked image stays on that node
+  ---
+  duration_ms: 8.68084
+  ...
+# Subtest: a grid starts at two columns and writes no preset id
+ok 238 - a grid starts at two columns and writes no preset id
+  ---
+  duration_ms: 8.020299
+  ...
+# Subtest: a group id uses grp and stays empty
+ok 239 - a group id uses grp and stays empty
+  ---
+  duration_ms: 7.329436
+  ...
+# Subtest: a heading node is new, unlocked, and uses the text Heading
+ok 240 - a heading node is new, unlocked, and uses the text Heading
+  ---
+  duration_ms: 5.695024
+  ...
+# Subtest: the heading is inserted into the selected container or the page root
+ok 241 - the heading is inserted into the selected container or the page root
+  ---
+  duration_ms: 0.583058
+  ...
+# Subtest: undo removes only the new heading node
+ok 242 - undo removes only the new heading node
+  ---
+  duration_ms: 0.372509
+  ...
+# Subtest: serializing a heading maps a flow block and leaves hero fields unchanged
+ok 243 - serializing a heading maps a flow block and leaves hero fields unchanged
+  ---
+  duration_ms: 3.11708
+  ...
+# Subtest: a preview heading block does not change an existing heading or the hero
+ok 244 - a preview heading block does not change an existing heading or the hero
+  ---
+  duration_ms: 0.29522
+  ...
+# Subtest: an icon button is distinct and its label is the accessible name
+ok 245 - an icon button is distinct and its label is the accessible name
+  ---
+  duration_ms: 6.092377
+  ...
+# Subtest: the serializer writes the icon and leaves a text button label alone
+ok 246 - the serializer writes the icon and leaves a text button label alone
+  ---
+  duration_ms: 2.378733
+  ...
+# Subtest: an icon is decorative until it has a label, and it is not an icon button
+ok 247 - an icon is decorative until it has a label, and it is not an icon button
+  ---
+  duration_ms: 5.495141
+  ...
+# Subtest: the serializer stores the icon name
+ok 248 - the serializer stores the icon name
+  ---
+  duration_ms: 2.129659
+  ...
+# Subtest: an image node starts empty
+ok 249 - an image node starts empty
+  ---
+  duration_ms: 5.284779
+  ...
+# Subtest: choosing a picture updates this image and leaves the hero source alone
+ok 250 - choosing a picture updates this image and leaves the hero source alone
+  ---
+  duration_ms: 3.079691
+  ...
+# Subtest: an input can sit in a form and not in a heading
+ok 251 - an input can sit in a form and not in a heading
+  ---
+  duration_ms: 7.902467
+  ...
+# Subtest: a link node has its own label and a valid address
+ok 252 - a link node has its own label and a valid address
+  ---
+  duration_ms: 6.466813
+  ...
+# Subtest: an invalid address is not written and the link is not the header button
+ok 253 - an invalid address is not written and the link is not the header button
+  ---
+  duration_ms: 4.354568
+  ...
+# Subtest: a paragraph node is new and its text is Paragraph
+ok 254 - a paragraph node is new and its text is Paragraph
+  ---
+  duration_ms: 5.293211
+  ...
+# Subtest: a paragraph is inserted after the selection and does not change nearby text
+ok 255 - a paragraph is inserted after the selection and does not change nearby text
+  ---
+  duration_ms: 0.992579
+  ...
+# Subtest: undo removes only the new paragraph
+ok 256 - undo removes only the new paragraph
+  ---
+  duration_ms: 0.410171
+  ...
+# Subtest: a paragraph serializes as its own flow block
+ok 257 - a paragraph serializes as its own flow block
+  ---
+  duration_ms: 2.380684
+  ...
+# Subtest: a preview paragraph is a new block after the selected one
+ok 258 - a preview paragraph is a new block after the selected one
+  ---
+  duration_ms: 0.269897
+  ...
+# Subtest: a rich text node starts with an empty mark list
+ok 259 - a rich text node starts with an empty mark list
+  ---
+  duration_ms: 6.42894
+  ...
+# Subtest: bold on a rich text node stores a mark and leaves the other node alone
+ok 260 - bold on a rich text node stores a mark and leaves the other node alone
+  ---
+  duration_ms: 0.522588
+  ...
+# Subtest: a rich text node serializes as a flow paragraph that keeps its marks
+ok 261 - a rich text node serializes as a flow paragraph that keeps its marks
+  ---
+  duration_ms: 2.746289
+  ...
+# Subtest: a select stores two generic options
+ok 262 - a select stores two generic options
+  ---
+  duration_ms: 8.353277
+  ...
+# Subtest: a spacer defaults to medium and has no text
+ok 263 - a spacer defaults to medium and has no text
+  ---
+  duration_ms: 10.521166
+  ...
+# Subtest: a stack starts as a column and is not a preset
+ok 264 - a stack starts as a column and is not a preset
+  ---
+  duration_ms: 10.204517
+  ...
+# Subtest: a testimonial uses generic words
+ok 265 - a testimonial uses generic words
+  ---
+  duration_ms: 7.749139
+  ...
+# Subtest: a text area is not an input and stays inside the form
+ok 266 - a text area is not an input and stays inside the form
+  ---
+  duration_ms: 11.378129
+  ...
+# Subtest: an http video address is rejected and an https address is kept
+ok 267 - an http video address is rejected and an https address is kept
+  ---
+  duration_ms: 6.63976
+  ...
+# Subtest: the serializer keeps the video address and the existing image
+ok 268 - the serializer keeps the video address and the existing image
+  ---
+  duration_ms: 2.741836
+  ...
+# Subtest: experience mode defaults to basic and is stored per website
+ok 269 - experience mode defaults to basic and is stored per website
+  ---
+  duration_ms: 0.609155
+  ...
+# Subtest: only a super administrator or client administrator can persist administrator
+ok 270 - only a super administrator or client administrator can persist administrator
+  ---
+  duration_ms: 0.133726
+  ...
+# Subtest: the account menu offers the modes and the inspector tabs stay
+ok 271 - the account menu offers the modes and the inspector tabs stay
+  ---
+  duration_ms: 0.565049
+  ...
+# web_harbor
+# Subtest: the harbor adapter parses and discovery finds its folder
+ok 272 - the harbor adapter parses and discovery finds its folder
+  ---
+  duration_ms: 23.291448
+  ...
+# Subtest: the harbor editor seed lists harbor pages and the tide clock
+ok 273 - the harbor editor seed lists harbor pages and the tide clock
+  ---
+  duration_ms: 11.543806
+  ...
+# Subtest: harbor hides blog library entries that quantum age still shows
+ok 274 - harbor hides blog library entries that quantum age still shows
+  ---
+  duration_ms: 0.892813
+  ...
+# Subtest: harbor preview uses the adapter workspace and keeps the iframe transport
+ok 275 - harbor preview uses the adapter workspace and keeps the iframe transport
+  ---
+  duration_ms: 33.488752
+  ...
+# Subtest: the harbor registry lists the tide clock and the button
+ok 276 - the harbor registry lists the tide clock and the button
+  ---
+  duration_ms: 15.459824
+  ...
+# Subtest: harbor documents serialize inside the harbor workspace
+ok 277 - harbor documents serialize inside the harbor workspace
+  ---
+  duration_ms: 9.232406
+  ...
+# Subtest: the harbor visit template is a version 1 canvas with the tide clock
+ok 278 - the harbor visit template is a version 1 canvas with the tide clock
+  ---
+  duration_ms: 16.480594
+  ...
+# Subtest: undo restores the previous visual document
+ok 279 - undo restores the previous visual document
+  ---
+  duration_ms: 1.054123
+  ...
+# Subtest: undo does not cross websites
+ok 280 - undo does not cross websites
+  ---
+  duration_ms: 0.112752
+  ...
+# Subtest: redo returns the edited visual document and a new edit drops it
+ok 281 - redo returns the edited visual document and a new edit drops it
+  ---
+  duration_ms: 0.182723
+  ...
+# Subtest: a version 3 edit keeps a value snapshot without a visual document
+ok 282 - a version 3 edit keeps a value snapshot without a visual document
+  ---
+  duration_ms: 0.095336
+  ...
+# Subtest: undo returns the state before the change, and redo brings the change back
+ok 283 - undo returns the state before the change, and redo brings the change back
+  ---
+  duration_ms: 1.275395
+  ...
+# Subtest: a new change drops the redo steps
+ok 284 - a new change drops the redo steps
+  ---
+  duration_ms: 0.163446
+  ...
+# Subtest: nothing to undo or redo returns null
+ok 285 - nothing to undo or redo returns null
+  ---
+  duration_ms: 0.137179
+  ...
+# Subtest: history keeps only the newest steps
+ok 286 - history keeps only the newest steps
+  ---
+  duration_ms: 0.136219
+  ...
+# Subtest: a client editor does not receive administrator fields
+ok 287 - a client editor does not receive administrator fields
+  ---
+  duration_ms: 0.969267
+  ...
+# Subtest: button fonts come from the adapter and disabled state stays on the same node
+ok 288 - button fonts come from the adapter and disabled state stays on the same node
+  ---
+  duration_ms: 1.466697
+  ...
+# Subtest: canvas percentages write the active box and stay hidden in flow
+ok 289 - canvas percentages write the active box and stay hidden in flow
+  ---
+  duration_ms: 1.20268
+  ...
+# Subtest: flags false hide canvas, form, and theme controls
+ok 290 - flags false hide canvas, form, and theme controls
+  ---
+  duration_ms: 1.40944
+  ...
+# Subtest: design token options match the active adapter and a locked component hides design
+ok 291 - design token options match the active adapter and a locked component hides design
+  ---
+  duration_ms: 1.315897
+  ...
+# Subtest: an invalid address stays a warning and a valid address clears it
+ok 292 - an invalid address stays a warning and a valid address clears it
+  ---
+  duration_ms: 2.250837
+  ...
+# Subtest: prop errors keep the typed value and default to a warning
+ok 293 - prop errors keep the typed value and default to a warning
+  ---
+  duration_ms: 2.962645
+  ...
+# Subtest: a generic heading has a name field and a read-only id
+ok 294 - a generic heading has a name field and a read-only id
+  ---
+  duration_ms: 3.978507
+  ...
+# Subtest: content props are text, label, quote, and title, and a write touches one prop
+ok 295 - content props are text, label, quote, and title, and a write touches one prop
+  ---
+  duration_ms: 0.213164
+  ...
+# Subtest: replace writes src on the selected image only, and an empty alt keeps the warning
+ok 296 - replace writes src on the selected image only, and an empty alt keeps the warning
+  ---
+  duration_ms: 0.976235
+  ...
+# Subtest: confirm stores the previous layout and undo restores the mode and settings
+ok 297 - confirm stores the previous layout and undo restores the mode and settings
+  ---
+  duration_ms: 1.104002
+  ...
+# Subtest: layout conversion is on for a generic container and off when the flag is false
+ok 298 - layout conversion is on for a generic container and off when the flag is false
+  ---
+  duration_ms: 2.154489
+  ...
+# Subtest: converting a stack section to canvas keeps the original section until undo
+ok 299 - converting a stack section to canvas keeps the original section until undo
+  ---
+  duration_ms: 0.238901
+  ...
+# Subtest: a page path saves, a javascript address does not, and new tab is target new
+ok 300 - a page path saves, a javascript address does not, and new tab is target new
+  ---
+  duration_ms: 1.232987
+  ...
+# Subtest: basic mode hides strategy, z-index, and component ids
+ok 301 - basic mode hides strategy, z-index, and component ids
+  ---
+  duration_ms: 1.000245
+  ...
+# Subtest: registered components render their own fields and an unknown slot warns an administrator
+ok 302 - registered components render their own fields and an unknown slot warns an administrator
+  ---
+  duration_ms: 1.330618
+  ...
+# Subtest: changing strategy updates the node and flow text stays hidden
+ok 303 - changing strategy updates the node and flow text stays hidden
+  ---
+  duration_ms: 1.996779
+  ...
+# Subtest: text style writes one key and does not offer a markup field
+ok 304 - text style writes one key and does not offer a markup field
+  ---
+  duration_ms: 1.800217
+  ...
+# Subtest: hide on one device leaves the others visible, and all three sets hidden
+ok 305 - hide on one device leaves the others visible, and all three sets hidden
+  ---
+  duration_ms: 1.336155
+  ...
+# Subtest: a Harbor editor with no saved draft does not receive the Quantum Age document
+ok 306 - a Harbor editor with no saved draft does not receive the Quantum Age document
+  ---
+  duration_ms: 19.361489
+  ...
+# Subtest: a commit refuses a workspace that belongs to the other site
+ok 307 - a commit refuses a workspace that belongs to the other site
+  ---
+  duration_ms: 141.513036
+  ...
+# Subtest: harbor and quantum age color tokens stay on their own sites
+ok 308 - harbor and quantum age color tokens stay on their own sites
+  ---
+  duration_ms: 0.951748
+  ...
+# Subtest: each site registry returns only that site's components
+ok 309 - each site registry returns only that site's components
+  ---
+  duration_ms: 0.927508
+  ...
+# Subtest: a draft write cannot name the other site's page
+ok 310 - a draft write cannot name the other site's page
+  ---
+  duration_ms: 316.024906
+  ...
+# Subtest: harbor and quantum age font lists do not leak
+ok 311 - harbor and quantum age font lists do not leak
+  ---
+  duration_ms: 0.875639
+  ...
+# Subtest: locking a Harbor paragraph does not change Quantum Age locks
+ok 312 - locking a Harbor paragraph does not change Quantum Age locks
+  ---
+  duration_ms: 3.014993
+  ...
+# Subtest: a harbor request for a quantum age media id is not found
+ok 313 - a harbor request for a quantum age media id is not found
+  ---
+  duration_ms: 306.784244
+  ...
+# Subtest: a Harbor member does not receive Quantum Age
+ok 314 - a Harbor member does not receive Quantum Age
+  ---
+  duration_ms: 286.50297
+  ...
+# Subtest: a harbor page read does not return a quantum age page
+ok 315 - a harbor page read does not return a quantum age page
+  ---
+  duration_ms: 248.907214
+  ...
+# Subtest: a Harbor publish list cannot include Quantum Age files
+ok 316 - a Harbor publish list cannot include Quantum Age files
+  ---
+  duration_ms: 442.985542
+  ...
+# Subtest: the editor payload keeps repository secrets off the client
+ok 317 - the editor payload keeps repository secrets off the client
+  ---
+  duration_ms: 5.305482
+  ...
+# Subtest: route discovery for one site does not return the other site's routes
+ok 318 - route discovery for one site does not return the other site's routes
+  ---
+  duration_ms: 1.855001
+  ...
+# Subtest: template pickers keep site templates on their own adapter
+ok 319 - template pickers keep site templates on their own adapter
+  ---
+  duration_ms: 0.58204
+  ...
+# Subtest: arrow keys move the active layer and leave a rename field alone
+ok 320 - arrow keys move the active layer and leave a rename field alone
+  ---
+  duration_ms: 1.231912
+  ...
+# Subtest: a heading row says Heading unless it was renamed
+ok 321 - a heading row says Heading unless it was renamed
+  ---
+  duration_ms: 0.504058
+  ...
+# Subtest: custom rows use the registry display name and that name is not hardcoded
+ok 322 - custom rows use the registry display name and that name is not hardcoded
+  ---
+  duration_ms: 0.2065
+  ...
+# Subtest: node types and paragraph and canvas have words
+ok 323 - node types and paragraph and canvas have words
+  ---
+  duration_ms: 0.193614
+  ...
+# Subtest: basic layers hide component ids and advanced layers show them
+ok 324 - basic layers hide component ids and advanced layers show them
+  ---
+  duration_ms: 0.129909
+  ...
+# Subtest: containers show a layout mode and other nodes do not
+ok 325 - containers show a layout mode and other nodes do not
+  ---
+  duration_ms: 0.120867
+  ...
+# Subtest: provider-managed rows say Managed and a paragraph does not
+ok 326 - provider-managed rows say Managed and a paragraph does not
+  ---
+  duration_ms: 0.069482
+  ...
+# Subtest: locking a paragraph sets the flag and leaves the text
+ok 327 - locking a paragraph sets the flag and leaves the text
+  ---
+  duration_ms: 0.587392
+  ...
+# Subtest: a layer name does not change the heading text
+ok 328 - a layer name does not change the heading text
+  ---
+  duration_ms: 0.61482
+  ...
+# Subtest: a rename field does not start a layer drag
+ok 329 - a rename field does not start a layer drag
+  ---
+  duration_ms: 0.508714
+  ...
+# Subtest: the lower half of a row inserts after that sibling
+ok 330 - the lower half of a row inserts after that sibling
+  ---
+  duration_ms: 0.118248
+  ...
+# Subtest: a canvas parent reorders children and leaves z alone
+ok 331 - a canvas parent reorders children and leaves z alone
+  ---
+  duration_ms: 0.84386
+  ...
+# Subtest: a paragraph dropped on another section moves once
+ok 332 - a paragraph dropped on another section moves once
+  ---
+  duration_ms: 1.587876
+  ...
+# Subtest: an illegal layer target does not move the node
+ok 333 - an illegal layer target does not move the node
+  ---
+  duration_ms: 0.278938
+  ...
+# Subtest: every node has a row, including a provider-managed node
+ok 334 - every node has a row, including a provider-managed node
+  ---
+  duration_ms: 1.013767
+  ...
+# Subtest: the root and the next level start open
+ok 335 - the root and the next level start open
+  ---
+  duration_ms: 0.163904
+  ...
+# Subtest: a layer click resolves the section and block, and the matching row is selected
+ok 336 - a layer click resolves the section and block, and the matching row is selected
+  ---
+  duration_ms: 0.390335
+  ...
+# Subtest: every id in the shared selection highlights its row
+ok 337 - every id in the shared selection highlights its row
+  ---
+  duration_ms: 0.202586
+  ...
+# Subtest: a missing visual document keeps the version 3 list
+ok 338 - a missing visual document keeps the version 3 list
+  ---
+  duration_ms: 0.268596
+  ...
+# Subtest: hiding a node sets visibility.hidden and keeps hideOn
+ok 339 - hiding a node sets visibility.hidden and keeps hideOn
+  ---
+  duration_ms: 0.940842
+  ...
+# Subtest: an editor cannot unlock the logo, header, or footer
+ok 340 - an editor cannot unlock the logo, header, or footer
+  ---
+  duration_ms: 0.97457
+  ...
+# Subtest: an administrator can unlock the logo and an editor can unlock a paragraph
+ok 341 - an administrator can unlock the logo and an editor can unlock a paragraph
+  ---
+  duration_ms: 0.290625
+  ...
+# Subtest: bold applies to the selected words only
+ok 342 - bold applies to the selected words only
+  ---
+  duration_ms: 1.142307
+  ...
+# Subtest: bold toggles off when the whole range is already bold
+ok 343 - bold toggles off when the whole range is already bold
+  ---
+  duration_ms: 0.173578
+  ...
+# Subtest: toggling part of a bold run splits it
+ok 344 - toggling part of a bold run splits it
+  ---
+  duration_ms: 0.112938
+  ...
+# Subtest: a partly bold range becomes fully bold and merges
+ok 345 - a partly bold range becomes fully bold and merges
+  ---
+  duration_ms: 0.118805
+  ...
+# Subtest: other kinds are left alone
+ok 346 - other kinds are left alone
+  ---
+  duration_ms: 8.818985
+  ...
+# Subtest: links replace an existing link with a different address
+ok 347 - links replace an existing link with a different address
+  ---
+  duration_ms: 0.415834
+  ...
+# Subtest: an empty range changes nothing
+ok 348 - an empty range changes nothing
+  ---
+  duration_ms: 1.008986
+  ...
+# Subtest: clear removes marks in the range, or everything when the range is empty
+ok 349 - clear removes marks in the range, or everything when the range is empty
+  ---
+  duration_ms: 0.447614
+  ...
+# Subtest: hasMark checks full coverage
+ok 350 - hasMark checks full coverage
+  ---
+  duration_ms: 0.358539
+  ...
+# Subtest: html nesting matches the website renderer and escapes text
+ok 351 - html nesting matches the website renderer and escapes text
+  ---
+  duration_ms: 0.675054
+  ...
+# Subtest: links must be site paths, https, email, or phone
+ok 352 - links must be site paths, https, email, or phone
+  ---
+  duration_ms: 0.335566
+  ...
+# Subtest: comparison fails when a text string is missing and passes when it was copied
+ok 353 - comparison fails when a text string is missing and passes when it was copied
+  ---
+  duration_ms: 1.106416
+  ...
+# Subtest: a redacted version 3 draft assembles without writing copy into the report
+ok 354 - a redacted version 3 draft assembles without writing copy into the report
+  ---
+  duration_ms: 37.263337
+  ...
+# Subtest: detail text and chrome copy stay in the assembled document
+ok 355 - detail text and chrome copy stay in the assembled document
+  ---
+  duration_ms: 10.967179
+  ...
+# Subtest: a home-shaped draft becomes one visual page and an unknown object is rejected
+ok 356 - a home-shaped draft becomes one visual page and an unknown object is rejected
+  ---
+  duration_ms: 0.879637
+  ...
+# Subtest: the assembler does not name a site inside the platform
+ok 357 - the assembler does not name a site inside the platform
+  ---
+  duration_ms: 0.433951
+  ...
+# Subtest: execution stores a visual document beside version 3 and rolls the fixture back
+ok 358 - execution stores a visual document beside version 3 and rolls the fixture back
+  ---
+  duration_ms: 587.194321
+  ...
+# Subtest: a locked block stays locked and an unlocked paragraph stays unlocked
+ok 359 - a locked block stays locked and an unlocked paragraph stays unlocked
+  ---
+  duration_ms: 0.590024
+  ...
+# Subtest: a dropped media path fails and equal sets pass
+ok 360 - a dropped media path fails and equal sets pass
+  ---
+  duration_ms: 1.033227
+  ...
+# Subtest: an unknown key is reported and is not omitted
+ok 361 - an unknown key is reported and is not omitted
+  ---
+  duration_ms: 1.149297
+  ...
+# Subtest: rollback refuses to run without a website
+ok 362 - rollback refuses to run without a website
+  ---
+  duration_ms: 75.045282
+  ...
+# Subtest: rollback restores the newest backup and rejects a different site
+not ok 363 - rollback restores the newest backup and rejects a different site
+  ---
+  duration_ms: 284.237814
+  location: '/workspace/tests/unit/migrate-rollback.test.ts:23:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+    + []
+    - [
+    -   1,
+    -   1
+    - ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 1
+    1: 1
+  actual:
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/tests/unit/migrate-rollback.test.ts:93:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: dropping a route fails and the same set passes
+ok 364 - dropping a route fails and the same set passes
+  ---
+  duration_ms: 0.518844
+  ...
+# Subtest: a stacked version 3 conversion validates and a broken node fails
+ok 365 - a stacked version 3 conversion validates and a broken node fails
+  ---
+  duration_ms: 6.197641
+  ...
+# Subtest: a failed report cannot activate
+ok 366 - a failed report cannot activate
+  ---
+  duration_ms: 102.283851
+  ...
+# Subtest: a passed report creates only the new site
+ok 367 - a passed report creates only the new site
+  ---
+  duration_ms: 49.558925
+  ...
+# Subtest: a relative adapter path passes and a parent path fails
+ok 368 - a relative adapter path passes and a parent path fails
+  ---
+  duration_ms: 1.48026
+  ...
+# Subtest: a relative content path passes and a parent path fails
+ok 369 - a relative content path passes and a parent path fails
+  ---
+  duration_ms: 0.221858
+  ...
+# Subtest: a relative media path passes and an absolute path fails
+ok 370 - a relative media path passes and an absolute path fails
+  ---
+  duration_ms: 0.143615
+  ...
+# Subtest: the default branch allows main and develop and rejects a space
+ok 371 - the default branch allows main and develop and rejects a space
+  ---
+  duration_ms: 1.016823
+  ...
+# Subtest: a failing command fails and logs are redacted
+ok 372 - a failing command fails and logs are redacted
+  ---
+  duration_ms: 0.896325
+  ...
+# Subtest: the harbor production build passes
+ok 373 - the harbor production build passes
+  ---
+  duration_ms: 2858.041245
+  ...
+# Subtest: harbor shows Tide clock and duplicate ids fail
+ok 374 - harbor shows Tide clock and duplicate ids fail
+  ---
+  duration_ms: 12.746399
+  ...
+# Subtest: the quantum age registry is unchanged
+ok 375 - the quantum age registry is unchanged
+  ---
+  duration_ms: 2.137846
+  ...
+# Subtest: a found repository returns no token
+ok 376 - a found repository returns no token
+  ---
+  duration_ms: 1.03766
+  ...
+# Subtest: a missing repository is a failed result without a stack
+ok 377 - a missing repository is a failed result without a stack
+  ---
+  duration_ms: 0.296437
+  ...
+# Subtest: a client editor is refused
+ok 378 - a client editor is refused
+  ---
+  duration_ms: 0.182827
+  ...
+# Subtest: a site id is lowercase, unique, and kept when it is valid
+ok 379 - a site id is lowercase, unique, and kept when it is valid
+  ---
+  duration_ms: 0.557976
+  ...
+# Subtest: document and adapter are both valid navigation sources
+ok 380 - document and adapter are both valid navigation sources
+  ---
+  duration_ms: 0.941641
+  ...
+# Subtest: harbor home produces ready and a closed port does not
+ok 381 - harbor home produces ready and a closed port does not
+  ---
+  duration_ms: 185.92587
+  ...
+# Subtest: the preview check does not import site components
+ok 382 - the preview check does not import site components
+  ---
+  duration_ms: 0.256755
+  ...
+# Subtest: a failed connection removes only that checkout
+ok 383 - a failed connection removes only that checkout
+  ---
+  duration_ms: 1.47356
+  ...
+# Subtest: a passing harbor run marks every section pass
+ok 384 - a passing harbor run marks every section pass
+  ---
+  duration_ms: 217.111904
+  ...
+# Subtest: a failed check stays visible and a token is left out
+ok 385 - a failed check stays visible and a token is left out
+  ---
+  duration_ms: 0.448867
+  ...
+# Subtest: harbor routes include /work and an empty level 2 list fails
+ok 386 - harbor routes include /work and an empty level 2 list fails
+  ---
+  duration_ms: 13.720844
+  ...
+# Subtest: quantum age routes are left unchanged
+ok 387 - quantum age routes are left unchanged
+  ---
+  duration_ms: 2.806465
+  ...
+# Subtest: harbor serialization passes and a parent path fails
+ok 388 - harbor serialization passes and a parent path fails
+  ---
+  duration_ms: 14.147864
+  ...
+# Subtest: quantum age drafts are not rewritten
+ok 389 - quantum age drafts are not rewritten
+  ---
+  duration_ms: 2.566738
+  ...
+# Subtest: adapter is a theme source and an http URL is rejected
+ok 390 - adapter is a theme source and an http URL is rejected
+  ---
+  duration_ms: 1.190327
+  ...
+# Subtest: the harbor adapter file passes
+ok 391 - the harbor adapter file passes
+  ---
+  duration_ms: 186.913453
+  ...
+# Subtest: a broken adapter returns field errors
+ok 392 - a broken adapter returns field errors
+  ---
+  duration_ms: 0.917466
+  ...
+# Subtest: the quantum age adapter still parses
+ok 393 - the quantum age adapter still parses
+  ---
+  duration_ms: 1.491808
+  ...
+# Subtest: the client form does not import an adapter module
+ok 394 - the client form does not import an adapter module
+  ---
+  duration_ms: 0.222743
+  ...
+# Subtest: body nodes skip region chrome and a new page can edit its body
+ok 395 - body nodes skip region chrome and a new page can edit its body
+  ---
+  duration_ms: 4.010612
+  ...
+# Subtest: a provider-managed page hides body editing and a normal page shows metadata
+ok 396 - a provider-managed page hides body editing and a normal page shows metadata
+  ---
+  duration_ms: 1.499117
+  ...
+# Subtest: a landing call to action is editable only when the page allows it
+ok 397 - a landing call to action is editable only when the page allows it
+  ---
+  duration_ms: 8.684559
+  ...
+# Subtest: a page can edit its header only when that page allows it
+ok 398 - a page can edit its header only when that page allows it
+  ---
+  duration_ms: 6.748011
+  ...
+# Subtest: a partial visual document falls back to the version 3 page list
+ok 399 - a partial visual document falls back to the version 3 page list
+  ---
+  duration_ms: 1.181262
+  ...
+# Subtest: a document with zero pages is empty and a site with pages is not
+ok 400 - a document with zero pages is empty and a site with pages is not
+  ---
+  duration_ms: 0.236848
+  ...
+# Subtest: locked content blocks text edits and still allows a layout change
+ok 401 - locked content blocks text edits and still allows a layout change
+  ---
+  duration_ms: 1.339542
+  ...
+# Subtest: a locked layout hides conversion and still allows text when content is open
+ok 402 - a locked layout hides conversion and still allows text when content is open
+  ---
+  duration_ms: 1.354049
+  ...
+# Subtest: article routes use adapter flags instead of a blanket managed screen
+ok 403 - article routes use adapter flags instead of a blanket managed screen
+  ---
+  duration_ms: 18.658613
+  ...
+# Subtest: reserved routes come from the adapter
+ok 404 - reserved routes come from the adapter
+  ---
+  duration_ms: 9.816129
+  ...
+# Subtest: a sidebar can be edited only when the page has one and allows it
+ok 405 - a sidebar can be edited only when the page has one and allows it
+  ---
+  duration_ms: 8.047808
+  ...
+# Subtest: page addresses follow the adapter pattern
+ok 406 - page addresses follow the adapter pattern
+  ---
+  duration_ms: 4.861542
+  ...
+# Subtest: the redacted version 3 draft parses and a partial document returns issues
+ok 407 - the redacted version 3 draft parses and a partial document returns issues
+  ---
+  duration_ms: 9.205776
+  ...
+# Subtest: version 3 parsing stays out of the document package
+ok 408 - version 3 parsing stays out of the document package
+  ---
+  duration_ms: 0.927708
+  ...
+# Subtest: different website ids fail the site check
+ok 409 - different website ids fail the site check
+  ---
+  duration_ms: 0.506359
+  ...
+# Subtest: the same website id passes
+ok 410 - the same website id passes
+  ---
+  duration_ms: 0.089173
+  ...
+# Subtest: the platform version is 1
+ok 411 - the platform version is 1
+  ---
+  duration_ms: 0.482049
+  ...
+# Subtest: every platform error code has a helper and no site name
+ok 412 - every platform error code has a helper and no site name
+  ---
+  duration_ms: 0.797742
+  ...
+# Subtest: helpers build a context and a minimal adapter
+ok 413 - helpers build a context and a minimal adapter
+  ---
+  duration_ms: 2.536532
+  ...
+# Subtest: generated platform ids are unique and match the checker
+ok 414 - generated platform ids are unique and match the checker
+  ---
+  duration_ms: 3.438766
+  ...
+# Subtest: ok and err narrow
+ok 415 - ok and err narrow
+  ---
+  duration_ms: 0.611217
+  ...
+# Subtest: a fake adapter refuses a path outside its allowlist
+ok 416 - a fake adapter refuses a path outside its allowlist
+  ---
+  duration_ms: 1.386408
+  ...
+# Subtest: local and review outcomes use different sentences
+ok 417 - local and review outcomes use different sentences
+  ---
+  duration_ms: 0.470285
+  ...
+# Subtest: unsafe publish failures use the generic sentence
+ok 418 - unsafe publish failures use the generic sentence
+  ---
+  duration_ms: 0.125937
+  ...
+# Subtest: quantum age article behavior stays out of the platform
+ok 419 - quantum age article behavior stays out of the platform
+  ---
+  duration_ms: 10.990155
+  ...
+# Subtest: quantum age breakpoint widths match the editor config
+ok 420 - quantum age breakpoint widths match the editor config
+  ---
+  duration_ms: 2.198432
+  ...
+# Subtest: quantum age commands match the editor config
+ok 421 - quantum age commands match the editor config
+  ---
+  duration_ms: 8.426454
+  ...
+# Subtest: quantum age fonts match the overlay layout
+ok 422 - quantum age fonts match the overlay layout
+  ---
+  duration_ms: 8.849408
+  ...
+# Subtest: the quantum age adapter parses and discovery returns its id
+ok 423 - the quantum age adapter parses and discovery returns its id
+  ---
+  duration_ms: 20.703855
+  ...
+# Subtest: quantum age lock names stay in the adapter and the editor config
+ok 424 - quantum age lock names stay in the adapter and the editor config
+  ---
+  duration_ms: 9.289102
+  ...
+# Subtest: quantum age media accepts the current image types
+ok 425 - quantum age media accepts the current image types
+  ---
+  duration_ms: 1.777662
+  ...
+# Subtest: quantum age metadata matches the editor config
+ok 426 - quantum age metadata matches the editor config
+  ---
+  duration_ms: 10.724345
+  ...
+# Subtest: quantum age navigation comes from the document and has no label list
+ok 427 - quantum age navigation comes from the document and has no label list
+  ---
+  duration_ms: 10.312181
+  ...
+# Subtest: adapter reserved routes stay on the adapter
+ok 428 - adapter reserved routes stay on the adapter
+  ---
+  duration_ms: 1.836197
+  ...
+# Subtest: quantum age routes match the editor config and stay out of the platform
+ok 429 - quantum age routes match the editor config and stay out of the platform
+  ---
+  duration_ms: 9.456034
+  ...
+# Subtest: quantum age templates include insights-landing only outside the platform
+ok 430 - quantum age templates include insights-landing only outside the platform
+  ---
+  duration_ms: 11.713302
+  ...
+# Subtest: quantum age color tokens match the draft chrome
+not ok 431 - quantum age color tokens match the draft chrome
+  ---
+  duration_ms: 0.66802
+  location: '/workspace/tests/unit/qa-adapter-theme.test.ts:8:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'chrome')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/tests/unit/qa-adapter-theme.test.ts:14:23)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.start (node:internal/test_runner/test:877:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: quantum age validation warns on a missing root and does not require a hero
+ok 432 - quantum age validation warns on a missing root and does not require a hero
+  ---
+  duration_ms: 2.169011
+  ...
+# Subtest: the quantum age button validates and the platform button stays generic
+ok 433 - the quantum age button validates and the platform button stays generic
+  ---
+  duration_ms: 2.305147
+  ...
+# Subtest: quantum age card defaults are empty and the platform has no card preset enum
+ok 434 - quantum age card defaults are empty and the platform has no card preset enum
+  ---
+  duration_ms: 10.136713
+  ...
+# Subtest: the quantum age footer definition validates and the hub does not import it
+ok 435 - the quantum age footer definition validates and the hub does not import it
+  ---
+  duration_ms: 10.845428
+  ...
+# Subtest: the quantum age form keeps the recipient on the component
+ok 436 - the quantum age form keeps the recipient on the component
+  ---
+  duration_ms: 9.632087
+  ...
+# Subtest: the quantum age header definition validates and stays out of the platform
+ok 437 - the quantum age header definition validates and stays out of the platform
+  ---
+  duration_ms: 10.73893
+  ...
+# Subtest: the quantum age hero accepts current hero fields and keeps them out of the platform
+ok 438 - the quantum age hero accepts current hero fields and keeps them out of the platform
+  ---
+  duration_ms: 11.056673
+  ...
+# Subtest: the quantum age logo lock stays on the adapter
+ok 439 - the quantum age logo lock stays on the adapter
+  ---
+  duration_ms: 9.88606
+  ...
+# Subtest: privacy and terms stay provider-managed and articles are not blanket-locked
+ok 440 - privacy and terms stay provider-managed and articles are not blanket-locked
+  ---
+  duration_ms: 1.655625
+  ...
+# Subtest: the quantum age seed lives in the adapter
+ok 441 - the quantum age seed lives in the adapter
+  ---
+  duration_ms: 9.21763
+  ...
+# Subtest: a hero component serializes to home json and an unknown node is reported
+ok 442 - a hero component serializes to home json and an unknown node is reported
+  ---
+  duration_ms: 6.272697
+  ...
+# Subtest: sample.text groups under text and an unknown category fails
+ok 443 - sample.text groups under text and an unknown category fails
+  ---
+  duration_ms: 0.736186
+  ...
+# Subtest: closed parents reject children and listed types pass
+ok 444 - closed parents reject children and listed types pass
+  ---
+  duration_ms: 0.506122
+  ...
+# Subtest: defaults fill missing props and keep provided ones
+ok 445 - defaults fill missing props and keep provided ones
+  ---
+  duration_ms: 0.778854
+  ...
+# Subtest: the sample adapter registers sample.text without scanning a site
+ok 446 - the sample adapter registers sample.text without scanning a site
+  ---
+  duration_ms: 8.715497
+  ...
+# Subtest: locked nodes cannot drag and unlocked draggable nodes can
+ok 447 - locked nodes cannot drag and unlocked draggable nodes can
+  ---
+  duration_ms: 0.45886
+  ...
+# Subtest: a string prop becomes a text control and unknown types are skipped
+ok 448 - a string prop becomes a text control and unknown types are skipped
+  ---
+  duration_ms: 3.244951
+  ...
+# Subtest: two adapters keep separate component registries
+ok 449 - two adapters keep separate component registries
+  ---
+  duration_ms: 8.447821
+  ...
+# Subtest: editors cannot unlock an administrator-only component
+ok 450 - editors cannot unlock an administrator-only component
+  ---
+  duration_ms: 1.176806
+  ...
+# Subtest: a button can sit in a section and not in text
+ok 451 - a button can sit in a section and not in text
+  ---
+  duration_ms: 0.758922
+  ...
+# Subtest: strict prop schemas name the extra field
+ok 452 - strict prop schemas name the extra field
+  ---
+  duration_ms: 2.817424
+  ...
+# Subtest: registries keep their own components
+ok 453 - registries keep their own components
+  ---
+  duration_ms: 0.723304
+  ...
+# Subtest: a repeated id is rejected and case is significant
+ok 454 - a repeated id is rejected and case is significant
+  ---
+  duration_ms: 0.232339
+  ...
+# Subtest: resize requires a resizable unlocked component on a canvas parent
+ok 455 - resize requires a resizable unlocked component on a canvas parent
+  ---
+  duration_ms: 0.720421
+  ...
+# Subtest: only responsive unlocked components can add a breakpoint override
+ok 456 - only responsive unlocked components can add a breakpoint override
+  ---
+  duration_ms: 0.636852
+  ...
+# Subtest: disallowed style keys fail and an empty styleable list cannot register
+ok 457 - disallowed style keys fail and an empty styleable list cannot register
+  ---
+  duration_ms: 0.840927
+  ...
+# Subtest: another website id fails and a generic button placeholder passes
+ok 458 - another website id fails and a generic button placeholder passes
+  ---
+  duration_ms: 0.922536
+  ...
+# Subtest: the search preview host comes from the adapter
+ok 459 - the search preview host comes from the adapter
+  ---
+  duration_ms: 1.346879
+  ...
+# Subtest: settings labels name the capability in a sentence
+ok 460 - settings labels name the capability in a sentence
+  ---
+  duration_ms: 1.02039
+  ...
+# Subtest: an article page can edit metadata, header, and a rich text body
+ok 461 - an article page can edit metadata, header, and a rich text body
+  ---
+  duration_ms: 5.646657
+  ...
+# Subtest: a blank canvas page has no children and a blank structured page stays flow
+ok 462 - a blank canvas page has no children and a blank structured page stays flow
+  ---
+  duration_ms: 6.35488
+  ...
+# Subtest: a blank structured page is one empty flow section
+ok 463 - a blank structured page is one empty flow section
+  ---
+  duration_ms: 5.636581
+  ...
+# Subtest: a landing page uses generic nodes and neutral copy
+ok 464 - a landing page uses generic nodes and neutral copy
+  ---
+  duration_ms: 7.416405
+  ...
+# Subtest: the page picker lists platform templates plus the adapter templates
+ok 465 - the page picker lists platform templates plus the adapter templates
+  ---
+  duration_ms: 14.001399
+  ...
+# Subtest: a service page uses generic nodes and a root address
+ok 466 - a service page uses generic nodes and a root address
+  ---
+  duration_ms: 8.437318
+  ...
+1..466
+# tests 466
+# suites 0
+# pass 461
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 60243.699571

@@ -36,6 +36,12 @@ export function can(actions: Action[], action: Action): boolean {
   return actions.includes(action);
 }
 
+/** Connecting a site is limited to a platform administrator or a client administrator. */
+export function canConnectWebsite(platformRole: PlatformRole | null, membershipRoles: readonly MembershipRole[]): boolean {
+  if (platformRole === "SUPER_ADMIN") return true;
+  return membershipRoles.includes("CLIENT_ADMIN");
+}
+
 export const stepUpActions: Action[] = [
   "publish.request",
   "audit.read",

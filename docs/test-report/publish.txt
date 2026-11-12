@@ -1,0 +1,11 @@
+Quantum Age review dialog, mocked in `tests/e2e/product-surfaces.spec.ts`:
+
+- Pending text: “Sending for review.” It does not say the site is published.
+- A 500 with “The review could not be opened.” shows that sentence.
+- A following 200 with status `SAVED_LOCALLY` replaces it with “Saved for review on this copy. A pull request was not opened.”
+
+Harbor hides Submit for review. That assertion passed in `tests/e2e/product-surfaces.spec.ts`.
+
+A live GitHub pull request was not opened. The GitHub App is not configured, so a real send on Quantum Age is expected to be `SAVED_LOCALLY` when the workspace can commit. This pass did not complete an unmocked publish, because the public site checkout is absent. The mocked status is the one the dialog shows.
+
+Harbor publish stays off in the editor. The capability is false.

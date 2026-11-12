@@ -1,0 +1,15 @@
+
+Running 2 tests using 1 worker
+
+(node:25177) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:25177) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [setup] › tests/e2e/auth.setup.ts:3:6 › sign in as the administrator (4.8s)
+(node:26000) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26000) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 [editor] › tests/e2e/builder-demos.spec.ts:3:5 › Harbor loads, lists the tide clock, and a blank page is not a Quantum Age hero (4.7s)
+
+  2 passed (11.6s)

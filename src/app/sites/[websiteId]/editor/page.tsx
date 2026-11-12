@@ -1,9 +1,15 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { devPause } from "@/lib/dev-pause";
 import { EditorShell } from "@/components/editor-shell";
 import "@/components/editor/editor.css";
 import { AuthzError, authorize } from "@/lib/authorize";
 import { blogDraftSchema } from "@/lib/content-schema";
 import { imageSize, mediaRoot } from "@/lib/media";
+import { canUseAdministrator } from "@/components/editor/state/experience";
+import { draftForSite } from "@/components/editor/state/site";
+import { editorAdapterForSite, registeredInspectorPlan } from "@/lib/editor-adapter";
+import { siteDraftFromAdapter } from "@/lib/adapter-draft";
+import { clientEditorPayload } from "@/lib/editor-payload";
 import { normalizeSiteDraft } from "@/lib/page-documents";
 import { mintPreviewAccess } from "@/lib/preview-access";
 import { prisma } from "@/lib/prisma";
@@ -12,22 +18,51 @@ import { can, permissionsFor, roleLabel } from "@/lib/roles";
 import fs from "node:fs";
 import path from "node:path";
 
-export default async function EditorPage({ params }: { params: Promise<{ websiteId: string }> }) {
+export default async function EditorPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ websiteId: string }>;
+  searchParams: Promise<{ slow?: string; boom?: string }>;
+}) {
   const { websiteId } = await params;
+  const query = await searchParams;
+  if (process.env.NODE_ENV !== "production" && query.boom === "1") {
+    throw new Error("forced editor error");
+  }
+  await devPause(query.slow);
   let actor;
   try {
     actor = await authorize(websiteId, "view");
   } catch (error) {
+    if (error instanceof AuthzError && error.reason === "no-membership") redirect(`/sites/${websiteId}/denied`);
     if (error instanceof AuthzError) notFound();
     throw error;
   }
+  if (actor.website.id !== websiteId) notFound();
+  const actions = permissionsFor(actor.platformRole, actor.membershipRole);
+  const canEmbed = actor.platformRole === "SUPER_ADMIN" || actor.platformRole === "DESIGNER" || actor.membershipRole === "DESIGNER";
+  const canAdminister = canUseAdministrator(actor.platformRole, actor.membershipRole);
   const page = await prisma.page.findUnique({ where: { websiteId_route: { websiteId, route: "/" } } });
   const draft = page
     ? await prisma.workspaceDraft.findUnique({
         where: { websiteId_userId_pageId: { websiteId, userId: actor.user.id, pageId: page.id } },
       })
     : null;
-  const site = normalizeSiteDraft(draft?.draftData);
+  const ownedDraft = draftForSite(websiteId, draft);
+  const adapter = await editorAdapterForSite(websiteId);
+  const site = ownedDraft
+    ? normalizeSiteDraft(ownedDraft.draftData)
+    : adapter?.fields.workspace
+      ? siteDraftFromAdapter(adapter, actor.website.name)
+      : normalizeSiteDraft(undefined);
+  const editorPayload = clientEditorPayload({
+    canAdminister,
+    website: actor.website,
+    userId: actor.user.id,
+    adapter: adapter?.fields ?? null,
+  });
+  const inspectorPlan = registeredInspectorPlan(adapter?.fields ?? null);
   const storedPosts = await prisma.blogPost.findMany({
     where: { websiteId, status: { in: ["DRAFT", "SCHEDULED"] } },
     orderBy: { updatedAt: "desc" },
@@ -43,11 +78,13 @@ export default async function EditorPage({ params }: { params: Promise<{ website
     orderBy: { createdAt: "desc" },
     take: 8,
   });
-  const actions = permissionsFor(actor.platformRole, actor.membershipRole);
-  const canEmbed = actor.platformRole === "SUPER_ADMIN" || actor.platformRole === "DESIGNER" || actor.membershipRole === "DESIGNER";
   return (
     <EditorShell
       websiteId={websiteId}
+      siteContext={editorPayload.siteContext}
+      adapterId={adapter?.id ?? null}
+      adapter={editorPayload.adapter}
+      visualDocument={ownedDraft?.visualDocument ?? null}
       websiteName={actor.website.name}
       initialSite={site}
       initialPosts={posts.length > 0 ? posts : []}
@@ -68,6 +105,7 @@ export default async function EditorPage({ params }: { params: Promise<{ website
       canEdit={can(actions, "edit")}
       canPublish={can(actions, "publish.request")}
       canEmbed={canEmbed}
+      canAdminister={canAdminister}
       role={roleLabel(actor.platformRole, actor.membershipRole)}
       userName={actor.user.displayName}
       previewAccess={mintPreviewAccess(websiteId, actor.user.id)}
@@ -77,6 +115,8 @@ export default async function EditorPage({ params }: { params: Promise<{ website
         reviewUrl: item.pullRequestUrl,
         createdAt: item.createdAt.toISOString(),
       }))}
+      registered={inspectorPlan.registered}
+      inspectorSlots={inspectorPlan.slots}
     />
   );
 }
